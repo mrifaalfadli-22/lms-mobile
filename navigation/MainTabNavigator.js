@@ -94,7 +94,7 @@ export default function MainTabNavigator() {
         name="MataKuliah"
         component={MataKuliahScreen}
         options={{
-          tabBarLabel: 'Mata kuliah',
+          tabBarLabel: 'Kelas',
           tabBarButton: (props) => <CustomTabBarButton {...props} />,
         }}
       />
