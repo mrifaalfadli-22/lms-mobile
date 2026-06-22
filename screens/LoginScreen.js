@@ -182,7 +182,7 @@ export default function LoginScreen({ navigation }) {
           {/* Sign-up link */}
           <View style={styles.signupRow}>
             <Text style={styles.signupText}>Tidak punya akun? </Text>
-            <TouchableOpacity onPress={() => {}}>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
               <Text style={styles.signupLink}>Buat sekarang</Text>
             </TouchableOpacity>
           </View>

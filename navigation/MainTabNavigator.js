@@ -44,25 +44,6 @@ const ProfileIcon = ({ color }) => (
   </Svg>
 );
 
-// ── Custom Tab Button ─────────────────────────────────────────────────────────
-const CustomTabBarButton = ({ children, onPress, accessibilityState, style, ...rest }) => {
-  const isSelected = accessibilityState?.selected;
-  return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      onPress={onPress}
-      style={[
-        style,
-        styles.tabButton,
-        isSelected && styles.tabButtonActive,
-      ]}
-      {...rest}
-    >
-      {children}
-    </TouchableOpacity>
-  );
-};
-
 // ── Bottom Tab Navigator ──────────────────────────────────────────────────────
 export default function MainTabNavigator() {
   return (
@@ -73,6 +54,12 @@ export default function MainTabNavigator() {
         tabBarShowLabel: true,
         tabBarActiveTintColor: '#FFFFFF',
         tabBarInactiveTintColor: '#FFFFFF',
+        tabBarActiveBackgroundColor: ACTIVE_BG, // Native active background
+        tabBarItemStyle: {
+          borderRadius: 999, // Perfect pill shape natively!
+          marginHorizontal: 12,
+          marginVertical: 8,
+        },
         tabBarLabelStyle: styles.tabLabel,
         tabBarIcon: ({ color }) => {
           if (route.name === 'Home') return <HomeIcon color={color} />;
@@ -87,7 +74,6 @@ export default function MainTabNavigator() {
         component={HomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarButton: (props) => <CustomTabBarButton {...props} />,
         }}
       />
       <Tab.Screen
@@ -95,7 +81,6 @@ export default function MainTabNavigator() {
         component={MataKuliahScreen}
         options={{
           tabBarLabel: 'Kelas',
-          tabBarButton: (props) => <CustomTabBarButton {...props} />,
         }}
       />
       <Tab.Screen
@@ -103,7 +88,6 @@ export default function MainTabNavigator() {
         component={JadwalKelasScreen}
         options={{
           tabBarLabel: 'Jadwal kelas',
-          tabBarButton: (props) => <CustomTabBarButton {...props} />,
         }}
       />
       <Tab.Screen
@@ -111,7 +95,6 @@ export default function MainTabNavigator() {
         component={ProfilScreen}
         options={{
           tabBarLabel: 'Profil',
-          tabBarButton: (props) => <CustomTabBarButton {...props} />,
         }}
       />
     </Tab.Navigator>
@@ -132,17 +115,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     paddingHorizontal: 8,
     paddingBottom: 6,
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 30,
-    marginVertical: 6,
-    marginHorizontal: 4,
-  },
-  tabButtonActive: {
-    backgroundColor: ACTIVE_BG,
   },
   tabLabel: {
     fontSize: 10,

@@ -118,15 +118,15 @@ const IconTugas = () => (
 );
 
 // ── MenuIcon Component ─────────────────────────────────────────────────────────
-const MenuIcon = ({ icon, label }) => (
-  <TouchableOpacity style={styles.menuItem} activeOpacity={0.75}>
+const MenuIcon = ({ icon, label, onPress }) => (
+  <TouchableOpacity style={styles.menuItem} activeOpacity={0.75} onPress={onPress}>
     <View style={styles.menuIconBox}>{icon}</View>
     <Text style={styles.menuLabel}>{label}</Text>
   </TouchableOpacity>
 );
 
 // ── HomeScreen ────────────────────────────────────────────────────────────────
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const [searchText, setSearchText] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const [adzanExpanded, setAdzanExpanded] = useState(true);
@@ -190,7 +190,7 @@ export default function HomeScreen() {
             <UserAvatarIcon />
             <View>
               <Text style={styles.greetText}>Halo sobat</Text>
-              <TouchableOpacity style={styles.loginBtn} activeOpacity={0.8}>
+              <TouchableOpacity style={styles.loginBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Register')}>
                 <Text style={styles.loginBtnText}>Daftar / Masuk</Text>
               </TouchableOpacity>
             </View>
@@ -243,7 +243,7 @@ export default function HomeScreen() {
               <Text style={styles.jadwalCardSmall}>Jadwal hari ini</Text>
               <Text style={styles.jadwalCardDate}>{dateStr}</Text>
             </View>
-            <TouchableOpacity style={styles.jadwalBtn} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.jadwalBtn} activeOpacity={0.8} onPress={() => navigation.navigate('JadwalKelas')}>
               <CalendarSmallIcon />
               <Text style={styles.jadwalBtnText}>lihat jadwal</Text>
             </TouchableOpacity>
@@ -251,15 +251,15 @@ export default function HomeScreen() {
           <Text style={styles.jadwalInfo}>
             Kamu belum memilih mata kuliah, yuk isi untuk{'\n'}menggunakan fitur lainnya
           </Text>
-          <TouchableOpacity activeOpacity={0.8}>
+          <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('Register')}>
             <Text style={styles.jadwalCTA}>Isi sekarang</Text>
           </TouchableOpacity>
         </View>
 
         {/* ── Menu Grid ── */}
         <View style={styles.menuGrid}>
-          <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" />
-          <MenuIcon icon={<IconJadwal />} label="Jadwal" />
+          <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" onPress={() => navigation.navigate('MataKuliah')} />
+          <MenuIcon icon={<IconJadwal />} label="Jadwal" onPress={() => navigation.navigate('JadwalKelas')} />
           <MenuIcon icon={<IconMateri />} label="Materi" />
           <MenuIcon icon={<IconTugas />} label={'Tugas\n&kuis'} />
         </View>
