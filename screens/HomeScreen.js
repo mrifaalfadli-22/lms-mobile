@@ -312,7 +312,7 @@ export default function HomeScreen({ navigation }) {
                   styles.carouselCard,
                   { marginRight: index === courses.length - 1 ? SIDE_PEEK : CARD_GAP },
                 ]}
-                onPress={() => !isActive && scrollToIndex(index)}
+                onPress={() => !isActive ? scrollToIndex(index) : navigation.navigate('DetailMataKuliah', { course: item })}
               >
                 <Image
                   source={{ uri: item.image }}
