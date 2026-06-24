@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 const { width, height } = Dimensions.get('window');
 
@@ -65,6 +66,12 @@ const ClockDarkIcon = () => (
   <Svg width="14" height="14" viewBox="0 0 24 24" fill="none">
     <Circle cx="12" cy="12" r="10" stroke="#10B981" strokeWidth="2" />
     <Path d="M12 6v6l4 2" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const CloseIcon = () => (
+  <Svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+    <Path d="M18 6L6 18M6 6l12 12" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
   </Svg>
 );
 
@@ -159,10 +166,20 @@ const IconSertifikat = () => (
 );
 
 // ── MenuIcon Component ─────────────────────────────────────────────────────────
-const MenuIcon = ({ icon, label, onPress }) => (
+const MenuIcon = ({ icon, label, onPress, isLocked }) => (
   <TouchableOpacity style={styles.menuItem} activeOpacity={0.75} onPress={onPress}>
-    <View style={styles.menuIconBox}>{icon}</View>
-    <Text style={styles.menuLabel}>{label}</Text>
+    <View style={styles.menuIconBox}>
+      <View style={isLocked ? { opacity: 0.3, transform: [{ scale: 0.95 }] } : null}>{icon}</View>
+      {isLocked && (
+        <View style={styles.lockBadge}>
+          <Svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <Path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11Z" fill="#374151" />
+            <Path d="M7 11V7C7 4.23858 9.23858 2 12 2C14.7614 2 17 4.23858 17 7V11" stroke="#374151" strokeWidth="2.5" strokeLinecap="round" />
+          </Svg>
+        </View>
+      )}
+    </View>
+    <Text style={[styles.menuLabel, isLocked && { color: '#9CA3AF' }]}>{label}</Text>
   </TouchableOpacity>
 );
 
@@ -318,6 +335,28 @@ export default function HomeScreen({ navigation, route }) {
   const jadwalListRef = useRef(null);
   const materiListRef = useRef(null);
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  const openDaftarModal = () => {
+    setModalVisible(true);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeDaftarModal = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setModalVisible(false);
+    });
+  };
+
   const jadwals = [
     {
       id: 'j1',
@@ -463,12 +502,14 @@ export default function HomeScreen({ navigation, route }) {
               )}
             </View>
           </View>
-          <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
-            <BellIcon />
-            <View style={styles.bellBadge}>
-              <Text style={styles.bellBadgeText}>1</Text>
-            </View>
-          </TouchableOpacity>
+          {isRegistered && (
+            <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Notifikasi')}>
+              <BellIcon />
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>1</Text>
+              </View>
+            </TouchableOpacity>
+          )}
         </LinearGradient>
 
         {/* ── Search Section ── */}
@@ -538,11 +579,11 @@ export default function HomeScreen({ navigation, route }) {
           <View style={styles.menuGridExpanded}>
             <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" onPress={() => navigation.navigate('MataKuliah')} />
             <MenuIcon icon={<IconJadwal />} label="Jadwal" onPress={() => navigation.navigate('JadwalKelas')} />
-            <MenuIcon icon={<IconMateri />} label="Materi" />
-            <MenuIcon icon={<IconTugas />} label={"Tugas\n&Kuis"} />
-            <MenuIcon icon={<IconProgress />} label={'Progress\nbelajar'} />
-            <MenuIcon icon={<IconNilai />} label="Lihat nilai" />
-            <MenuIcon icon={<IconSertifikat />} label="Sertifikat" />
+            <MenuIcon icon={<IconMateri />} label="Materi" onPress={() => navigation.navigate('Materi')} />
+            <MenuIcon icon={<IconTugas />} label={"Tugas\n&Kuis"} onPress={() => navigation.navigate('TugasKuis')} />
+            <MenuIcon icon={<IconProgress />} label={'Progress\nbelajar'} onPress={() => navigation.navigate('ProgressBelajar')} />
+            <MenuIcon icon={<IconNilai />} label="Lihat nilai" onPress={() => navigation.navigate('LihatNilai')} />
+            <MenuIcon icon={<IconSertifikat />} label="Sertifikat" onPress={() => navigation.navigate('Sertifikat')} />
             <View style={[styles.menuItem, { opacity: 0 }]} />
           </View>
         )}
@@ -614,11 +655,15 @@ export default function HomeScreen({ navigation, route }) {
 
         {/* ── Menu Grid (Guest: after Jadwal Card) ── */}
         {!isRegistered && (
-          <View style={styles.menuGrid}>
+          <View style={styles.menuGridExpanded}>
             <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" onPress={() => navigation.navigate('MataKuliah')} />
             <MenuIcon icon={<IconJadwal />} label="Jadwal" onPress={() => navigation.navigate('JadwalKelas')} />
-            <MenuIcon icon={<IconMateri />} label="Materi" />
-            <MenuIcon icon={<IconTugas />} label={'Tugas\n&kuis'} />
+            <MenuIcon icon={<IconMateri />} label="Materi" isLocked onPress={openDaftarModal} />
+            <MenuIcon icon={<IconTugas />} label={"Tugas\n&kuis"} isLocked onPress={openDaftarModal} />
+            <MenuIcon icon={<IconProgress />} label={'Progress\nbelajar'} isLocked onPress={openDaftarModal} />
+            <MenuIcon icon={<IconNilai />} label="Lihat nilai" isLocked onPress={openDaftarModal} />
+            <MenuIcon icon={<IconSertifikat />} label="Sertifikat" isLocked onPress={openDaftarModal} />
+            <View style={[styles.menuItem, { opacity: 0 }]} />
           </View>
         )}
         {/* ── Materi Terbaru (Registered Only) ── */}
@@ -715,8 +760,45 @@ export default function HomeScreen({ navigation, route }) {
           </>
         )}
 
-        <View style={{ height: 24 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* ── Modal Pop-up Daftar ── */}
+      {modalVisible && (
+        <Animated.View 
+          style={[
+            StyleSheet.absoluteFill, 
+            { opacity: fadeAnim, zIndex: 9999 }
+          ]}
+        >
+          <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill}>
+            <TouchableOpacity 
+              style={styles.modalOverlay} 
+              activeOpacity={1} 
+              onPress={closeDaftarModal}
+            >
+              <TouchableOpacity activeOpacity={1} style={styles.modalContentSmall}>
+                <TouchableOpacity style={styles.modalCloseBtn} onPress={closeDaftarModal} activeOpacity={0.8}>
+                  <CloseIcon />
+                </TouchableOpacity>
+                <Text style={styles.modalMessage}>
+                  Silahkan daftar untuk{'\n'}mengakses fitur
+                </Text>
+                <TouchableOpacity 
+                  style={styles.modalDaftarButton}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    closeDaftarModal();
+                    navigation.navigate('Register');
+                  }}
+                >
+                  <Text style={styles.modalDaftarText}>Daftar</Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </BlurView>
+        </Animated.View>
+      )}
 
       {/* ── Floating Adzan Bar — Fixed absolute, always visible ── */}
       <View style={styles.adzanBarContainer} pointerEvents="box-none">
@@ -898,6 +980,24 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   menuLabel: { fontSize: 12, color: '#111827', textAlign: 'center', lineHeight: 16, fontWeight: '500' },
+  lockBadge: {
+    position: 'absolute',
+    bottom: -6,
+    right: -2,
+    backgroundColor: '#ffffff',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
 
   // ── Section Header ──
   sectionHeader: {
@@ -1009,7 +1109,74 @@ const styles = StyleSheet.create({
   jrcLecturerName: { fontSize: 12, fontWeight: '700', color: '#111827' },
   jrcLecturerRole: { fontSize: 10, color: '#6B7280' },
 
-  materiRegisteredSection: { marginTop: 24 },
+  materiRegisteredSection: {
+    marginTop: 24,
+    marginBottom: 8,
+  },
   materiCarouselContent: { paddingLeft: 18, paddingRight: 18, gap: 16 },
-  materiImageCard: { width: CARD_WIDTH, height: 160, borderRadius: 20 },
+  materiImageCard: {
+    width: CARD_WIDTH,
+    height: 160,
+    borderRadius: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  modalContentSmall: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 24,
+    paddingTop: 36,
+    paddingBottom: 24,
+    borderRadius: 16,
+    width: '80%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+    position: 'relative',
+    overflow: 'visible',
+  },
+  modalCloseBtn: {
+    position: 'absolute',
+    top: -14,
+    right: -14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: PRIMARY,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  modalMessage: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#4B5563',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  modalDaftarButton: {
+    backgroundColor: PRIMARY,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalDaftarText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });

@@ -12,9 +12,10 @@ import {
   Animated,
   TextInput
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import YoutubePlayer from 'react-native-youtube-iframe';
 
 const { width, height } = Dimensions.get('window');
 
@@ -39,6 +40,14 @@ const CloseIcon = () => (
   </Svg>
 );
 
+
+const YoutubePlayIcon = () => (
+  <Svg width="40" height="28" viewBox="0 0 48 32" fill="none">
+    <Path d="M46.5 5.5A5.8 5.8 0 0 0 42.4 1.4C38.8 0.5 24 0.5 24 0.5S9.2 0.5 5.6 1.4A5.8 5.8 0 0 0 1.5 5.5C0.5 9.2 0.5 16 0.5 16s0 6.8 1 10.5a5.8 5.8 0 0 0 4.1 4.1C9.2 31.5 24 31.5 24 31.5s14.8 0 18.4-1c2.2-.6 4-2.4 4.5-4.6 1-3.7 1-10.4 1-10.4s0-6.8-1-10z" fill="#FF0000" />
+    <Path d="M19 22.5l13-6.5-13-6.5v13z" fill="#FFF" />
+  </Svg>
+);
+
 export default function DetailMataKuliahScreen({ navigation, route }) {
   const isRegistered = route?.params?.isRegistered || false;
   const course = route?.params?.course;
@@ -48,6 +57,8 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [token, setToken] = useState('');
+  const [hasJoined, setHasJoined] = useState(false);
+  const [activeTab, setActiveTab] = useState('pertemuan');
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const openMeetingModal = (meeting) => {
@@ -83,6 +94,49 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
       topic: 'Lorem ipsum dolor sit amet',
       lecturer: 'Yulianto M.Kom'
     }))
+  ];
+
+  const assignments = [
+    {
+      id: '1',
+      lecturer: 'Yulianto M.kom',
+      action: 'Mengupload tugas',
+      time: 'Hari ini - 09.00',
+      title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.',
+      desc: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.',
+    },
+    {
+      id: '2',
+      lecturer: 'Yulianto M.kom',
+      action: 'Mengupload tugas',
+      time: 'Hari ini - 09.00',
+      title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.',
+      desc: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.',
+    }
+  ];
+
+  const materials = [
+    {
+      id: '1',
+      title: 'Pertemuan 1',
+      topic: 'Pengenalan dasar HTML',
+      lecturer: 'Yulianto M.Kom',
+      instruction: 'Pelajari materi berikut ini',
+      type: 'file',
+      files: [
+        { type: 'ppt', name: 'Materi_Pertemuan_1.pptx' },
+        { type: 'pdf', name: 'Rangkuman_HTML.pdf' }
+      ],
+    },
+    {
+      id: '2',
+      title: 'Pertemuan 2',
+      topic: 'Pengenalan framework CSS',
+      lecturer: 'Yulianto M.Kom',
+      instruction: 'Silahkan simak video berikut :',
+      type: 'video',
+      videoId: 'iee2TATGMyI', // YouTube video ID example
+    }
   ];
 
   return (
@@ -139,49 +193,142 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.
           </Text>
 
-          <TouchableOpacity 
-            style={styles.daftarButton} 
-            activeOpacity={0.8}
-            onPress={() => {
-              if (isRegistered) {
-                openMeetingModal(null);
-              } else {
-                navigation.navigate('Register');
-              }
-            }}
-          >
-            <Text style={styles.daftarButtonText}>{isRegistered ? 'Gabung' : 'Daftar'}</Text>
-          </TouchableOpacity>
-
-          {/* MEETING LIST */}
-          <View style={styles.meetingList}>
-            {meetings.map((item) => (
-              <TouchableOpacity 
-                key={item.id} 
-                style={styles.meetingCard}
-                activeOpacity={0.7}
-                onPress={() => openMeetingModal(item)}
-              >
-                {/* Diagonal subtle gradient inside card using expo-linear-gradient */}
-                <LinearGradient
-                  colors={['#ffffff', '#E2EBE8']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFillObject}
-                />
-
-                {/* Left Green Line */}
-                <View style={styles.meetingCardLine} />
-                
-                {/* Card Content */}
-                <View style={styles.meetingCardContent}>
-                  <Text style={styles.meetingTitle}>{item.title}</Text>
-                  <Text style={styles.meetingTopic}>{item.topic}</Text>
-                  <Text style={styles.meetingLecturer}>{item.lecturer}</Text>
-                </View>
+          {!hasJoined ? (
+            <TouchableOpacity 
+              style={styles.daftarButton} 
+              activeOpacity={0.8}
+              onPress={() => {
+                if (isRegistered) {
+                  openMeetingModal(null);
+                } else {
+                  navigation.navigate('Register');
+                }
+              }}
+            >
+              <Text style={styles.daftarButtonText}>{isRegistered ? 'Gabung' : 'Daftar'}</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.tabContainer}>
+              <TouchableOpacity style={[styles.tabButton, activeTab === 'pertemuan' && styles.activeTabButton]} onPress={() => setActiveTab('pertemuan')}>
+                <Text style={[styles.tabText, activeTab === 'pertemuan' && styles.activeTabText]}>Pertemuan</Text>
               </TouchableOpacity>
-            ))}
-          </View>
+              <TouchableOpacity style={[styles.tabButton, activeTab === 'tugas' && styles.activeTabButton]} onPress={() => setActiveTab('tugas')}>
+                <Text style={[styles.tabText, activeTab === 'tugas' && styles.activeTabText]}>Tugas dan kuis</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.tabButton, activeTab === 'materi' && styles.activeTabButton]} onPress={() => setActiveTab('materi')}>
+                <Text style={[styles.tabText, activeTab === 'materi' && styles.activeTabText]}>Materi dibagikan</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* MEETING LIST OR TABS CONTENT */}
+          {(!hasJoined || activeTab === 'pertemuan') && (
+            <View style={styles.meetingList}>
+              {meetings.map((item) => (
+                <TouchableOpacity 
+                  key={item.id} 
+                  style={styles.meetingCard}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    if (!hasJoined) {
+                      openMeetingModal(item);
+                    } else {
+                      navigation.navigate('DetailSesi', { meeting: item, course: course });
+                    }
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#ffffff', '#E2EBE8']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                  <View style={styles.meetingCardLine} />
+                  <View style={styles.meetingCardContent}>
+                    <Text style={styles.meetingTitle}>{item.title}</Text>
+                    <Text style={styles.meetingTopic}>{item.topic}</Text>
+                    <Text style={styles.meetingLecturer}>{item.lecturer}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {hasJoined && activeTab === 'tugas' && (
+            <View style={styles.assignmentList}>
+              {assignments.map(item => (
+                <View key={item.id} style={styles.assignmentCard}>
+                  <View style={styles.assignmentHeaderInfo}>
+                    <Image source={require('../assets/dosen.png')} style={styles.assignmentAvatar} />
+                    <View>
+                      <Text style={styles.assignmentLecturer}>{item.lecturer} <Text style={styles.assignmentAction}>{item.action}</Text></Text>
+                      <Text style={styles.assignmentTime}>{item.time}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.assignmentTitle}>{item.title}</Text>
+                  <Text style={styles.assignmentDesc}>{item.desc}</Text>
+                  <TouchableOpacity style={styles.lihatTugasBtn} activeOpacity={0.8}>
+                    <Text style={styles.lihatTugasText}>Lihat tugas</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {hasJoined && activeTab === 'materi' && (
+            <View style={styles.assignmentList}>
+              {materials.map(item => (
+                <View key={item.id} style={styles.materialCard}>
+                  <View style={styles.materialCardHeader}>
+                    <LinearGradient
+                      colors={['#F8F9FA', '#C9E2D8']}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={StyleSheet.absoluteFillObject}
+                    />
+                    <View style={styles.meetingCardLine} />
+                    <View style={styles.meetingCardContent}>
+                      <Text style={styles.meetingTitle}>{item.title}</Text>
+                      <Text style={styles.meetingTopic}>{item.topic}</Text>
+                      <Text style={styles.meetingLecturer}>{item.lecturer}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.materialCardBody}>
+                    <Text style={styles.materialInstruction}>{item.instruction}</Text>
+                    {item.type === 'file' ? (
+                      <View style={styles.fileListContainer}>
+                        {item.files?.map((file, index) => (
+                          <View key={index} style={styles.fileItemRow}>
+                            <Image 
+                              source={file.type === 'ppt' ? require('../assets/Ppt.png') : require('../assets/Pdf.png')} 
+                              style={styles.fileIcon} 
+                              resizeMode="contain"
+                            />
+                            <Text style={styles.fileNameText} numberOfLines={1}>{file.name}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    ) : item.type === 'video' ? (
+                      <View style={styles.videoContainer}>
+                        <YoutubePlayer
+                          height={180}
+                          play={false}
+                          videoId={item.videoId}
+                        />
+                      </View>
+                    ) : null}
+                  </View>
+
+                  {item.type === 'file' && (
+                    <TouchableOpacity style={styles.downloadButton} activeOpacity={0.7}>
+                      <Text style={styles.downloadButtonText}>Download</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
           
         {/* Bottom spacing */}
           <View style={{ height: 24 }} />
@@ -219,7 +366,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                       activeOpacity={0.8}
                       onPress={() => {
                         closeMeetingModal();
-                        // Handle join logic here
+                        setHasJoined(true);
                       }}
                     >
                       <Text style={styles.modalDaftarText}>Bergabung</Text>
@@ -227,6 +374,9 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                   </>
                 ) : (
                   <>
+                    <TouchableOpacity style={styles.modalCloseBtn} onPress={closeMeetingModal} activeOpacity={0.8}>
+                      <CloseIcon />
+                    </TouchableOpacity>
                     <Text style={styles.modalMessage}>
                       Silahkan daftar untuk{'\n'}mengakses fitur
                     </Text>
@@ -423,7 +573,7 @@ const styles = StyleSheet.create({
   },
   modalTokenContent: {
     width: '85%',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingTop: 36,
@@ -477,5 +627,161 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeTabButton: {
+    borderBottomColor: PRIMARY,
+  },
+  tabText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: '#111827',
+    fontWeight: '600',
+  },
+  assignmentList: {
+    gap: 16,
+  },
+  assignmentCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+  },
+  assignmentHeaderInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  assignmentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 10,
+  },
+  assignmentLecturer: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  assignmentAction: {
+    fontWeight: '400',
+    color: '#6B7280',
+  },
+  assignmentTime: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  assignmentTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 6,
+    lineHeight: 20,
+  },
+  assignmentDesc: {
+    fontSize: 12,
+    color: '#4B5563',
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  lihatTugasBtn: {
+    backgroundColor: PRIMARY,
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+  },
+  lihatTugasText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  materialCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+  },
+  materialCardHeader: {
+    flexDirection: 'row',
+    position: 'relative',
+    minHeight: 80,
+  },
+  materialCardBody: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    backgroundColor: '#ffffff',
+  },
+  materialInstruction: {
+    fontSize: 12,
+    color: '#374151',
+    marginBottom: 12,
+    fontWeight: '500',
+  },
+  fileListContainer: {
+    gap: 12,
+  },
+  fileItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  fileIcon: {
+    width: 32,
+    height: 32,
+  },
+  fileNameText: {
+    marginLeft: 12,
+    fontSize: 13,
+    color: '#374151',
+    fontWeight: '500',
+    flex: 1,
+  },
+  videoContainer: {
+    width: '100%',
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#000000',
+  },
+  downloadButton: {
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  downloadButtonText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
   },
 });

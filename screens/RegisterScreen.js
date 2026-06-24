@@ -5,13 +5,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   Dimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Ellipse } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
@@ -133,19 +133,7 @@ export default function RegisterScreen({ navigation }) {
               />
             </View>
 
-            {/* Email */}
-            <Text style={styles.label}>Email</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Example@gmail.com"
-                placeholderTextColor="#9CA3AF"
-                value={form.email}
-                onChangeText={(v) => setForm({ ...form, email: v })}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-            </View>
+
 
             {/* Password */}
             <Text style={styles.label}>Password</Text>
@@ -166,14 +154,22 @@ export default function RegisterScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            {/* Masuk / Register Button */}
+            {/* Daftar Button */}
             <TouchableOpacity
               style={styles.primaryBtn}
               activeOpacity={0.85}
               onPress={handleRegister}
             >
-              <Text style={styles.primaryBtnText}>Masuk</Text>
+              <Text style={styles.primaryBtnText}>Daftar</Text>
             </TouchableOpacity>
+
+            {/* Login Link */}
+            <View style={styles.loginLinkContainer}>
+              <Text style={styles.loginLinkText}>Sudah punya akun? </Text>
+              <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Login')}>
+                <Text style={styles.loginLinkAction}>Masuk sekarang</Text>
+              </TouchableOpacity>
+            </View>
 
           </View>
         </ScrollView>
@@ -260,6 +256,19 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0.3,
+  },
+  loginLinkContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  loginLinkText: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  loginLinkAction: {
+    fontSize: 13,
+    color: PRIMARY,
+    fontWeight: '700',
   },
 });

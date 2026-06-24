@@ -99,7 +99,11 @@ export default function JadwalKelasScreen({ navigation, route }) {
   const scheduleTitle = isToday ? 'Jadwal hari ini' : `Jadwal ${format(activeDate, 'EEEE, d MMM', { locale: id })}`;
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+    <TouchableOpacity 
+      style={styles.card} 
+      activeOpacity={0.8}
+      onPress={() => navigation.navigate('DetailMataKuliah', { course: { ...item, lecturer: item.dosen }, isRegistered: isRegistered })}
+    >
       <Image source={require('../assets/dosen.png')} style={styles.cardImage} />
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{item.title}</Text>

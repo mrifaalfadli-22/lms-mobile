@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   Dimensions,
   Image,
@@ -14,6 +13,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Ellipse } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
@@ -212,28 +212,29 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 28,
+    paddingTop: 10,
+    paddingBottom: 20,
   },
 
   // ── Illustration ──
   illustrationContainer: {
     alignItems: 'flex-start',
     paddingLeft: 12,
-    marginTop: 32,
-    marginBottom: 12,
+    marginTop: 30,
+    marginBottom: 16,
   },
   illustrationImage: {
-    width: width * 0.60,
-    height: height * 0.24,
+    width: width * 0.58,
+    height: height * 0.22,
   },
 
   // ── Typography ──
   headline: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '800',
     color: '#111827',
     marginHorizontal: 24,
-    lineHeight: 34,
+    lineHeight: 32,
     letterSpacing: -0.3,
     marginBottom: 6,
   },
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderRadius: 8,
     backgroundColor: '#FFFFFF',
-    marginBottom: 12,
+    marginBottom: 14,
     paddingHorizontal: 14,
     height: 48,
     justifyContent: 'center',
@@ -278,8 +279,8 @@ const styles = StyleSheet.create({
   // Lupa Password
   forgotBtn: {
     alignSelf: 'flex-end',
-    marginBottom: 16,
-    marginTop: -2,
+    marginBottom: 18,
+    marginTop: -4,
   },
   forgotText: {
     color: LINK_COLOR,
@@ -291,10 +292,10 @@ const styles = StyleSheet.create({
   primaryBtn: {
     backgroundColor: PRIMARY,
     borderRadius: 50,
-    height: 50,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
     elevation: 3,
     shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 4 },
@@ -313,7 +314,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#D1D5DB',
     borderRadius: 50,
-    height: 50,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
-    height: 50,
+    height: 48,
     paddingHorizontal: 14,
     elevation: 1,
     shadowColor: '#000',

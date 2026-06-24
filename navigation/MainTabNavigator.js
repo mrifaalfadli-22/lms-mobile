@@ -7,7 +7,6 @@ import HomeScreen from '../screens/HomeScreen';
 import MataKuliahScreen from '../screens/MataKuliahScreen';
 import JadwalKelasScreen from '../screens/JadwalKelasScreen';
 import ProfilScreen from '../screens/ProfilScreen';
-import DetailMataKuliahScreen from '../screens/DetailMataKuliahScreen';
 
 const Tab = createBottomTabNavigator();
 const PRIMARY = '#116E63';
@@ -102,15 +101,6 @@ export default function MainTabNavigator({ route }) {
         initialParams={{ isRegistered }}
         options={{
           tabBarLabel: 'Profil',
-        }}
-      />
-      <Tab.Screen
-        name="DetailMataKuliah"
-        component={DetailMataKuliahScreen}
-        initialParams={{ isRegistered }}
-        options={{
-          tabBarItemStyle: { display: 'none' },
-          tabBarButton: () => null,
         }}
       />
     </Tab.Navigator>
