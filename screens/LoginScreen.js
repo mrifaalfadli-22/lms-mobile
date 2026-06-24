@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import Svg, { Path, Circle, Ellipse } from 'react-native-svg';
 
@@ -68,6 +69,15 @@ export default function LoginScreen({ navigation }) {
   const [npm, setNpm] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleLogin = () => {
+    if (npm.trim() === '' || password.trim() === '') {
+      Alert.alert('Gagal Masuk', 'Silakan masukkan NPM dan Password Anda terlebih dahulu.');
+      return;
+    }
+    // Simulate successful login
+    navigation.replace('Main', { isRegistered: true });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -148,7 +158,7 @@ export default function LoginScreen({ navigation }) {
             <TouchableOpacity
               style={styles.primaryBtn}
               activeOpacity={0.85}
-              onPress={() => {}}
+              onPress={handleLogin}
             >
               <Text style={styles.primaryBtnText}>Masuk</Text>
             </TouchableOpacity>

@@ -15,7 +15,7 @@ import {
 import Svg, { Path, Circle, Ellipse } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
-const PRIMARY = '#1E7B6B';
+const PRIMARY = '#116E63';
 
 // ── Eye icon ───────────────────────────────────────────────────────────────────
 const EyeIcon = ({ visible }) =>
@@ -59,7 +59,7 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = () => {
     // Navigasi ke Main/Login setelah daftar
-    navigation.replace('Main');
+    navigation.replace('Main', { screen: 'Home', params: { isRegistered: true } });
   };
 
   return (
@@ -189,23 +189,24 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingTop: 80,
-    paddingBottom: 28,
+    paddingTop: 40,
+    paddingBottom: 20,
+    justifyContent: 'center',
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 24,
     paddingHorizontal: 20,
   },
   headline: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#111827',
+    color: '#000000',
     marginBottom: 8,
   },
   subheadline: {
     fontSize: 13,
-    color: '#4B5563',
+    color: '#333333',
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -213,23 +214,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   label: {
-    fontSize: 13,
-    color: '#4B5563',
-    marginBottom: 6,
-    fontWeight: '500',
+    fontSize: 14,
+    color: '#4A4A4A',
+    marginBottom: 4,
+    fontWeight: '600',
   },
   inputWrapper: {
     borderRadius: 8,
-    backgroundColor: '#E5E5E5',
-    marginBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: 12,
     paddingHorizontal: 14,
-    height: 48,
+    height: 44,
     justifyContent: 'center',
   },
   passwordWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 32, // larger margin before the button
+    marginBottom: 24,
   },
   input: {
     fontSize: 14,
@@ -243,10 +246,10 @@ const styles = StyleSheet.create({
   primaryBtn: {
     backgroundColor: PRIMARY,
     borderRadius: 50,
-    height: 50,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: 8,
     elevation: 3,
     shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 4 },

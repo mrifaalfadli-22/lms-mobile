@@ -7,6 +7,7 @@ import HomeScreen from '../screens/HomeScreen';
 import MataKuliahScreen from '../screens/MataKuliahScreen';
 import JadwalKelasScreen from '../screens/JadwalKelasScreen';
 import ProfilScreen from '../screens/ProfilScreen';
+import DetailMataKuliahScreen from '../screens/DetailMataKuliahScreen';
 
 const Tab = createBottomTabNavigator();
 const PRIMARY = '#116E63';
@@ -45,7 +46,9 @@ const ProfileIcon = ({ color }) => (
 );
 
 // ── Bottom Tab Navigator ──────────────────────────────────────────────────────
-export default function MainTabNavigator() {
+export default function MainTabNavigator({ route }) {
+  const isRegistered = route?.params?.isRegistered ?? route?.params?.params?.isRegistered ?? false;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -57,8 +60,8 @@ export default function MainTabNavigator() {
         tabBarActiveBackgroundColor: ACTIVE_BG, // Native active background
         tabBarItemStyle: {
           borderRadius: 999, // Perfect pill shape natively!
-          marginHorizontal: 12,
-          marginVertical: 8,
+          marginHorizontal: 8,
+          marginVertical: 6,
         },
         tabBarLabelStyle: styles.tabLabel,
         tabBarIcon: ({ color }) => {
@@ -72,6 +75,7 @@ export default function MainTabNavigator() {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
+        initialParams={{ isRegistered }}
         options={{
           tabBarLabel: 'Home',
         }}
@@ -79,22 +83,34 @@ export default function MainTabNavigator() {
       <Tab.Screen
         name="MataKuliah"
         component={MataKuliahScreen}
+        initialParams={{ isRegistered }}
         options={{
-          tabBarLabel: 'Kelas',
+          tabBarLabel: 'Mata Kuliah',
         }}
       />
       <Tab.Screen
         name="JadwalKelas"
         component={JadwalKelasScreen}
+        initialParams={{ isRegistered }}
         options={{
-          tabBarLabel: 'Jadwal kelas',
+          tabBarLabel: 'Jadwal',
         }}
       />
       <Tab.Screen
         name="Profil"
         component={ProfilScreen}
+        initialParams={{ isRegistered }}
         options={{
           tabBarLabel: 'Profil',
+        }}
+      />
+      <Tab.Screen
+        name="DetailMataKuliah"
+        component={DetailMataKuliahScreen}
+        initialParams={{ isRegistered }}
+        options={{
+          tabBarItemStyle: { display: 'none' },
+          tabBarButton: () => null,
         }}
       />
     </Tab.Navigator>
@@ -104,7 +120,7 @@ export default function MainTabNavigator() {
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: PRIMARY,
-    height: 70,
+    height: 76,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderTopWidth: 0,
@@ -114,11 +130,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     paddingHorizontal: 8,
-    paddingBottom: 6,
+    paddingBottom: 8,
   },
   tabLabel: {
     fontSize: 10,
     fontWeight: '600',
     marginTop: 2,
+    marginBottom: 4,
   },
 });

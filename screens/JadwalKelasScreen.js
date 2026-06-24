@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar, Modal } from 'react-native';
-import Svg, { Polyline } from 'react-native-svg';
+import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar, Modal, FlatList, ImageBackground } from 'react-native';
+import Svg, { Polyline, Path, Circle } from 'react-native-svg';
 import { format, startOfWeek, addDays, isSameDay, subWeeks, addWeeks } from 'date-fns';
 import { id } from 'date-fns/locale/id';
 
-const ACTIVE_BG = '#258A7A'; // Same as HomeScreen/TabBar active color
+const ACTIVE_BG = '#258A7A';
 const PRIMARY = '#116E63'; 
 const BG = '#F8FAFC';
 
@@ -35,7 +35,33 @@ const ChevronRightSmall = ({ color = "#4B5563" }) => (
   </Svg>
 );
 
-export default function JadwalKelasScreen({ navigation }) {
+const UsersIcon = () => (
+  <Svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+    <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Circle cx="9" cy="7" r="4" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const ClockRedIcon = () => (
+  <Svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+    <Circle cx="12" cy="12" r="10" stroke="#EF4444" strokeWidth="2" />
+    <Path d="M12 6v6l4 2" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const MOCK_JADWAL = Array(3).fill({
+  title: 'Pemrograman Web + Praktikum',
+  pertemuan: 'Pertemuan 1',
+  time: '08.10 - 9.10',
+  dosen: 'Yulianto M.kom',
+  role: 'Dosen utama',
+}).map((item, idx) => ({ ...item, id: String(idx) }));
+
+export default function JadwalKelasScreen({ navigation, route }) {
+  const isRegistered = route?.params?.isRegistered || false;
+
   const [activeDate, setActiveDate] = useState(new Date());
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   
@@ -58,77 +84,95 @@ export default function JadwalKelasScreen({ navigation }) {
   const handlePrevWeek = () => setCurrentWeekStart(prev => subWeeks(prev, 1));
   const handleNextWeek = () => setCurrentWeekStart(prev => addWeeks(prev, 1));
 
-  // Hasilkan 7 hari ke depan mulai dari state minggu yang sedang dilihat
   const dates = Array.from({ length: 7 }).map((_, i) => {
     const date = addDays(currentWeekStart, i);
     return {
       date: date,
       day: format(date, 'd'),
-      dayName: format(date, 'EEE', { locale: id }), // Sen, Sel, Rab, dll
+      dayName: format(date, 'EEE', { locale: id }),
     };
   });
 
-  // Format untuk Header Bulan & Tahun
   const currentMonthYear = format(currentWeekStart, 'MMMM yyyy', { locale: id });
   
-  // Format untuk sub-judul jadwal
   const isToday = isSameDay(activeDate, new Date());
   const scheduleTitle = isToday ? 'Jadwal hari ini' : `Jadwal ${format(activeDate, 'EEEE, d MMM', { locale: id })}`;
 
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={BG} />
-      
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ChevronLeft />
-          <Text style={styles.headerTitle}>Jadwal</Text>
+  const renderItem = ({ item }) => (
+    <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+      <Image source={require('../assets/dosen.png')} style={styles.cardImage} />
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        <View style={styles.cardRow}>
+          <UsersIcon />
+          <Text style={styles.cardInfo}>{item.pertemuan}</Text>
+        </View>
+        <View style={styles.cardRow}>
+          <ClockRedIcon />
+          <Text style={styles.cardInfo}>{item.time}</Text>
+        </View>
+        <View style={styles.dosenRow}>
+          <Image source={require('../assets/dosen.png')} style={styles.dosenAvatar} />
+          <View>
+            <Text style={styles.dosenName}>{item.dosen}</Text>
+            <Text style={styles.dosenRole}>{item.role}</Text>
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const innerContent = (
+    <View style={styles.content}>
+      {/* ── Month Selector (Dropdown Style) ── */}
+      <TouchableOpacity style={styles.monthSelector} activeOpacity={0.7} onPress={() => {
+        setPickerYear(currentWeekStart.getFullYear());
+        setShowMonthPicker(true);
+      }}>
+        <Text style={styles.monthText}>{currentMonthYear}</Text>
+        <ChevronDown />
+      </TouchableOpacity>
+
+      {/* ── Date Picker & Navigasi Minggu ── */}
+      <View style={styles.datePickerContainer}>
+        <TouchableOpacity onPress={handlePrevWeek} style={styles.weekNavBtn} activeOpacity={0.6}>
+          <ChevronLeftSmall color="#9CA3AF" />
+        </TouchableOpacity>
+
+        <View style={styles.dateRow}>
+          {dates.map((item, index) => {
+            const isActive = isSameDay(item.date, activeDate);
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[styles.dateCard, isActive && styles.dateCardActive]}
+                onPress={() => setActiveDate(item.date)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.dayNumber, isActive && styles.textWhite]}>{item.day}</Text>
+                <Text style={[styles.dayName, isActive && styles.textWhite]}>{item.dayName}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <TouchableOpacity onPress={handleNextWeek} style={styles.weekNavBtn} activeOpacity={0.6}>
+          <ChevronRightSmall color="#9CA3AF" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        {/* ── Month Selector (Dropdown Style) ── */}
-        <TouchableOpacity style={styles.monthSelector} activeOpacity={0.7} onPress={() => {
-          setPickerYear(currentWeekStart.getFullYear());
-          setShowMonthPicker(true);
-        }}>
-          <Text style={styles.monthText}>{currentMonthYear}</Text>
-          <ChevronDown />
-        </TouchableOpacity>
+      {/* ── Jadwal Title ── */}
+      <Text style={styles.sectionTitle}>{scheduleTitle}</Text>
 
-        {/* ── Date Picker & Navigasi Minggu ── */}
-        <View style={styles.datePickerContainer}>
-          <TouchableOpacity onPress={handlePrevWeek} style={styles.weekNavBtn} activeOpacity={0.6}>
-            <ChevronLeftSmall color="#9CA3AF" />
-          </TouchableOpacity>
-
-          <View style={styles.dateRow}>
-            {dates.map((item, index) => {
-              const isActive = isSameDay(item.date, activeDate);
-              return (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.dateCard, isActive && styles.dateCardActive]}
-                  onPress={() => setActiveDate(item.date)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.dayNumber, isActive && styles.textWhite]}>{item.day}</Text>
-                  <Text style={[styles.dayName, isActive && styles.textWhite]}>{item.dayName}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <TouchableOpacity onPress={handleNextWeek} style={styles.weekNavBtn} activeOpacity={0.6}>
-            <ChevronRightSmall color="#9CA3AF" />
-          </TouchableOpacity>
-        </View>
-
-        {/* ── Jadwal Title ── */}
-        <Text style={styles.sectionTitle}>{scheduleTitle}</Text>
-
-        {/* ── Empty State ── */}
+      {isRegistered ? (
+        <FlatList
+          data={MOCK_JADWAL}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
         <View style={styles.emptyState}>
           <Image
             source={require('../assets/kosong.png')}
@@ -142,14 +186,40 @@ export default function JadwalKelasScreen({ navigation }) {
             <Text style={styles.registerLink}>Daftar</Text>
           </TouchableOpacity>
         </View>
+      )}
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={BG} />
+      
+      {/* ── Header ── */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <ChevronLeft />
+          <Text style={styles.headerTitle}>Jadwal</Text>
+        </TouchableOpacity>
       </View>
+
+      {isRegistered ? (
+        <ImageBackground
+          source={require('../assets/bg-pattern.png')}
+          style={styles.bgPattern}
+          imageStyle={{ opacity: 0.3, resizeMode: 'cover' }}
+        >
+          {innerContent}
+        </ImageBackground>
+      ) : (
+        <View style={styles.bgPattern}>
+          {innerContent}
+        </View>
+      )}
 
       {/* ── Month Picker Modal ── */}
       <Modal visible={showMonthPicker} transparent animationType="fade">
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowMonthPicker(false)}>
           <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
-            
-            {/* Year Selector in Modal */}
             <View style={styles.modalYearRow}>
               <TouchableOpacity onPress={() => setPickerYear(y => y - 1)} style={styles.modalYearBtn}>
                 <ChevronLeftSmall color="#111827" />
@@ -159,8 +229,6 @@ export default function JadwalKelasScreen({ navigation }) {
                 <ChevronRightSmall color="#111827" />
               </TouchableOpacity>
             </View>
-
-            {/* Month Grid */}
             <View style={styles.monthGrid}>
               {monthNames.map((m, i) => (
                 <TouchableOpacity key={i} style={styles.monthGridItem} onPress={() => handleSelectMonth(i)} activeOpacity={0.7}>
@@ -168,7 +236,6 @@ export default function JadwalKelasScreen({ navigation }) {
                 </TouchableOpacity>
               ))}
             </View>
-
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
@@ -182,6 +249,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BG,
   },
+  bgPattern: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -190,6 +260,8 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    backgroundColor: BG,
+    zIndex: 10,
   },
   backBtn: {
     flexDirection: 'row',
@@ -265,6 +337,70 @@ const styles = StyleSheet.create({
     color: '#111827',
     paddingHorizontal: 24,
     marginBottom: 16,
+  },
+  listContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  card: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    overflow: 'hidden',
+  },
+  cardImage: {
+    width: 120,
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  cardContent: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'center',
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  cardInfo: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginLeft: 8,
+  },
+  dosenRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  dosenAvatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginRight: 8,
+  },
+  dosenName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  dosenRole: {
+    fontSize: 9,
+    color: '#9CA3AF',
+    marginTop: 1,
   },
   emptyState: {
     flex: 1,
