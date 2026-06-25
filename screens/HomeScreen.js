@@ -561,7 +561,11 @@ export default function HomeScreen({ navigation, route }) {
                 <Text style={styles.progressPercent}>67%</Text>
               </View>
 
-              <TouchableOpacity style={styles.progressBtn} activeOpacity={0.8}>
+              <TouchableOpacity 
+                style={styles.progressBtn} 
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('ProgressBelajar')}
+              >
                 <Text style={styles.progressBtnText}>Lihat progress</Text>
               </TouchableOpacity>
             </View>

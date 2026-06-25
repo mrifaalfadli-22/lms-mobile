@@ -13,6 +13,8 @@ import LihatNilaiScreen from '../screens/LihatNilaiScreen';
 import EvaluasiScreen from '../screens/EvaluasiScreen';
 import DetailMataKuliahScreen from '../screens/DetailMataKuliahScreen';
 import DetailSesiScreen from '../screens/DetailSesiScreen';
+import DetailProgressBelajarScreen from '../screens/DetailProgressBelajarScreen';
+import DetailEvaluasiScreen from '../screens/DetailEvaluasiScreen';
 import MainTabNavigator from './MainTabNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -33,6 +35,8 @@ export default function RootNavigator() {
       <Stack.Screen name="Evaluasi" component={EvaluasiScreen} />
       <Stack.Screen name="DetailMataKuliah" component={DetailMataKuliahScreen} />
       <Stack.Screen name="DetailSesi" component={DetailSesiScreen} />
+      <Stack.Screen name="DetailProgressBelajar" component={DetailProgressBelajarScreen} />
+      <Stack.Screen name="DetailEvaluasi" component={DetailEvaluasiScreen} />
     </Stack.Navigator>
   );
 }

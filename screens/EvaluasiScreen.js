@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -9,7 +9,7 @@ import {
   TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
 
 const BackIcon = () => (
@@ -25,26 +25,40 @@ const SearchIcon = () => (
   </Svg>
 );
 
-const EvaluasiCard = ({ item }) => (
-  <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+const EvaluasiCard = ({ item, onPress }) => (
+  <TouchableOpacity 
+    style={styles.card} 
+    activeOpacity={0.8} 
+    onPress={onPress}
+    disabled={item.status === 'Selesai'}
+  >
     <Text style={styles.lecturerText}>{item.lecturer}</Text>
     <Text style={styles.courseText}>{item.course}</Text>
-    <Text style={styles.statusText}>*{item.status}</Text>
+    {item.status === 'Selesai' ? (
+      <Text style={styles.scoreText}>Nilai: {item.score}</Text>
+    ) : (
+      <Text style={styles.statusText}>*{item.status}</Text>
+    )}
   </TouchableOpacity>
 );
 
 export default function EvaluasiScreen() {
   const navigation = useNavigation();
+  const route = useRoute();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const evaluasiData = [
+  const [evaluasiData, setEvaluasiData] = useState([
     { id: '1', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
     { id: '2', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
     { id: '3', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
     { id: '4', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
     { id: '5', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
     { id: '6', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
-  ];
+  ]);
+
+  useEffect(() => {
+    // We can remove the route param listener because we will use a direct callback
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -76,7 +90,16 @@ export default function EvaluasiScreen() {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {evaluasiData.map(data => (
-            <EvaluasiCard key={data.id} item={data} />
+            <EvaluasiCard 
+              key={data.id} 
+              item={data} 
+              onPress={() => navigation.navigate('DetailEvaluasi', { 
+                item: data,
+                onComplete: (completedId, score) => {
+                  setEvaluasiData(prev => prev.map(i => i.id === completedId ? { ...i, status: 'Selesai', score } : i));
+                }
+              })}
+            />
           ))}
         </ScrollView>
       </View>
@@ -185,5 +208,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: '#EF4444',
+  },
+  scoreText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#116E63',
   }
 });

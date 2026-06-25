@@ -49,8 +49,8 @@ const LinearProgress = ({ label, current, total, progress, color = '#116E63' }) 
   </View>
 );
 
-const ProgressCard = ({ item }) => (
-  <View style={styles.card}>
+const ProgressCard = ({ item, onPress }) => (
+  <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={onPress}>
     <Image source={{ uri: item.image }} style={styles.cardImage} resizeMode="cover" />
     <View style={styles.cardContent}>
       <Text style={styles.titleText}>{item.title}</Text>
@@ -64,7 +64,7 @@ const ProgressCard = ({ item }) => (
         <LinearProgress label="Ujian" progress={50} color="#1D4ED8" />
       </View>
     </View>
-  </View>
+  </TouchableOpacity>
 );
 
 export default function ProgressBelajarScreen() {
@@ -132,7 +132,11 @@ export default function ProgressBelajarScreen() {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {progressData.map(data => (
-            <ProgressCard key={data.id} item={data} />
+            <ProgressCard 
+              key={data.id} 
+              item={data} 
+              onPress={() => navigation.navigate('DetailProgressBelajar', { item: data })} 
+            />
           ))}
         </ScrollView>
       </View>
