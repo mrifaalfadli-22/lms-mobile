@@ -11,10 +11,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Ellipse } from 'react-native-svg';
+import NotificationPopup from '../components/NotificationPopup';
 
 const { width, height } = Dimensions.get('window');
 
@@ -69,14 +70,64 @@ export default function LoginScreen({ navigation }) {
   const [npm, setNpm] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
+  // State untuk Notification Popup
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupConfig, setPopupConfig] = useState({ title: '', message: '', type: 'error' });
+
+  const showPopup = (title, message, type = 'error') => {
+    setPopupConfig({ title, message, type });
+    setPopupVisible(true);
+  };
+
+  const handleLogin = async () => {
     if (npm.trim() === '' || password.trim() === '') {
-      Alert.alert('Gagal Masuk', 'Silakan masukkan NPM dan Password Anda terlebih dahulu.');
+      showPopup('Gagal Masuk', 'Silakan masukkan NPM dan Password Anda terlebih dahulu.', 'warning');
       return;
     }
-    // Simulate successful login
-    navigation.replace('Main', { isRegistered: true });
+
+    setIsLoading(true);
+
+    try {
+      // Endpoint API backend Laravel Anda. 
+      // Ganti dengan IP lokal Anda jika menggunakan physical device (contoh: http://192.168.1.100:8000/api/login)
+      // Gunakan 10.0.2.2 untuk Android Emulator.
+      const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8000/api/login' : 'http://localhost:8000/api/login';
+      
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          identifier: npm, // Backend menerima 'identifier' (yang memproses NPM / nomor_induk)
+          password: password,
+        }),
+      });
+
+      const jsonResponse = await response.json();
+
+      if (response.status === 200 && jsonResponse.status === 'success') {
+        // Jika login berhasil
+        const token = jsonResponse.data.token;
+        
+        navigation.replace('Main', { 
+          isRegistered: true, 
+          user: jsonResponse.data.user,
+          token: token 
+        });
+      } else {
+        // Tampilkan error (kredensial salah, akun dinonaktifkan, dll)
+        showPopup('Gagal Masuk', jsonResponse.message || 'NPM atau Password yang Anda masukkan salah.', 'error');
+      }
+    } catch (error) {
+      console.error("Login Error: ", error);
+      showPopup('Kesalahan', 'Tidak dapat terhubung ke server. Pastikan backend Laravel sudah berjalan dan URL API sesuai.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -159,8 +210,13 @@ export default function LoginScreen({ navigation }) {
               style={styles.primaryBtn}
               activeOpacity={0.85}
               onPress={handleLogin}
+              disabled={isLoading}
             >
-              <Text style={styles.primaryBtnText}>Masuk</Text>
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.primaryBtnText}>Masuk</Text>
+              )}
             </TouchableOpacity>
 
             {/* Login as Guest */}
@@ -199,6 +255,14 @@ export default function LoginScreen({ navigation }) {
 
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <NotificationPopup
+        visible={popupVisible}
+        title={popupConfig.title}
+        message={popupConfig.message}
+        type={popupConfig.type}
+        onClose={() => setPopupVisible(false)}
+      />
     </SafeAreaView>
   );
 }

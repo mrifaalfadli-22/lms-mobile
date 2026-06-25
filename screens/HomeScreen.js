@@ -11,6 +11,8 @@ import {
   StatusBar,
   FlatList,
   Animated,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -326,6 +328,9 @@ const AnimatedJadwalCard = ({ item, index, activeIndex, scrollToIndex, jadwalsLe
 // ── HomeScreen ────────────────────────────────────────────────────────────────
 export default function HomeScreen({ navigation, route }) {
   const isRegistered = route?.params?.isRegistered || false;
+  const user = route?.params?.user || null;
+  const token = route?.params?.token || null;
+  
   const [searchText, setSearchText] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeJadwalIndex, setActiveJadwalIndex] = useState(0);
@@ -337,6 +342,51 @@ export default function HomeScreen({ navigation, route }) {
 
   const [modalVisible, setModalVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // State untuk data dinamis
+  const [dashboardData, setDashboardData] = useState({
+    progress: { percentage: 0, completed_modules: 0 },
+    jadwalHariIni: [],
+    materiTerbaru: []
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isRegistered && token) {
+      const fetchDashboard = async () => {
+        setIsLoading(true);
+        try {
+          const API_URL = Platform.OS === 'android' 
+            ? 'http://10.0.2.2:8000/api/mahasiswa/dashboard' 
+            : 'http://localhost:8000/api/mahasiswa/dashboard';
+            
+          const response = await fetch(API_URL, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          const json = await response.json();
+          if (json.status === 'success') {
+            setDashboardData({
+              progress: json.data.progress,
+              jadwalHariIni: json.data.jadwal_hari_ini,
+              materiTerbaru: json.data.materi_terbaru
+            });
+          }
+        } catch (error) {
+          console.error("Dashboard Fetch Error: ", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      fetchDashboard();
+    }
+  }, [isRegistered, token]);
 
   const openDaftarModal = () => {
     setModalVisible(true);
@@ -357,44 +407,8 @@ export default function HomeScreen({ navigation, route }) {
     });
   };
 
-  const jadwals = [
-    {
-      id: 'j1',
-      image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80',
-      title: 'Pemrograman Web + Praktikum',
-      date: '21 Januari 2026',
-      time: '08.10 - 9.10',
-      lecturer: 'Yulianto M.kom',
-      role: 'Dosen utama',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80',
-    },
-    {
-      id: 'j2',
-      image: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=600&q=80',
-      title: 'Kalkulus Lanjut',
-      date: '23 Januari 2026',
-      time: '10.15 - 11.45',
-      lecturer: 'Dr. Fauzi Hamdan',
-      role: 'Dosen utama',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80',
-    },
-    {
-      id: 'j3',
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80',
-      title: 'Basis Data Terdistribusi',
-      date: '25 Januari 2026',
-      time: '13.00 - 15.00',
-      lecturer: 'Siti Rahma, S.T',
-      role: 'Asisten Dosen',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80',
-    }
-  ];
-
-  const materis = [
-    { id: 'm1', image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80' },
-    { id: 'm2', image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80' },
-    { id: 'm3', image: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=600&q=80' },
-  ];
+  const jadwals = dashboardData.jadwalHariIni;
+  const materis = dashboardData.materiTerbaru;
 
   const courses = [
     {
@@ -480,7 +494,7 @@ export default function HomeScreen({ navigation, route }) {
           <View style={styles.headerLeft}>
             {isRegistered ? (
               <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop' }} 
+                source={{ uri: user?.foto_profil ? `http://10.0.2.2:8000/storage/${user.foto_profil}` : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop' }} 
                 style={styles.avatarImage} 
               />
             ) : (
@@ -490,7 +504,7 @@ export default function HomeScreen({ navigation, route }) {
               {isRegistered ? (
                 <>
                   <Text style={styles.greetSubText}>Selamat datang,</Text>
-                  <Text style={styles.greetText}>Dimas Putra Pratama</Text>
+                  <Text style={styles.greetText}>{user?.nama_lengkap || 'Mahasiswa'}</Text>
                 </>
               ) : (
                 <>
@@ -551,14 +565,14 @@ export default function HomeScreen({ navigation, route }) {
             <View style={styles.progressLeft}>
               <Text style={styles.progressTitle}>Progress pembelajaran{'\n'}kamu</Text>
               <Text style={styles.progressDesc}>
-                Kamu menyelesaikan 8 modul{'\n'}pembelajaran bulan ini. Pertahankan{'\n'}semangat kamu!
+                Kamu menyelesaikan {dashboardData.progress.completed_modules} modul{'\n'}pembelajaran bulan ini. Pertahankan{'\n'}semangat kamu!
               </Text>
               
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
-                  <View style={[styles.progressBarFill, { width: '67%' }]} />
+                  <View style={[styles.progressBarFill, { width: `${dashboardData.progress.percentage}%` }]} />
                 </View>
-                <Text style={styles.progressPercent}>67%</Text>
+                <Text style={styles.progressPercent}>{dashboardData.progress.percentage}%</Text>
               </View>
 
               <TouchableOpacity 
@@ -597,6 +611,7 @@ export default function HomeScreen({ navigation, route }) {
           <View style={styles.jadwalRegisteredSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Jadwal hari ini</Text>
+              {isLoading && <ActivityIndicator size="small" color={PRIMARY} />}
               {jadwals.length > 1 && (
                 <View style={styles.dotRow}>
                   {jadwals.map((_, i) => (
@@ -607,34 +622,41 @@ export default function HomeScreen({ navigation, route }) {
                 </View>
               )}
             </View>
-            <FlatList
-              ref={jadwalListRef}
-              data={jadwals}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={SNAP_INTERVAL}
-              snapToAlignment="start"
-              decelerationRate="fast"
-              contentContainerStyle={styles.carouselContainer}
-              initialScrollIndex={0}
-              getItemLayout={(_, index) => ({
-                length: SNAP_INTERVAL,
-                offset: SNAP_INTERVAL * index,
-                index,
-              })}
-              onViewableItemsChanged={onViewableJadwalChanged}
-              viewabilityConfig={viewabilityConfig.current}
-              renderItem={({ item, index }) => (
-                <AnimatedJadwalCard
-                  item={item}
-                  index={index}
-                  activeIndex={activeJadwalIndex}
-                  scrollToIndex={scrollToJadwalIndex}
-                  jadwalsLength={jadwals.length}
-                />
-              )}
-            />
+            
+            {jadwals.length === 0 && !isLoading ? (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <Text style={{ color: '#6B7280', fontSize: 13 }}>Tidak ada jadwal perkuliahan hari ini.</Text>
+              </View>
+            ) : (
+              <FlatList
+                ref={jadwalListRef}
+                data={jadwals}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={SNAP_INTERVAL}
+                snapToAlignment="start"
+                decelerationRate="fast"
+                contentContainerStyle={styles.carouselContainer}
+                initialScrollIndex={0}
+                getItemLayout={(_, index) => ({
+                  length: SNAP_INTERVAL,
+                  offset: SNAP_INTERVAL * index,
+                  index,
+                })}
+                onViewableItemsChanged={onViewableJadwalChanged}
+                viewabilityConfig={viewabilityConfig.current}
+                renderItem={({ item, index }) => (
+                  <AnimatedJadwalCard
+                    item={item}
+                    index={index}
+                    activeIndex={activeJadwalIndex}
+                    scrollToIndex={scrollToJadwalIndex}
+                    jadwalsLength={jadwals.length}
+                  />
+                )}
+              />
+            )}
           </View>
         ) : (
           <View style={styles.jadwalCard}>
@@ -685,34 +707,41 @@ export default function HomeScreen({ navigation, route }) {
                 </View>
               )}
             </View>
-            <FlatList
-              ref={materiListRef}
-              data={materis}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={SNAP_INTERVAL}
-              snapToAlignment="start"
-              decelerationRate="fast"
-              contentContainerStyle={styles.carouselContainer}
-              initialScrollIndex={0}
-              getItemLayout={(_, index) => ({
-                length: SNAP_INTERVAL,
-                offset: SNAP_INTERVAL * index,
-                index,
-              })}
-              onViewableItemsChanged={onViewableMateriChanged}
-              viewabilityConfig={viewabilityConfig.current}
-              renderItem={({ item, index }) => (
-                <AnimatedMateriCard
-                  item={item}
-                  index={index}
-                  activeIndex={activeMateriIndex}
-                  scrollToIndex={scrollToMateriIndex}
-                  materisLength={materis.length}
-                />
-              )}
-            />
+            
+            {materis.length === 0 && !isLoading ? (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <Text style={{ color: '#6B7280', fontSize: 13 }}>Belum ada materi terbaru.</Text>
+              </View>
+            ) : (
+              <FlatList
+                ref={materiListRef}
+                data={materis}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={SNAP_INTERVAL}
+                snapToAlignment="start"
+                decelerationRate="fast"
+                contentContainerStyle={styles.carouselContainer}
+                initialScrollIndex={0}
+                getItemLayout={(_, index) => ({
+                  length: SNAP_INTERVAL,
+                  offset: SNAP_INTERVAL * index,
+                  index,
+                })}
+                onViewableItemsChanged={onViewableMateriChanged}
+                viewabilityConfig={viewabilityConfig.current}
+                renderItem={({ item, index }) => (
+                  <AnimatedMateriCard
+                    item={item}
+                    index={index}
+                    activeIndex={activeMateriIndex}
+                    scrollToIndex={scrollToMateriIndex}
+                    materisLength={materis.length}
+                  />
+                )}
+              />
+            )}
           </View>
         )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,9 @@ import {
   StatusBar,
   ImageBackground,
   Animated,
-  TextInput
+  TextInput,
+  Alert,
+  Platform
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -52,14 +54,157 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
   const isRegistered = route?.params?.isRegistered || false;
   const course = route?.params?.course;
   const courseName = course?.title || "Pemrograman Web + Praktikum";
-  const lecturer = course?.lecturer || "Yulianto M.Kom";
+  const lecturer = course?.dosen || course?.lecturer || "Yulianto M.Kom";
+  const userToken = route?.params?.token;
+  const isDiambil = route?.params?.isDiambil || false;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
-  const [token, setToken] = useState('');
-  const [hasJoined, setHasJoined] = useState(false);
+  const [enrollToken, setEnrollToken] = useState('');
+  const [hasJoined, setHasJoined] = useState(isDiambil);
+  const [isEnrolling, setIsEnrolling] = useState(false);
   const [activeTab, setActiveTab] = useState('pertemuan');
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  const [meetings, setMeetings] = useState([]);
+  const [isLoadingMeetings, setIsLoadingMeetings] = useState(true);
+  const [materials, setMaterials] = useState([]);
+  const [isLoadingMaterials, setIsLoadingMaterials] = useState(false);
+  const [assignments, setAssignments] = useState([]);
+  const [isLoadingAssignments, setIsLoadingAssignments] = useState(false);
+
+  useEffect(() => {
+    if (course?.id) {
+      const fetchMeetings = async () => {
+        setIsLoadingMeetings(true);
+        try {
+          const API_URL = Platform.OS === 'android' 
+            ? `http://10.0.2.2:8000/api/sesi-pertemuan/jadwal/${course.id}` 
+            : `http://localhost:8000/api/sesi-pertemuan/jadwal/${course.id}`;
+            
+          const response = await fetch(API_URL, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${userToken}`
+            }
+          });
+          
+          const json = await response.json();
+          if (json.status === 'success') {
+            const fetchedMeetings = json.data.map(sesi => {
+              const dateObj = new Date(sesi.tanggal_pelaksanaan);
+              const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+              const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+              
+              const dayName = days[dateObj.getDay()];
+              const dateNum = dateObj.getDate();
+              const monthName = months[dateObj.getMonth()];
+              const year = dateObj.getFullYear();
+              
+              const jamMulai = sesi.jam_mulai ? sesi.jam_mulai.substring(0, 5) : '';
+              const jamBerakhir = sesi.jam_berakhir ? sesi.jam_berakhir.substring(0, 5) : '';
+              const timeString = `${dayName}, ${dateNum} ${monthName} ${year}   ${jamMulai} - ${jamBerakhir}`;
+
+              return {
+                id: sesi.id_sesi,
+                title: sesi.judul_sesi || `Pertemuan ${sesi.pertemuan_ke}`,
+                topic: sesi.materi || '-',
+                lecturer: lecturer,
+                method: sesi.metode_pertemuan,
+                time: timeString,
+                link_kelas_daring: sesi.link_kelas_daring,
+                rawMateri: sesi.materi
+              };
+            });
+            setMeetings(fetchedMeetings);
+          }
+        } catch (error) {
+          console.error("Fetch Meetings Error: ", error);
+        } finally {
+          setIsLoadingMeetings(false);
+        }
+      };
+      
+      const fetchMaterials = async () => {
+        setIsLoadingMaterials(true);
+        try {
+          const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+          const response = await fetch(`${baseUrl}/api/materi/jadwal/${course.id}`, {
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${userToken}`
+            }
+          });
+          const json = await response.json();
+          if (json.status === 'success') {
+            setMaterials(json.data);
+          }
+        } catch (error) {
+          console.error("Fetch Materials Error: ", error);
+        } finally {
+          setIsLoadingMaterials(false);
+        }
+      };
+
+      const fetchAssignments = async () => {
+        setIsLoadingAssignments(true);
+        try {
+          const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+          const response = await fetch(`${baseUrl}/api/tugas/jadwal/${course.id}`, {
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${userToken}`
+            }
+          });
+          const json = await response.json();
+          if (json.status === 'success') {
+            const fetchedAssignments = json.data.map(tugas => {
+              const meetingTitle = tugas.sesi_pertemuan?.judul_sesi || `Pertemuan ${tugas.sesi_pertemuan?.pertemuan_ke || '-'}`;
+              const topic = tugas.sesi_pertemuan?.materi || '-';
+              
+              // Format time
+              let timeStr = '-';
+              if (tugas.batas_waktu) {
+                const dateObj = new Date(tugas.batas_waktu);
+                const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                const dayName = days[dateObj.getDay()];
+                const dateNum = dateObj.getDate();
+                const monthName = months[dateObj.getMonth()];
+                const year = dateObj.getFullYear();
+                const hh = String(dateObj.getHours()).padStart(2, '0');
+                const mm = String(dateObj.getMinutes()).padStart(2, '0');
+                timeStr = `${dayName}, ${dateNum} ${monthName} ${year} - ${hh}.${mm}`;
+              }
+
+              return {
+                id: tugas.id_tugas,
+                meetingTitle: meetingTitle,
+                topic: topic,
+                lecturer: lecturer,
+                action: 'Membagikan tugas',
+                time: timeStr,
+                title: tugas.judul_tugas,
+                desc: tugas.deskripsi_tugas,
+                id_sesi: tugas.id_sesi
+              };
+            });
+            setAssignments(fetchedAssignments);
+          }
+        } catch (error) {
+          console.error("Fetch Assignments Error: ", error);
+        } finally {
+          setIsLoadingAssignments(false);
+        }
+      };
+
+      fetchMeetings();
+      fetchMaterials();
+      fetchAssignments();
+    }
+  }, [course?.id, userToken, lecturer]);
 
   const openMeetingModal = (meeting) => {
     setSelectedMeeting(meeting);
@@ -78,66 +223,52 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
       useNativeDriver: true,
     }).start(() => {
       setModalVisible(false);
+      setEnrollToken('');
     });
   };
 
-  // Using dummy meetings matching the design
-  const meetings = [
-    { id: '1', title: 'Pertemuan 1', topic: 'Pengenalan dasar HTML', lecturer: 'Yulianto M.Kom' },
-    { id: '2', title: 'Pertemuan 2', topic: 'Mengenal tag-tag dasar HTML', lecturer: 'Yulianto M.Kom' },
-    { id: '3', title: 'Pertemuan 3', topic: 'Lorem ipsum dolor sit amet', lecturer: 'Yulianto M.Kom' },
-    { id: '4', title: 'Pertemuan 4', topic: 'Lorem ipsum dolor sit amet', lecturer: 'Yulianto M.Kom' },
-    { id: '5', title: 'Pertemuan 5', topic: 'Lorem ipsum dolor sit amet', lecturer: 'Yulianto M.Kom' },
-    ...Array.from({ length: 11 }).map((_, index) => ({
-      id: String(index + 6),
-      title: `Pertemuan ${index + 6}`,
-      topic: 'Lorem ipsum dolor sit amet',
-      lecturer: 'Yulianto M.Kom'
-    }))
-  ];
-
-  const assignments = [
-    {
-      id: '1',
-      lecturer: 'Yulianto M.kom',
-      action: 'Mengupload tugas',
-      time: 'Hari ini - 09.00',
-      title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.',
-      desc: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.',
-    },
-    {
-      id: '2',
-      lecturer: 'Yulianto M.kom',
-      action: 'Mengupload tugas',
-      time: 'Hari ini - 09.00',
-      title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.',
-      desc: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.',
+  const handleEnroll = async () => {
+    if (!enrollToken.trim()) {
+      Alert.alert('Gagal', 'Silakan masukkan token terlebih dahulu.');
+      return;
     }
-  ];
-
-  const materials = [
-    {
-      id: '1',
-      title: 'Pertemuan 1',
-      topic: 'Pengenalan dasar HTML',
-      lecturer: 'Yulianto M.Kom',
-      instruction: 'Pelajari materi berikut ini',
-      type: 'file',
-      files: [
-        { type: 'ppt', name: 'Materi_Pertemuan_1.pptx' },
-        { type: 'pdf', name: 'Rangkuman_HTML.pdf' }
-      ],
-    },
-    {
-      id: '2',
-      title: 'Pertemuan 2',
-      topic: 'Pengenalan framework CSS',
-      lecturer: 'Yulianto M.Kom',
-      instruction: 'Silahkan simak video berikut :',
-      type: 'video',
-      videoId: 'iee2TATGMyI', // YouTube video ID example
+    
+    setIsEnrolling(true);
+    try {
+      const API_URL = Platform.OS === 'android' 
+        ? 'http://10.0.2.2:8000/api/peserta-kelas/enroll' 
+        : 'http://localhost:8000/api/peserta-kelas/enroll';
+        
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${userToken}`
+        },
+        body: JSON.stringify({ token_enrollment: enrollToken })
+      });
+      
+      const json = await response.json();
+      if (json.success) {
+        Alert.alert('Sukses', 'Anda berhasil bergabung ke kelas ini.');
+        setHasJoined(true);
+        closeMeetingModal();
+        navigation.goBack(); // Trigger refresh on MataKuliahScreen
+      } else {
+        Alert.alert('Gagal', json.message || 'Token tidak valid atau sudah terdaftar.');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Terjadi kesalahan jaringan.');
+    } finally {
+      setIsEnrolling(false);
     }
-  ];
+  };
+
+
+
+
 
   return (
     <ImageBackground 
@@ -183,14 +314,11 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
 
         {/* MAIN CONTENT CONTAINER */}
         <View style={styles.contentContainer}>
-          <Text style={styles.contentTitle}>Pemrograman web + {'\n'}Praktikum</Text>
+          <Text style={styles.contentTitle}>{courseName}</Text>
           <Text style={styles.contentLecturer}>{lecturer}</Text>
           
           <Text style={styles.descriptionText}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.
-          </Text>
-          <Text style={styles.descriptionText}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.
+            {course?.deskripsi || 'Tidak ada deskripsi tersedia.'}
           </Text>
 
           {!hasJoined ? (
@@ -224,109 +352,185 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
           {/* MEETING LIST OR TABS CONTENT */}
           {(!hasJoined || activeTab === 'pertemuan') && (
             <View style={styles.meetingList}>
-              {meetings.map((item) => (
-                <TouchableOpacity 
-                  key={item.id} 
-                  style={styles.meetingCard}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    if (!hasJoined) {
-                      openMeetingModal(item);
-                    } else {
-                      navigation.navigate('DetailSesi', { meeting: item, course: course });
-                    }
-                  }}
-                >
-                  <LinearGradient
-                    colors={['#ffffff', '#E2EBE8']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFillObject}
-                  />
-                  <View style={styles.meetingCardLine} />
-                  <View style={styles.meetingCardContent}>
-                    <Text style={styles.meetingTitle}>{item.title}</Text>
-                    <Text style={styles.meetingTopic}>{item.topic}</Text>
-                    <Text style={styles.meetingLecturer}>{item.lecturer}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {isLoadingMeetings ? (
+                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Memuat pertemuan...</Text>
+              ) : meetings.length > 0 ? (
+                meetings.map((item) => (
+                  <TouchableOpacity 
+                    key={item.id} 
+                    style={styles.meetingCard}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      if (!hasJoined) {
+                        openMeetingModal(item);
+                      } else {
+                        navigation.navigate('DetailSesi', { meeting: item, course: course, userToken: userToken });
+                      }
+                    }}
+                  >
+                    <LinearGradient
+                      colors={['#ffffff', '#E2EBE8']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={StyleSheet.absoluteFillObject}
+                    />
+                    <View style={styles.meetingCardLine} />
+                    <View style={styles.meetingCardContent}>
+                      <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4}}>
+                        <Text style={[styles.meetingTitle, { flex: 1, marginBottom: 0, marginRight: 8 }]}>{item.title}</Text>
+                        {item.method && (
+                          <View style={[styles.methodBadge, item.method.toLowerCase() === 'synchronous' ? styles.badgeSync : styles.badgeAsync]}>
+                            <Text style={[styles.methodBadgeText, item.method.toLowerCase() === 'synchronous' ? styles.badgeTextSync : styles.badgeTextAsync]}>
+                              {item.method.toLowerCase() === 'synchronous' ? 'Synchronous' : 'Asynchronous'}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.meetingTopic}>{item.topic}</Text>
+                      <Text style={styles.meetingLecturer}>{lecturer}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Belum ada sesi pertemuan yang dibuat.</Text>
+              )}
             </View>
           )}
 
           {hasJoined && activeTab === 'tugas' && (
             <View style={styles.assignmentList}>
-              {assignments.map(item => (
-                <View key={item.id} style={styles.assignmentCard}>
-                  <View style={styles.assignmentHeaderInfo}>
-                    <Image source={require('../assets/dosen.png')} style={styles.assignmentAvatar} />
-                    <View>
-                      <Text style={styles.assignmentLecturer}>{item.lecturer} <Text style={styles.assignmentAction}>{item.action}</Text></Text>
-                      <Text style={styles.assignmentTime}>{item.time}</Text>
+              {isLoadingAssignments ? (
+                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Memuat tugas...</Text>
+              ) : assignments.length > 0 ? (
+                assignments.map(item => (
+                  <View key={item.id} style={styles.materialCard}>
+                    <View style={styles.materialCardHeader}>
+                      <LinearGradient
+                        colors={['#F8F9FA', '#C9E2D8']}
+                        start={{ x: 0, y: 0.5 }}
+                        end={{ x: 1, y: 0.5 }}
+                        style={StyleSheet.absoluteFillObject}
+                      />
+                      <View style={styles.meetingCardLine} />
+                      <View style={styles.meetingCardContent}>
+                        <Text style={styles.meetingTitle}>{item.meetingTitle}</Text>
+                        <Text style={styles.meetingTopic}>{item.topic}</Text>
+                        <Text style={styles.meetingLecturer}>{item.lecturer}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.materialCardBody}>
+                      <View style={styles.assignmentHeaderInfo}>
+                        <Image source={{ uri: course?.avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80' }} style={styles.assignmentAvatar} />
+                        <View>
+                          <Text style={styles.assignmentLecturer}>{item.lecturer} <Text style={styles.assignmentAction}>{item.action}</Text></Text>
+                          <Text style={styles.assignmentTime}>{item.time}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.assignmentTitle}>{item.title}</Text>
+                      <Text style={styles.assignmentDesc}>{item.desc}</Text>
+                      <TouchableOpacity 
+                        style={styles.lihatTugasBtn} 
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          const meeting = meetings.find(m => m.id === item.id_sesi);
+                          if (meeting) {
+                            navigation.navigate('DetailSesi', { meeting: meeting, course: course, userToken: userToken });
+                          }
+                        }}
+                      >
+                        <Text style={styles.lihatTugasText}>Lihat tugas</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-                  <Text style={styles.assignmentTitle}>{item.title}</Text>
-                  <Text style={styles.assignmentDesc}>{item.desc}</Text>
-                  <TouchableOpacity style={styles.lihatTugasBtn} activeOpacity={0.8}>
-                    <Text style={styles.lihatTugasText}>Lihat tugas</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
+                ))
+              ) : (
+                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Belum ada tugas yang dibagikan.</Text>
+              )}
             </View>
           )}
 
           {hasJoined && activeTab === 'materi' && (
             <View style={styles.assignmentList}>
-              {materials.map(item => (
-                <View key={item.id} style={styles.materialCard}>
-                  <View style={styles.materialCardHeader}>
-                    <LinearGradient
-                      colors={['#F8F9FA', '#C9E2D8']}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 1, y: 0.5 }}
-                      style={StyleSheet.absoluteFillObject}
-                    />
-                    <View style={styles.meetingCardLine} />
-                    <View style={styles.meetingCardContent}>
-                      <Text style={styles.meetingTitle}>{item.title}</Text>
-                      <Text style={styles.meetingTopic}>{item.topic}</Text>
-                      <Text style={styles.meetingLecturer}>{item.lecturer}</Text>
+              {isLoadingMaterials ? (
+                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Memuat materi...</Text>
+              ) : materials.length > 0 ? (
+                materials.map((item, index) => (
+                  <View key={item.id || index} style={styles.materialCard}>
+                    <View style={styles.materialCardHeader}>
+                      <LinearGradient
+                        colors={['#F8F9FA', '#C9E2D8']}
+                        start={{ x: 0, y: 0.5 }}
+                        end={{ x: 1, y: 0.5 }}
+                        style={StyleSheet.absoluteFillObject}
+                      />
+                      <View style={styles.meetingCardLine} />
+                      <View style={styles.meetingCardContent}>
+                        <Text style={styles.meetingTitle}>{item.pertemuan}</Text>
+                        <Text style={styles.meetingTopic}>{item.judul}</Text>
+                        <Text style={styles.meetingLecturer}>{lecturer}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.materialCardBody}>
+                      <Text style={styles.materialInstruction}>{item.deskripsi || 'Pelajari materi berikut ini'}</Text>
+                      
+                      {item.file_materi && item.file_materi.length > 0 && (
+                        <View style={styles.fileListContainer}>
+                          {item.file_materi.map((file, idx) => {
+                             const ext = file.split('.').pop().toLowerCase();
+                             const isPdf = ext === 'pdf';
+                             const isDocx = ext === 'docx' || ext === 'doc';
+                             const isXls = ext === 'xls' || ext === 'xlsx';
+                             const isPpt = ext === 'ppt' || ext === 'pptx';
+                             const fileName = file.split('/').pop().replace(/^[a-f0-9\-]+_/, '');
+                             
+                             let iconSource = require('../assets/other.png');
+                             if (isPdf) iconSource = require('../assets/pdf.png');
+                             else if (isDocx) iconSource = require('../assets/doc.png');
+                             else if (isXls) iconSource = require('../assets/xls.png');
+                             else if (isPpt) iconSource = require('../assets/ppt.png');
+
+                             return (
+                               <View key={idx} style={styles.fileItemRow}>
+                                 <Image 
+                                   source={iconSource} 
+                                   style={styles.fileIcon} 
+                                   resizeMode="contain"
+                                 />
+                                 <View style={{ flex: 1, marginRight: 8 }}>
+                                   <Text style={styles.fileNameText} numberOfLines={1}>{fileName}</Text>
+                                 </View>
+                                 <TouchableOpacity 
+                                   style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+                                   onPress={() => {
+                                     const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+                                     Linking.openURL(`${baseUrl}/api/public/download?path=${file}&title=${encodeURIComponent(item.title)}`);
+                                   }}
+                                 >
+                                   <Text style={{ fontSize: 12, fontWeight: '600', color: '#116E63' }}>Unduh</Text>
+                                 </TouchableOpacity>
+                               </View>
+                             );
+                          })}
+                        </View>
+                      )}
+
+                      {item.link_video && (item.link_video.includes('youtube.com/watch?v=') || item.link_video.includes('youtu.be/')) && (
+                        <View style={styles.videoContainer}>
+                          <YoutubePlayer
+                            height={180}
+                            play={false}
+                            videoId={item.link_video.includes('youtu.be/') ? item.link_video.split('youtu.be/')[1]?.split('?')[0] : item.link_video.split('v=')[1]?.split('&')[0]}
+                          />
+                        </View>
+                      )}
                     </View>
                   </View>
-
-                  <View style={styles.materialCardBody}>
-                    <Text style={styles.materialInstruction}>{item.instruction}</Text>
-                    {item.type === 'file' ? (
-                      <View style={styles.fileListContainer}>
-                        {item.files?.map((file, index) => (
-                          <View key={index} style={styles.fileItemRow}>
-                            <Image 
-                              source={file.type === 'ppt' ? require('../assets/Ppt.png') : require('../assets/Pdf.png')} 
-                              style={styles.fileIcon} 
-                              resizeMode="contain"
-                            />
-                            <Text style={styles.fileNameText} numberOfLines={1}>{file.name}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    ) : item.type === 'video' ? (
-                      <View style={styles.videoContainer}>
-                        <YoutubePlayer
-                          height={180}
-                          play={false}
-                          videoId={item.videoId}
-                        />
-                      </View>
-                    ) : null}
-                  </View>
-
-                  {item.type === 'file' && (
-                    <TouchableOpacity style={styles.downloadButton} activeOpacity={0.7}>
-                      <Text style={styles.downloadButtonText}>Download</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              ))}
+                ))
+              ) : (
+                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Belum ada materi dibagikan</Text>
+              )}
             </View>
           )}
           
@@ -358,18 +562,21 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                     <Text style={styles.modalTokenMessage}>Masukkan token untuk melanjutkan</Text>
                     <TextInput 
                       style={styles.modalInput} 
-                      value={token}
-                      onChangeText={setToken}
+                      value={enrollToken}
+                      onChangeText={setEnrollToken}
+                      placeholder="Masukkan Token..."
+                      placeholderTextColor="#9CA3AF"
+                      autoCapitalize="characters"
                     />
                     <TouchableOpacity 
-                      style={styles.modalDaftarButton}
+                      style={[styles.modalDaftarButton, isEnrolling && { opacity: 0.7 }]}
                       activeOpacity={0.8}
-                      onPress={() => {
-                        closeMeetingModal();
-                        setHasJoined(true);
-                      }}
+                      onPress={handleEnroll}
+                      disabled={isEnrolling}
                     >
-                      <Text style={styles.modalDaftarText}>Bergabung</Text>
+                      <Text style={styles.modalDaftarText}>
+                        {isEnrolling ? 'Memproses...' : 'Bergabung'}
+                      </Text>
                     </TouchableOpacity>
                   </>
                 ) : (
@@ -542,6 +749,27 @@ const styles = StyleSheet.create({
   meetingLecturer: {
     fontSize: 11,
     color: '#9CA3AF',
+  },
+  methodBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  badgeSync: {
+    backgroundColor: '#EFF6FF',
+  },
+  badgeAsync: {
+    backgroundColor: '#F3F4F6',
+  },
+  methodBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  badgeTextSync: {
+    color: '#2563EB',
+  },
+  badgeTextAsync: {
+    color: '#4B5563',
   },
 
   // MODAL STYLES

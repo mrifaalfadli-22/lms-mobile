@@ -47,6 +47,8 @@ const ProfileIcon = ({ color }) => (
 // ── Bottom Tab Navigator ──────────────────────────────────────────────────────
 export default function MainTabNavigator({ route }) {
   const isRegistered = route?.params?.isRegistered ?? route?.params?.params?.isRegistered ?? false;
+  const user = route?.params?.user ?? route?.params?.params?.user ?? null;
+  const token = route?.params?.token ?? route?.params?.params?.token ?? null;
 
   return (
     <Tab.Navigator
@@ -74,7 +76,7 @@ export default function MainTabNavigator({ route }) {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        initialParams={{ isRegistered }}
+        initialParams={{ isRegistered, user, token }}
         options={{
           tabBarLabel: 'Home',
         }}
@@ -82,7 +84,7 @@ export default function MainTabNavigator({ route }) {
       <Tab.Screen
         name="MataKuliah"
         component={MataKuliahScreen}
-        initialParams={{ isRegistered }}
+        initialParams={{ isRegistered, user, token }}
         options={{
           tabBarLabel: 'Mata Kuliah',
         }}
@@ -90,7 +92,7 @@ export default function MainTabNavigator({ route }) {
       <Tab.Screen
         name="JadwalKelas"
         component={JadwalKelasScreen}
-        initialParams={{ isRegistered }}
+        initialParams={{ isRegistered, user, token }}
         options={{
           tabBarLabel: 'Jadwal',
         }}
@@ -98,7 +100,7 @@ export default function MainTabNavigator({ route }) {
       <Tab.Screen
         name="Profil"
         component={ProfilScreen}
-        initialParams={{ isRegistered }}
+        initialParams={{ isRegistered, user, token }}
         options={{
           tabBarLabel: 'Profil',
         }}

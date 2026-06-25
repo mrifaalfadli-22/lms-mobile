@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ImageBackground, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ImageBackground, Image, Platform, Linking, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Rect, Polyline, Circle } from 'react-native-svg';
+import YoutubePlayer from 'react-native-youtube-iframe';
+import * as Clipboard from 'expo-clipboard';
+
+const CopyIcon = () => (
+  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <Rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="#116E63" strokeWidth="2" />
+    <Path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="#116E63" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
 
 const BackIcon = () => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -18,7 +27,7 @@ const CalendarIcon = () => (
 
 const DocumentIcon = () => (
   <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-    <Path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="#116E63" strokeWidth="2" strokeLinejoin="round"/>
+    <Path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="#116E63" strokeWidth="2" strokeLinejoin="round" />
     <Path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#116E63" strokeWidth="2" strokeLinecap="round" />
   </Svg>
 );
@@ -54,10 +63,110 @@ const CheckboxFilled = () => (
 export default function DetailSesiScreen({ route }) {
   const navigation = useNavigation();
   const [isRead, setIsRead] = useState(false);
+  const [sessionMaterials, setSessionMaterials] = useState([]);
+  const [tugasList, setTugasList] = useState([]);
+  const [forumList, setForumList] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [presensiStatus, setPresensiStatus] = useState(null); // null | 'hadir' | 'izin' | 'sakit' | 'alpha'
+  const [isMarkingPresensi, setIsMarkingPresensi] = useState(false);
+  const [isTugasModalVisible, setIsTugasModalVisible] = useState(false);
+  const [selectedTugas, setSelectedTugas] = useState(null);
 
   // Get data from params
   const meeting = route?.params?.meeting;
   const course = route?.params?.course;
+  const userToken = route?.params?.userToken;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+        
+        // Fetch Materials
+        const resMateri = await fetch(`${baseUrl}/api/materi/sesi/${meeting?.id}`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${userToken}`
+          }
+        });
+        const jsonMateri = await resMateri.json();
+        if (jsonMateri.status === 'success') {
+          setSessionMaterials(jsonMateri.data || []);
+        }
+
+        // Fetch Tugas
+        const resTugas = await fetch(`${baseUrl}/api/sesi/${meeting?.id}/tugas`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${userToken}`
+          }
+        });
+        const jsonTugas = await resTugas.json();
+        if (jsonTugas.success) {
+          setTugasList(jsonTugas.data?.data || []);
+        }
+
+        // Fetch Forum
+        const resForum = await fetch(`${baseUrl}/api/sesi/${meeting?.id}/forum`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${userToken}`
+          }
+        });
+        const jsonForum = await resForum.json();
+        if (jsonForum.success) {
+          setForumList(jsonForum.data?.data || []);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    if (meeting?.id) fetchData();
+  }, [meeting?.id, userToken]);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+        const res = await fetch(`${baseUrl}/api/user`, {
+          headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${userToken}` }
+        });
+        const json = await res.json();
+        setCurrentUser(json);
+      } catch (e) { console.error(e); }
+    };
+    if (userToken) fetchCurrentUser();
+  }, [userToken]);
+
+  useEffect(() => {
+    const fetchPresensi = async () => {
+      try {
+        const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+        const res = await fetch(`${baseUrl}/api/presensi/sesi/${meeting?.id}/saya`, {
+          headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${userToken}` }
+        });
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          setPresensiStatus(json.data.status_kehadiran);
+          if (json.data.status_kehadiran === 'hadir') setIsRead(true);
+        }
+      } catch (e) { console.error(e); }
+    };
+    if (meeting?.id && userToken) fetchPresensi();
+  }, [meeting?.id, userToken]);
+
+  const formatTugasDate = (dateString) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    if (isNaN(date)) return dateString;
+    const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${day} ${month} ${year}, ${hours}:${minutes}`;
+  };
 
   // Provide fallback values
   const courseTitle = course?.title || 'Pemrograman perangkat lunak';
@@ -69,7 +178,7 @@ export default function DetailSesiScreen({ route }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center'}} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => navigation.goBack()}>
           <View style={styles.backBtn}>
             <BackIcon />
           </View>
@@ -79,10 +188,19 @@ export default function DetailSesiScreen({ route }) {
       <View style={styles.headerLine} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
+
         {/* Info Card */}
         <View style={styles.card}>
-          <Text style={styles.courseTitle}>{courseTitle}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <Text style={[styles.courseTitle, { marginBottom: 0, flex: 1, marginRight: 8 }]}>{courseTitle}</Text>
+            {meeting?.method && (
+              <View style={[styles.methodBadge, meeting.method.toLowerCase() === 'synchronous' ? styles.badgeSync : styles.badgeAsync]}>
+                <Text style={[styles.methodBadgeText, meeting.method.toLowerCase() === 'synchronous' ? styles.badgeTextSync : styles.badgeTextAsync]}>
+                  {meeting.method.toLowerCase() === 'synchronous' ? 'Synchronous' : 'Asynchronous'}
+                </Text>
+              </View>
+            )}
+          </View>
           <View style={styles.infoRow}>
             <CalendarIcon />
             <Text style={styles.infoText}>{timeInfo}</Text>
@@ -100,74 +218,227 @@ export default function DetailSesiScreen({ route }) {
         </View>
 
         {/* Conference Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Conference</Text>
-          <Text style={styles.linkText}>https://meet.google.com/pwz-ruvw-brd</Text>
-        </View>
+        {meeting?.method?.toLowerCase() !== 'asynchronous' && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Link Gmeet/Zoom</Text>
+            {meeting?.link_kelas_daring ? (
+              <Text style={styles.linkText}>{meeting.link_kelas_daring}</Text>
+            ) : (
+              <Text style={styles.cardContentText}>Belum ada link conference yang dibagikan.</Text>
+            )}
+          </View>
+        )}
 
         {/* Materi Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Materi</Text>
           <Text style={styles.cardContentText}>
-            Silakan pelajari materi berikut sebelum memulai sesi perkuliahan. Anda juga dapat mengunduh materi untuk dibaca secara offline.
+            {meeting?.rawMateri && meeting.rawMateri !== '-'
+              ? meeting.rawMateri
+              : 'Silakan pelajari materi berikut sebelum memulai sesi perkuliahan.'}
           </Text>
-          
+
+          {/* Support embedded video if the string is a youtube link */}
+          {meeting?.rawMateri && meeting.rawMateri.includes('youtube.com/watch?v=') && (
+            <View style={{ marginTop: 12, borderRadius: 8, overflow: 'hidden' }}>
+              <YoutubePlayer
+                height={180}
+                play={false}
+                videoId={meeting.rawMateri.split('v=')[1]?.split('&')[0]}
+              />
+            </View>
+          )}
+
+          {meeting?.rawMateri && meeting.rawMateri.includes('youtu.be/') && (
+            <View style={{ marginTop: 12, borderRadius: 8, overflow: 'hidden' }}>
+              <YoutubePlayer
+                height={180}
+                play={false}
+                videoId={meeting.rawMateri.split('youtu.be/')[1]?.split('?')[0]}
+              />
+            </View>
+          )}
+
+          {/* Dynamic Details from MateriPembelajaran */}
+          {sessionMaterials.map((m, idx) => (
+            <View key={`materi-info-${idx}`} style={{ marginTop: 12 }}>
+              {m.judul_materi && (
+                <Text style={{ fontSize: 14, fontFamily: 'Outfit-SemiBold', color: '#1F2937', marginBottom: 4 }}>
+                  {m.judul_materi}
+                </Text>
+              )}
+              {m.deskripsi && (
+                <Text style={{ fontSize: 13, fontFamily: 'Inter-Regular', color: '#4B5563', marginBottom: 8, lineHeight: 20 }}>
+                  {m.deskripsi}
+                </Text>
+              )}
+            </View>
+          ))}
+
+          {/* Additional Videos from MateriPembelajaran */}
+          {sessionMaterials.map((m, idx) => m.link_video_pembelajaran && (m.link_video_pembelajaran.includes('youtube.com/watch?v=') || m.link_video_pembelajaran.includes('youtu.be/')) ? (
+            <View key={`video-${idx}`} style={{ marginTop: 12, borderRadius: 8, overflow: 'hidden' }}>
+              <YoutubePlayer
+                height={180}
+                play={false}
+                videoId={m.link_video_pembelajaran.includes('youtu.be/') ? m.link_video_pembelajaran.split('youtu.be/')[1]?.split('?')[0] : m.link_video_pembelajaran.split('v=')[1]?.split('&')[0]}
+              />
+            </View>
+          ) : null)}
+
           <View style={styles.fileListContainer}>
-             <View style={styles.fileItemRow}>
-                <Image source={require('../assets/Pdf.png')} style={styles.fileIcon} resizeMode="contain" />
-                <View style={styles.fileTextContainer}>
-                   <Text style={styles.fileNameText} numberOfLines={1}>Materi_Pertemuan_10.pdf</Text>
-                   <Text style={styles.fileSizeText}>2.4 MB • PDF</Text>
+            {sessionMaterials.flatMap(m => m.file_materi || []).map((file, index) => {
+              const ext = file.split('.').pop().toLowerCase();
+              const isPdf = ext === 'pdf';
+              const isDocx = ext === 'docx' || ext === 'doc';
+              const isXls = ext === 'xls' || ext === 'xlsx';
+              const isPpt = ext === 'ppt' || ext === 'pptx';
+              const fileName = file.split('/').pop().replace(/^[a-f0-9\-]+_/, '');
+
+              let iconSource = require('../assets/other.png');
+              if (isPdf) iconSource = require('../assets/pdf.png');
+              else if (isDocx) iconSource = require('../assets/doc.png');
+              else if (isXls) iconSource = require('../assets/xls.png');
+              else if (isPpt) iconSource = require('../assets/ppt.png');
+
+              return (
+                <View key={index} style={styles.fileItemRow}>
+                  <Image source={iconSource} style={styles.fileIcon} resizeMode="contain" />
+                  <View style={styles.fileTextContainer}>
+                    <Text style={styles.fileNameText} numberOfLines={1}>{fileName}</Text>
+                    <Text style={styles.fileSizeText}>{ext.toUpperCase()}</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.downloadIconBtn}
+                    onPress={() => {
+                      const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+                      Linking.openURL(`${baseUrl}/api/public/download?path=${file}&title=${encodeURIComponent(meetingTitle)}`);
+                    }}
+                  >
+                    <Text style={styles.downloadLink}>Unduh</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.downloadIconBtn}>
-                  <Text style={styles.downloadLink}>Unduh</Text>
-                </TouchableOpacity>
-             </View>
-             <View style={styles.fileItemRow}>
-                <Image source={require('../assets/Ppt.png')} style={styles.fileIcon} resizeMode="contain" />
-                <View style={styles.fileTextContainer}>
-                   <Text style={styles.fileNameText} numberOfLines={1}>Presentasi_Bab_10.pptx</Text>
-                   <Text style={styles.fileSizeText}>4.1 MB • PPTX</Text>
-                </View>
-                <TouchableOpacity style={styles.downloadIconBtn}>
-                  <Text style={styles.downloadLink}>Unduh</Text>
-                </TouchableOpacity>
-             </View>
+              );
+            })}
           </View>
 
-          <View style={styles.attendanceDivider} />
-          <TouchableOpacity 
-            style={styles.attendanceContainer} 
-            activeOpacity={0.7}
-            onPress={() => setIsRead(!isRead)}
-          >
-            {isRead ? <CheckboxFilled /> : <CheckboxEmpty />}
-            <Text style={styles.attendanceText}>Tandai saya telah membaca materi ini</Text>
-          </TouchableOpacity>
+          {meeting?.method?.toLowerCase() !== 'synchronous' ? (
+            <>
+              <View style={styles.attendanceDivider} />
+              {presensiStatus === 'hadir' ? (
+                <View style={styles.attendanceContainer}>
+                  <CheckboxFilled />
+                  <Text style={[styles.attendanceText, { color: '#116E63', fontWeight: '600' }]}>
+                    ✓ Anda telah menandai kehadiran
+                  </Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.attendanceContainer, isMarkingPresensi && { opacity: 0.5 }]}
+                  activeOpacity={0.7}
+                  disabled={isMarkingPresensi}
+                  onPress={async () => {
+                    setIsMarkingPresensi(true);
+                    try {
+                      const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+                      const res = await fetch(`${baseUrl}/api/presensi/hadir-sendiri`, {
+                        method: 'POST',
+                        headers: {
+                          'Accept': 'application/json',
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${userToken}`
+                        },
+                        body: JSON.stringify({ id_sesi: meeting?.id })
+                      });
+                      const json = await res.json();
+                      if (json.status === 'success') {
+                        setPresensiStatus('hadir');
+                        setIsRead(true);
+                      }
+                    } catch (e) { console.error(e); }
+                    setIsMarkingPresensi(false);
+                  }}
+                >
+                  <CheckboxEmpty />
+                  <Text style={styles.attendanceText}>
+                    {isMarkingPresensi ? 'Menyimpan...' : 'Tandai saya telah membaca materi ini'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
+          ) : (
+            <>
+              <View style={styles.attendanceDivider} />
+              <View style={styles.attendanceContainer}>
+                {presensiStatus === 'hadir' ? (
+                  <>
+                    <CheckboxFilled />
+                    <Text style={[styles.attendanceText, { color: '#116E63', fontWeight: '600' }]}>Hadir</Text>
+                  </>
+                ) : presensiStatus === 'izin' ? (
+                  <>
+                    <CheckboxEmpty />
+                    <Text style={[styles.attendanceText, { color: '#F59E0B', fontWeight: '600' }]}>Izin</Text>
+                  </>
+                ) : presensiStatus === 'sakit' ? (
+                  <>
+                    <CheckboxEmpty />
+                    <Text style={[styles.attendanceText, { color: '#3B82F6', fontWeight: '600' }]}>Sakit</Text>
+                  </>
+                ) : presensiStatus === 'alpha' ? (
+                  <>
+                    <CheckboxEmpty />
+                    <Text style={[styles.attendanceText, { color: '#EF4444', fontWeight: '600' }]}>Alpha</Text>
+                  </>
+                ) : (
+                  <>
+                    <CheckboxEmpty />
+                    <Text style={[styles.attendanceText, { color: '#9CA3AF' }]}>Belum diabsen oleh dosen</Text>
+                  </>
+                )}
+              </View>
+            </>
+          )}
         </View>
 
         {/* Tugas dan kuis Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Tugas dan kuis</Text>
-          <View style={styles.taskItem}>
-            <View style={styles.taskHeaderRow}>
-               <View style={styles.taskIconContainer}>
-                 <ClipboardIcon />
-               </View>
-               <View style={styles.taskHeaderTextContainer}>
-                 <Text style={styles.taskTitle}>Tugas Praktikum 10 - Web Dinamis</Text>
-                 <Text style={styles.taskDeadline}>Tenggat: 30 Apr 2026, 23:59</Text>
-               </View>
-            </View>
-            <View style={styles.taskActionRow}>
-               <View style={styles.statusBadgeUnfinished}>
-                 <Text style={styles.statusBadgeTextUnfinished}>Belum dikumpulkan</Text>
-               </View>
-               <TouchableOpacity style={styles.uploadBtn}>
-                  <Text style={styles.uploadBtnText}>Lihat Detail</Text>
-               </TouchableOpacity>
-            </View>
-          </View>
+          {tugasList.length === 0 ? (
+            <Text style={styles.cardContentText}>Belum ada tugas yang dibagikan.</Text>
+          ) : (
+            tugasList.map((tugas, index) => {
+              const statusText = "Belum dikumpulkan"; // default status
+              
+              return (
+                <View key={index} style={styles.taskItem}>
+                  <View style={styles.taskHeaderRow}>
+                    <View style={styles.taskIconContainer}>
+                      <ClipboardIcon />
+                    </View>
+                    <View style={styles.taskHeaderTextContainer}>
+                      <Text style={styles.taskTitle}>{tugas.judul_tugas}</Text>
+                      <Text style={styles.taskDeadline}>Tenggat: {formatTugasDate(tugas.batas_waktu)}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.taskActionRow}>
+                    <View style={styles.statusBadgeUnfinished}>
+                      <Text style={styles.statusBadgeTextUnfinished}>{statusText}</Text>
+                    </View>
+                    <TouchableOpacity 
+                      style={styles.uploadBtn}
+                      onPress={() => {
+                        setSelectedTugas(tugas);
+                        setIsTugasModalVisible(true);
+                      }}
+                    >
+                      <Text style={styles.uploadBtnText}>Lihat Detail</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })
+          )}
         </View>
 
 
@@ -175,34 +446,137 @@ export default function DetailSesiScreen({ route }) {
         {/* Forum diskusi Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Forum diskusi</Text>
-          
+
           {/* Chat bubbles */}
           <View style={styles.chatContainer}>
-            <View style={styles.chatRowLeft}>
-              <Image source={require('../assets/dosen.png')} style={styles.avatar} />
-              <View style={styles.chatBubbleLeft}>
-                <Text style={styles.chatName}>Dimas Putra Pratama</Text>
-                <Text style={styles.chatText}>Lorem ipsum dolor sit amet</Text>
-                <Text style={styles.chatTime}>5 Jam yang lalu</Text>
-              </View>
-            </View>
+            {forumList.length === 0 ? (
+              <Text style={styles.cardContentText}>Belum ada diskusi di forum ini.</Text>
+            ) : (
+              forumList.slice(-2).map((msg, index) => {
+                const getInitials = (name) => {
+                  if (!name) return 'A';
+                  const names = name.split(' ').filter(n => n);
+                  if (names.length === 0) return 'A';
+                  if (names.length === 1) return names[0].substring(0, 1).toUpperCase();
+                  return (names[0].substring(0, 1) + names[1].substring(0, 1)).toUpperCase();
+                };
 
-            <View style={styles.chatRowRight}>
-              <View style={styles.chatBubbleRight}>
-                <Text style={styles.chatName}>Dimas Putra Pratama</Text>
-                <Text style={styles.chatText}>Lorem ipsum dolor sit amet</Text>
-                <Text style={styles.chatTime}>5 Jam yang lalu</Text>
-              </View>
-              <Image source={require('../assets/dosen.png')} style={styles.avatar} />
-            </View>
+                const timeAgo = (dateString) => {
+                  if (!dateString) return '';
+                  const diff = new Date() - new Date(dateString);
+                  const hours = Math.floor(diff / 3600000);
+                  if (hours >= 24) return `${Math.floor(hours/24)} hari yang lalu`;
+                  if (hours > 0) return `${hours} jam yang lalu`;
+                  const mins = Math.floor(diff / 60000);
+                  if (mins > 0) return `${mins} menit yang lalu`;
+                  return 'Baru saja';
+                };
+
+                const isMe = currentUser && currentUser.id_user === msg.id_pengirim;
+                const avatarView = (
+                  <View style={[styles.avatar, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#116E63' }]}>
+                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                      {getInitials(msg.pengirim?.nama_lengkap)}
+                    </Text>
+                  </View>
+                );
+
+                return isMe ? (
+                  <View key={index} style={styles.chatRowRight}>
+                    <View style={[styles.chatBubbleRight, { backgroundColor: '#D1FAE5' }]}>
+                      <Text style={styles.chatName}>{msg.pengirim?.nama_lengkap || 'Anonim'}</Text>
+                      <Text style={styles.chatText}>{msg.isi_pesan}</Text>
+                      <Text style={styles.chatTime}>{timeAgo(msg.waktu_kirim)}</Text>
+                    </View>
+                    {avatarView}
+                  </View>
+                ) : (
+                  <View key={index} style={styles.chatRowLeft}>
+                    {avatarView}
+                    <View style={styles.chatBubbleLeft}>
+                      <Text style={styles.chatName}>{msg.pengirim?.nama_lengkap || 'Anonim'}</Text>
+                      <Text style={styles.chatText}>{msg.isi_pesan}</Text>
+                      <Text style={styles.chatTime}>{timeAgo(msg.waktu_kirim)}</Text>
+                    </View>
+                  </View>
+                );
+              })
+            )}
           </View>
 
-          <TouchableOpacity style={styles.forumLinkBtn} onPress={() => navigation.navigate('ForumDiskusi', { topic: topic })}>
+          <TouchableOpacity style={styles.forumLinkBtn} onPress={() => navigation.navigate('ForumDiskusi', { meeting, userToken, topic })}>
             <Text style={styles.forumLinkText}>Lihat forum diskusi</Text>
           </TouchableOpacity>
         </View>
 
       </ScrollView>
+
+      {/* Modal Detail Tugas */}
+      <Modal
+        visible={isTugasModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsTugasModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Detail Tugas</Text>
+              <TouchableOpacity onPress={() => setIsTugasModalVisible(false)} style={styles.closeModalBtn}>
+                <Text style={{ fontSize: 16, color: '#6B7280', fontWeight: 'bold' }}>X</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalBody}>
+              {selectedTugas && (
+                <>
+                  <Text style={styles.modalTaskTitle}>{selectedTugas.judul_tugas}</Text>
+                  <Text style={styles.modalTaskDesc}>{selectedTugas.deskripsi_tugas || "Tidak ada deskripsi untuk tugas ini."}</Text>
+                  
+                  <View style={styles.modalInfoRow}>
+                    <Text style={styles.modalInfoLabel}>Tenggat Waktu:</Text>
+                    <Text style={styles.modalInfoValueRed}>{formatTugasDate(selectedTugas.batas_waktu)}</Text>
+                  </View>
+                  
+                  {selectedTugas.link_cbt && (
+                    <View style={styles.modalInfoRow}>
+                      <Text style={styles.modalInfoLabel}>Link CBT:</Text>
+                      <TouchableOpacity onPress={() => Linking.openURL(selectedTugas.link_cbt)}>
+                        <Text style={styles.modalInfoValueBlue}>{selectedTugas.link_cbt}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {selectedTugas.token_cbt && (
+                    <View style={styles.modalInfoRow}>
+                      <Text style={styles.modalInfoLabel}>Token CBT:</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ backgroundColor: '#F3F4F6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, marginRight: 8 }}>
+                          <Text style={styles.modalInfoValueBold}>{selectedTugas.token_cbt}</Text>
+                        </View>
+                        <TouchableOpacity 
+                          onPress={async () => {
+                            await Clipboard.setStringAsync(selectedTugas.token_cbt);
+                          }}
+                          style={{ padding: 6, backgroundColor: '#ECFDF5', borderRadius: 6 }}
+                        >
+                          <CopyIcon />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+
+                  <View style={styles.modalInfoRow}>
+                    <Text style={styles.modalInfoLabel}>Status:</Text>
+                    <View style={styles.statusBadgeUnfinished}>
+                      <Text style={styles.statusBadgeTextUnfinished}>Belum dikumpulkan</Text>
+                    </View>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -253,7 +627,27 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#1F2937',
-    marginBottom: 12,
+  },
+  methodBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  badgeSync: {
+    backgroundColor: '#EFF6FF',
+  },
+  badgeAsync: {
+    backgroundColor: '#F3F4F6',
+  },
+  methodBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  badgeTextSync: {
+    color: '#2563EB',
+  },
+  badgeTextAsync: {
+    color: '#4B5563',
   },
   infoRow: {
     flexDirection: 'row',
@@ -492,5 +886,77 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#116E63',
     textDecorationLine: 'underline',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
+  closeModalBtn: {
+    padding: 4,
+  },
+  modalBody: {
+    padding: 16,
+  },
+  modalTaskTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#116E63',
+    marginBottom: 8,
+  },
+  modalTaskDesc: {
+    fontSize: 14,
+    color: '#4B5563',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  modalInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalInfoLabel: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  modalInfoValueRed: {
+    fontSize: 13,
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  modalInfoValueBlue: {
+    fontSize: 13,
+    color: '#2563EB',
+    textDecorationLine: 'underline',
+  },
+  modalInfoValueBold: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1F2937',
+    letterSpacing: 1,
   },
 });

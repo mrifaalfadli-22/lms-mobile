@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, TextInput, TouchableOpacity, 
   FlatList, KeyboardAvoidingView, Platform, ImageBackground, Image, Modal, Alert 
@@ -55,23 +55,11 @@ const DotsIcon = () => (
 export default function ForumDiskusiScreen({ route }) {
   const navigation = useNavigation();
   const topic = route?.params?.topic || "Pengenalan dasar HTML";
+  const meeting = route?.params?.meeting;
+  const userToken = route?.params?.userToken;
 
-  const [messages, setMessages] = useState([
-    {
-      id: '1',
-      text: 'Halo semuanya, jangan lupa pelajari materi HTML sebelum kelas dimulai ya.',
-      sender: 'Yulianto M.Kom - 043213123',
-      time: '10:00',
-      isMe: false,
-    },
-    {
-      id: '2',
-      text: 'Lorem ipsum dolor sit amet',
-      sender: 'Dimas Putra Pratama - 2110200',
-      time: '5 Jam yang lalu',
-      isMe: true,
-    }
-  ]);
+  const [messages, setMessages] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const [inputText, setInputText] = useState('');
   const [replyTo, setReplyTo] = useState(null);
@@ -81,29 +69,98 @@ export default function ForumDiskusiScreen({ route }) {
   const [selectedMessage, setSelectedMessage] = useState(null);
 
   const flatListRef = useRef(null);
+  const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
 
-  const handleSend = () => {
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`${baseUrl}/api/user`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${userToken}`
+          }
+        });
+        const json = await res.json();
+        setCurrentUser(json);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    if (userToken) fetchUser();
+  }, [userToken]);
+
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch(`${baseUrl}/api/sesi/${meeting?.id}/forum`, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${userToken}`
+        }
+      });
+      const json = await res.json();
+      if (json.success) {
+        setMessages(json.data?.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (meeting?.id) fetchMessages();
+  }, [meeting?.id, userToken]);
+
+  const handleSend = async () => {
     if (!inputText.trim()) return;
 
     if (editMsgId) {
-      setMessages(messages.map(m => m.id === editMsgId ? { ...m, text: inputText, isEdited: true } : m));
+      try {
+        const res = await fetch(`${baseUrl}/api/forum/${editMsgId}`, {
+          method: 'PUT',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${userToken}`
+          },
+          body: JSON.stringify({ isi_pesan: inputText })
+        });
+        if (res.ok) {
+          fetchMessages();
+        }
+      } catch (error) {
+        console.error(error);
+      }
       setEditMsgId(null);
     } else {
-      const newMessage = {
-        id: Date.now().toString(),
-        text: inputText,
-        sender: 'Dimas Putra Pratama - 2110200',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isMe: true,
-        read: false,
-        replyTo: replyTo ? { ...replyTo } : null
-      };
-      setMessages([...messages, newMessage]);
+      try {
+        const payload = {
+          id_sesi: meeting?.id,
+          isi_pesan: inputText,
+        };
+        if (replyTo) {
+          payload.id_parent_pesan = replyTo.id_pesan;
+        }
+
+        const res = await fetch(`${baseUrl}/api/forum`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${userToken}`
+          },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          fetchMessages();
+        }
+      } catch (error) {
+        console.error(error);
+      }
     }
 
     setInputText('');
     setReplyTo(null);
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 500);
   };
 
   const openOptions = (msg) => {
@@ -119,8 +176,8 @@ export default function ForumDiskusiScreen({ route }) {
   };
 
   const handleEdit = () => {
-    setEditMsgId(selectedMessage.id);
-    setInputText(selectedMessage.text);
+    setEditMsgId(selectedMessage.id_pesan);
+    setInputText(selectedMessage.isi_pesan);
     setReplyTo(null);
     setModalVisible(false);
   };
@@ -128,39 +185,113 @@ export default function ForumDiskusiScreen({ route }) {
   const handleDelete = () => {
     Alert.alert("Hapus Pesan", "Anda yakin ingin menghapus pesan ini?", [
       { text: "Batal", style: "cancel" },
-      { text: "Hapus", style: "destructive", onPress: () => {
-          setMessages(messages.filter(m => m.id !== selectedMessage.id));
+      { text: "Hapus", style: "destructive", onPress: async () => {
+          try {
+            const res = await fetch(`${baseUrl}/api/forum/${selectedMessage.id_pesan}`, {
+              method: 'DELETE',
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${userToken}`
+              }
+            });
+            if (res.ok) {
+              fetchMessages();
+            }
+          } catch (error) {
+            console.error(error);
+          }
           setModalVisible(false);
         }
       }
     ]);
   };
 
+  const getInitials = (name) => {
+    if (!name) return 'A';
+    const names = name.split(' ').filter(n => n);
+    if (names.length === 0) return 'A';
+    if (names.length === 1) return names[0].substring(0, 1).toUpperCase();
+    return (names[0].substring(0, 1) + names[1].substring(0, 1)).toUpperCase();
+  };
+
   const renderMessage = ({ item }) => {
-    return (
-      <View style={styles.messageRow}>
-        <Image source={require('../assets/dosen.png')} style={styles.avatar} />
+    const isMe = currentUser && currentUser.id_user === item.id_pengirim;
+    
+    const timeAgo = (dateString) => {
+      if (!dateString) return '';
+      const diff = new Date() - new Date(dateString);
+      const hours = Math.floor(diff / 3600000);
+      if (hours >= 24) return `${Math.floor(hours/24)} hari yang lalu`;
+      if (hours > 0) return `${hours} jam yang lalu`;
+      const mins = Math.floor(diff / 60000);
+      if (mins > 0) return `${mins} menit yang lalu`;
+      return 'Baru saja';
+    };
+
+    const avatarView = (
+      <View style={[styles.avatar, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#116E63' }]}>
+        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+          {getInitials(item.pengirim?.nama_lengkap)}
+        </Text>
+      </View>
+    );
+
+    return isMe ? (
+      <View style={[styles.messageRow, { justifyContent: 'flex-end' }]}>
         <View style={styles.messageContentWrapper}>
-          <View style={[styles.messageBubble, item.isMe ? styles.messageBubbleMe : styles.messageBubbleOther]}>
+          <View style={[styles.messageBubble, styles.messageBubbleMe]}>
             <View style={styles.bubbleHeader}>
-              <Text style={styles.senderName}>{item.sender}</Text>
+              <Text style={styles.senderName}>{item.pengirim?.nama_lengkap || 'Anonim'}</Text>
               <TouchableOpacity onPress={() => openOptions(item)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <DotsIcon />
               </TouchableOpacity>
             </View>
             
-            {item.replyTo && (
+            {item.parent_pesan && (
               <View style={styles.replyBubble}>
-                <Text style={styles.replySender}>{item.replyTo.sender}</Text>
-                <Text style={styles.replyText} numberOfLines={1}>{item.replyTo.text}</Text>
+                <Text style={styles.replySender}>{item.parent_pesan.pengirim?.nama_lengkap || 'Anonim'}</Text>
+                <Text style={styles.replyText} numberOfLines={1}>{item.parent_pesan.isi_pesan}</Text>
               </View>
             )}
 
-            <Text style={styles.messageText}>{item.text}</Text>
+            <Text style={styles.messageText}>{item.isi_pesan}</Text>
             
             <View style={styles.messageMeta}>
-              {item.isEdited && <Text style={styles.editedText}>Diedit</Text>}
-              <Text style={styles.messageTime}>{item.time}</Text>
+              {item.is_edited && <Text style={styles.editedText}>Diedit</Text>}
+              <Text style={styles.messageTime}>{timeAgo(item.waktu_kirim)}</Text>
+            </View>
+          </View>
+          
+          <TouchableOpacity style={styles.balasBtn} onPress={() => { setSelectedMessage(item); handleReply(); }}>
+            <Text style={styles.balasText}>Balas</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={{ marginLeft: 12 }}>{avatarView}</View>
+      </View>
+    ) : (
+      <View style={styles.messageRow}>
+        {avatarView}
+        <View style={styles.messageContentWrapper}>
+          <View style={[styles.messageBubble, styles.messageBubbleOther]}>
+            <View style={styles.bubbleHeader}>
+              <Text style={styles.senderName}>{item.pengirim?.nama_lengkap || 'Anonim'}</Text>
+              <TouchableOpacity onPress={() => openOptions(item)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <DotsIcon />
+              </TouchableOpacity>
+            </View>
+            
+            {item.parent_pesan && (
+              <View style={styles.replyBubble}>
+                <Text style={styles.replySender}>{item.parent_pesan.pengirim?.nama_lengkap || 'Anonim'}</Text>
+                <Text style={styles.replyText} numberOfLines={1}>{item.parent_pesan.isi_pesan}</Text>
+              </View>
+            )}
+
+            <Text style={styles.messageText}>{item.isi_pesan}</Text>
+            
+            <View style={styles.messageMeta}>
+              {item.is_edited && <Text style={styles.editedText}>Diedit</Text>}
+              <Text style={styles.messageTime}>{timeAgo(item.waktu_kirim)}</Text>
             </View>
           </View>
           
@@ -189,7 +320,7 @@ export default function ForumDiskusiScreen({ route }) {
         <FlatList
           ref={flatListRef}
           data={messages}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.id_pesan}
           renderItem={renderMessage}
           contentContainerStyle={styles.chatList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
@@ -205,10 +336,10 @@ export default function ForumDiskusiScreen({ route }) {
               <View style={styles.actionPreviewBar} />
               <View style={styles.actionPreviewContent}>
                 <Text style={styles.actionPreviewTitle}>
-                  {editMsgId ? 'Edit Pesan' : `Membalas ${replyTo.sender}`}
+                  {editMsgId ? 'Edit Pesan' : `Membalas ${replyTo.pengirim?.nama_lengkap || 'Anonim'}`}
                 </Text>
                 <Text style={styles.actionPreviewText} numberOfLines={1}>
-                  {editMsgId ? messages.find(m => m.id === editMsgId)?.text : replyTo.text}
+                  {editMsgId ? messages.find(m => m.id_pesan === editMsgId)?.isi_pesan : replyTo.isi_pesan}
                 </Text>
               </View>
               <TouchableOpacity style={styles.closeActionBtn} onPress={() => { setReplyTo(null); setEditMsgId(null); setInputText(''); }}>
@@ -246,7 +377,7 @@ export default function ForumDiskusiScreen({ route }) {
               <Text style={styles.modalOptionText}>Balas</Text>
             </TouchableOpacity>
             
-            {selectedMessage?.isMe && (
+            {selectedMessage && currentUser && selectedMessage.id_pengirim === currentUser.id_user && (
               <>
                 <View style={styles.modalDivider} />
                 <TouchableOpacity style={styles.modalOption} onPress={handleEdit}>
@@ -324,7 +455,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6', // Light gray
   },
   messageBubbleMe: {
-    backgroundColor: '#E6F4F1', // Light teal/greenish to distinguish
+    backgroundColor: '#D1FAE5', // Green for own messages
   },
   bubbleHeader: {
     flexDirection: 'row',

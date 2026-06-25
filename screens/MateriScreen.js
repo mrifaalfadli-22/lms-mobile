@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ImageBackground, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+  ScrollView,
   TextInput,
   StatusBar,
   Image
@@ -38,9 +38,9 @@ const DownloadIcon = () => (
 const MateriCard = ({ item }) => (
   <View style={styles.card}>
     <View style={styles.iconContainer}>
-      <Image 
-        source={item.type === 'ppt' ? require('../assets/Ppt.png') : require('../assets/Pdf.png')} 
-        style={styles.fileIcon} 
+      <Image
+        source={item.type === 'ppt' ? require('../assets/ppt.png') : require('../assets/pdf.png')}
+        style={styles.fileIcon}
         resizeMode="contain"
       />
     </View>

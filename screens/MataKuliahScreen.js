@@ -1,8 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar, FlatList, ImageBackground } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar, FlatList, ImageBackground, Platform, ActivityIndicator, Modal } from 'react-native';
 import Svg, { Polyline, Path, Circle } from 'react-native-svg';
 
 const BG = '#F8FAFC';
+const PRIMARY = '#116E63';
 
 // Icon Chevron Left
 const ChevronLeft = () => (
@@ -35,17 +37,59 @@ const UsersIcon = () => (
   </Svg>
 );
 
-const MOCK_COURSES = Array(6).fill({
-  title: 'Pemrograman Web + Praktikum',
-  type: 'Kar A - Teknik Informatika',
-  time: 'Kamis, 7.30 - 21.00',
-  dosen: 'Yulianto M.kom',
-}).map((item, idx) => ({ ...item, id: String(idx) }));
-
 export default function MataKuliahScreen({ navigation, route }) {
-  // For the purpose of this demonstration, we assume true. 
-  // If we ever pass `isRegistered` we would read it from route params.
   const isRegistered = route?.params?.isRegistered || false;
+  const user = route?.params?.user || null;
+  const token = route?.params?.token || null;
+
+  const [activeTab, setActiveTab] = useState('diambil'); // 'diambil' | 'tersedia'
+  const [coursesData, setCoursesData] = useState({
+    diambil: [],
+    tersedia: []
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedPeriode, setSelectedPeriode] = useState('2024/2025');
+  const [modalPeriodeVisible, setModalPeriodeVisible] = useState(false);
+
+  const PERIODES = ['2023/2024', '2024/2025', '2025/2026', '2026/2027'];
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isRegistered && token) {
+        const fetchMataKuliah = async () => {
+          setIsLoading(true);
+          try {
+            const API_URL = Platform.OS === 'android' 
+              ? 'http://10.0.2.2:8000/api/mahasiswa/mata-kuliah' 
+              : 'http://localhost:8000/api/mahasiswa/mata-kuliah';
+              
+            const response = await fetch(API_URL, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            const json = await response.json();
+            if (json.status === 'success') {
+              setCoursesData({
+                diambil: json.data.diambil,
+                tersedia: json.data.tersedia
+              });
+            }
+          } catch (error) {
+            console.error("Mata Kuliah Fetch Error: ", error);
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        
+        fetchMataKuliah();
+      }
+    }, [isRegistered, token])
+  );
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -63,49 +107,139 @@ export default function MataKuliahScreen({ navigation, route }) {
     </View>
   );
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={() => navigation.navigate('DetailMataKuliah', { course: item, isRegistered })}>
-      <Image source={require('../assets/dosen.png')} style={styles.cardImage} />
+  const renderItem = ({ item }) => {
+    const isDiambil = activeTab === 'diambil';
+    return (
+      <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={() => navigation.navigate('DetailMataKuliah', { course: item, isRegistered, user, token, isDiambil })}>
+      <Image source={{ uri: item?.image || 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80' }} style={styles.cardImage} />
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.cardTitle} numberOfLines={2}>{item?.title || 'Judul Tidak Tersedia'}</Text>
         <View style={styles.cardRow}>
           <UsersIcon />
-          <Text style={styles.cardInfo}>{item.type}</Text>
+          <Text style={styles.cardInfo} numberOfLines={1}>{item?.type || 'Tipe Tidak Tersedia'}</Text>
         </View>
         <View style={styles.cardRow}>
           <ClockIcon />
-          <Text style={styles.cardInfo}>{item.time}</Text>
+          <Text style={styles.cardInfo}>{item?.time || 'Waktu Tidak Tersedia'}</Text>
         </View>
         <View style={styles.dosenRow}>
-          <Image source={require('../assets/dosen.png')} style={styles.dosenAvatar} />
+          <Image source={{ uri: item?.avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80' }} style={styles.dosenAvatar} />
           <View>
-            <Text style={styles.dosenName}>{item.dosen}</Text>
-            <Text style={styles.dosenRole}>Dosen pengampu</Text>
+            <Text style={styles.dosenName} numberOfLines={1}>{item?.dosen || 'Dosen Tidak Tersedia'}</Text>
+            <Text style={styles.dosenRole}>{item?.role || 'Dosen pengampu'}</Text>
           </View>
         </View>
       </View>
     </TouchableOpacity>
   );
+};
+
+  const renderTabs = () => (
+    <View style={styles.tabContainer}>
+      <TouchableOpacity 
+        style={[styles.tabButton, activeTab === 'diambil' && styles.tabButtonActive]}
+        onPress={() => setActiveTab('diambil')}
+        activeOpacity={0.8}
+      >
+        <Text style={[styles.tabText, activeTab === 'diambil' && styles.tabTextActive]}>Diambil</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={[styles.tabButton, activeTab === 'tersedia' && styles.tabButtonActive]}
+        onPress={() => setActiveTab('tersedia')}
+        activeOpacity={0.8}
+      >
+        <Text style={[styles.tabText, activeTab === 'tersedia' && styles.tabTextActive]}>Tersedia</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderPeriodeModal = () => (
+    <Modal
+      transparent={true}
+      visible={modalPeriodeVisible}
+      animationType="fade"
+      onRequestClose={() => setModalPeriodeVisible(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay} 
+        activeOpacity={1} 
+        onPress={() => setModalPeriodeVisible(false)}
+      >
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Pilih Periode</Text>
+          {PERIODES.map((periode, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={[
+                styles.periodeOption, 
+                selectedPeriode === periode && styles.periodeOptionActive
+              ]}
+              onPress={() => {
+                setSelectedPeriode(periode);
+                setModalPeriodeVisible(false);
+              }}
+            >
+              <Text style={[
+                styles.periodeOptionText,
+                selectedPeriode === periode && styles.periodeOptionTextActive
+              ]}>
+                {periode}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+
+  // Filter berdasarkan tab aktif (diambil/tersedia)
+  const sourceData = activeTab === 'diambil' ? coursesData.diambil : coursesData.tersedia;
+  const safeSourceData = Array.isArray(sourceData) ? sourceData : [];
+  
+  // Filter berdasarkan periode yang dipilih
+  const currentData = safeSourceData.filter(item => {
+    if (!item || !item.tahun) return true; // Jika data lama tidak memiliki tahun, tampilkan saja
+    return item.tahun === selectedPeriode;
+  });
 
   const innerContent = (
     <View style={styles.content}>
+      {/* ── Tabs ── */}
+      {isRegistered && renderTabs()}
+
       {/* ── Periode Selector ── */}
       <View style={styles.periodeRow}>
         <Text style={styles.periodeLabel}>Periode :</Text>
-        <TouchableOpacity style={styles.periodeSelector} activeOpacity={0.7}>
-          <Text style={styles.periodeText}>2024 Ganjil</Text>
+        <TouchableOpacity 
+          style={styles.periodeSelector} 
+          activeOpacity={0.7}
+          onPress={() => setModalPeriodeVisible(true)}
+        >
+          <Text style={styles.periodeText}>{selectedPeriode}</Text>
           <ChevronsUpDown />
         </TouchableOpacity>
       </View>
 
       {isRegistered ? (
-        <FlatList
-          data={MOCK_COURSES}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        isLoading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={PRIMARY} />
+          </View>
+        ) : currentData.length > 0 ? (
+          <FlatList
+            data={currentData}
+            keyExtractor={(item, index) => item?.id ? item.id.toString() : index.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <View style={{ flex: 1, alignItems: 'center', paddingTop: 40 }}>
+            <Text style={{ color: '#6B7280', fontSize: 14 }}>
+              Tidak ada kelas {activeTab === 'diambil' ? 'yang diambil' : 'yang tersedia'}.
+            </Text>
+          </View>
+        )
       ) : (
         renderEmptyState()
       )}
@@ -120,7 +254,7 @@ export default function MataKuliahScreen({ navigation, route }) {
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft />
-          <Text style={styles.headerTitle}>Mata kuliah diambil</Text>
+          <Text style={styles.headerTitle}>Mata Kuliah</Text>
         </TouchableOpacity>
       </View>
 
@@ -137,6 +271,8 @@ export default function MataKuliahScreen({ navigation, route }) {
           {innerContent}
         </View>
       )}
+
+      {renderPeriodeModal()}
     </View>
   );
 }
@@ -173,7 +309,37 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: 24,
+    paddingTop: 20,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 10,
+    padding: 4,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  tabButtonActive: {
+    backgroundColor: '#FFFFFF',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  tabTextActive: {
+    color: PRIMARY,
   },
   periodeRow: {
     flexDirection: 'row',
@@ -195,6 +361,49 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
     marginRight: 6,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  periodeOption: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  periodeOptionActive: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 8,
+    borderBottomWidth: 0,
+  },
+  periodeOptionText: {
+    fontSize: 14,
+    color: '#4B5563',
+  },
+  periodeOptionTextActive: {
+    fontWeight: '700',
+    color: PRIMARY,
   },
   listContent: {
     paddingHorizontal: 20,
