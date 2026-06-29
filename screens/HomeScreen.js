@@ -98,51 +98,109 @@ const SoundIcon = () => (
 // ── Menu Icons ─────────────────────────────────────────────────────────────────
 
 const IconMataKuliah = () => (
-  <Svg width="36" height="36" viewBox="0 0 48 48">
-    <Rect x="4" y="8" width="40" height="32" rx="6" fill="#DBEAFE" />
-    <Rect x="6" y="10" width="36" height="24" rx="4" fill="#EFF6FF" />
-    <Circle cx="24" cy="22" r="4" fill="#F87171" />
-    <Path d="M18 32c0-3.3 2.7-6 6-6s6 2.7 6 6H18z" fill="#F87171" />
-    <Circle cx="13" cy="20" r="3" fill="#FBBF24" />
-    <Path d="M9 30c0-2.2 1.8-4 4-4s4 1.8 4 4H9z" fill="#FBBF24" />
-    <Circle cx="35" cy="20" r="3" fill="#34D399" />
-    <Path d="M31 30c0-2.2 1.8-4 4-4s4 1.8 4 4h-8z" fill="#34D399" />
+  <Svg width="42" height="42" viewBox="0 0 48 48">
+    {/* Book Cover */}
+    <Path d="M24 12 c-6-3 -14-1 -18 1 v 26 c4-2 12-4 18-1 c6-3 14-1 18 1 v -26 c-4-2 -12-4 -18-1 z" fill="#0F766E" />
+    
+    {/* Left Pages */}
+    <Path d="M24 14 c-5-2 -12-1 -16 1 v 22 c4-2 11-3 16-1 z" fill="#F1F5F9" />
+    {/* Right Pages */}
+    <Path d="M24 14 c5-2 12-1 16 1 v 22 c-4-2 -11-3 -16-1 z" fill="#FFFFFF" />
+
+    {/* Center crease */}
+    <Path d="M24 14 v 22" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round" />
+    
+    {/* Page Text Lines Left */}
+    <Path d="M12 22h8M12 26h8M12 30h5" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round" />
+    
+    {/* Page Text Lines Right */}
+    <Path d="M28 22h8M28 26h8M28 30h5" stroke="#E2E8F0" strokeWidth="2" strokeLinecap="round" />
+    
+    {/* Bookmark */}
+    <Path d="M16 10 v 14 l 3 -2 l 3 2 v -14 z" fill="#F43F5E" />
   </Svg>
 );
 
 const IconJadwal = () => (
-  <Svg width="36" height="36" viewBox="0 0 48 48">
-    <Rect x="6" y="8" width="36" height="32" rx="6" fill="#FEF3C7" stroke="#D97706" strokeWidth="2" />
-    <Path d="M6 18h36" stroke="#F87171" strokeWidth="6" />
-    <Path d="M14 4v8m20-8v8" stroke="#92400E" strokeWidth="3" strokeLinecap="round" />
-    <Rect x="12" y="24" width="5" height="5" rx="1.5" fill="#D1D5DB" />
-    <Rect x="21" y="24" width="5" height="5" rx="1.5" fill="#D1D5DB" />
-    <Rect x="30" y="24" width="5" height="5" rx="1.5" fill="#10B981" />
-    <Rect x="12" y="32" width="5" height="5" rx="1.5" fill="#D1D5DB" />
-    <Rect x="21" y="32" width="5" height="5" rx="1.5" fill="#D1D5DB" />
+  <Svg width="42" height="42" viewBox="0 0 48 48">
+    {/* Calendar Body */}
+    <Rect x="6" y="10" width="36" height="32" rx="4" fill="#EFF6FF" />
+    
+    {/* Calendar Header */}
+    <Path d="M6 14 a4 4 0 0 1 4 -4 h28 a4 4 0 0 1 4 4 v8 h-36 z" fill="#F43F5E" />
+    
+    {/* Bindings/Rings */}
+    <Rect x="12" y="6" width="4" height="8" rx="2" fill="#94A3B8" />
+    <Rect x="32" y="6" width="4" height="8" rx="2" fill="#94A3B8" />
+    
+    {/* Header Text / Year */}
+    <Rect x="20" y="14" width="8" height="3" rx="1.5" fill="#FDA4AF" />
+
+    {/* Grid / Dates */}
+    <Rect x="12" y="26" width="5" height="5" rx="1" fill="#CBD5E1" />
+    <Rect x="21" y="26" width="5" height="5" rx="1" fill="#CBD5E1" />
+    <Rect x="30" y="26" width="5" height="5" rx="1" fill="#CBD5E1" />
+    
+    <Rect x="12" y="34" width="5" height="5" rx="1" fill="#CBD5E1" />
+    <Rect x="21" y="34" width="5" height="5" rx="1" fill="#34D399" /> {/* Highlighted Date */}
+    <Rect x="30" y="34" width="5" height="5" rx="1" fill="#CBD5E1" />
   </Svg>
 );
 
 const IconMateri = () => (
-  <Svg width="36" height="36" viewBox="0 0 48 48">
-    <Path d="M12 14l22-5 5 24-22 5z" fill="#FBBF24" stroke="#92400E" strokeWidth="2" strokeLinejoin="round" />
-    <Path d="M8 18l22-5 5 24-22 5z" fill="#F472B6" stroke="#831843" strokeWidth="2" strokeLinejoin="round" />
-    <Path d="M4 22l22-5 5 24-22 5z" fill="#60A5FA" stroke="#1D4ED8" strokeWidth="2" strokeLinejoin="round" />
+  <Svg width="42" height="42" viewBox="0 0 48 48">
+    {/* Folder Back */}
+    <Path d="M6 14c0-2 2-4 4-4h8l3 4h21c2 0 4 2 4 4v22c0 2-2 4-4 4H10c-2 0-4-2-4-4Z" fill="#F59E0B" />
+
+    {/* Document 1 (Gray) */}
+    <Rect x="12" y="8" width="18" height="24" rx="2" fill="#F8FAFC" transform="rotate(-8 21 20)" />
+    <Path d="M16 14h10M16 18h10M16 22h6" stroke="#CBD5E1" strokeWidth="2.5" strokeLinecap="round" transform="rotate(-8 21 20)" />
+
+    {/* Document 2 (Blue) */}
+    <Rect x="18" y="10" width="18" height="24" rx="2" fill="#DBEAFE" transform="rotate(5 27 22)" />
+    <Circle cx="27" cy="17" r="4" fill="#93C5FD" transform="rotate(5 27 22)" />
+    <Path d="M22 25h10M22 29h6" stroke="#93C5FD" strokeWidth="2.5" strokeLinecap="round" transform="rotate(5 27 22)" />
+
+    {/* Folder Front */}
+    <Path d="M4 26l4-5h36c1 0 2 1 2 2v17c0 2-2 4-4 4H8c-2 0-4-2-4-4Z" fill="#FBBF24" />
   </Svg>
 );
 
 const IconTugas = () => (
-  <Svg width="36" height="36" viewBox="0 0 48 48">
-    <Rect x="6" y="6" width="36" height="36" rx="6" fill="#ECFDF5" stroke="#6B7280" strokeWidth="2" />
-    <Path d="M14 22l5 5 10-10" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    <Path d="M14 32h16" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" />
-    <Circle cx="34" cy="16" r="7" fill="#FBBF24" stroke="#92400E" strokeWidth="2" />
-    <Path d="M34 12v5l3 3" stroke="#92400E" strokeWidth="1.5" strokeLinecap="round" />
+  <Svg width="42" height="42" viewBox="0 0 48 48">
+    {/* Clipboard Base */}
+    <Rect x="8" y="10" width="28" height="34" rx="3" fill="#C7D2FE" />
+    
+    {/* Paper */}
+    <Rect x="12" y="14" width="20" height="26" rx="2" fill="#FFFFFF" />
+
+    {/* Clipboard Clip */}
+    <Rect x="16" y="6" width="12" height="6" rx="2" fill="#818CF8" />
+    <Circle cx="22" cy="9" r="1.5" fill="#E0E7FF" />
+
+    {/* Checklist Item 1 (Checked) */}
+    <Rect x="15" y="18" width="5" height="5" rx="1.5" fill="#34D399" />
+    <Path d="M16 20.5 l 1.5 1.5 l 2.5 -2.5" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    <Path d="M22 20.5 h 7" stroke="#CBD5E1" strokeWidth="2.5" strokeLinecap="round" />
+
+    {/* Checklist Item 2 (Unchecked) */}
+    <Rect x="15" y="26" width="5" height="5" rx="1.5" fill="#F8FAFC" stroke="#94A3B8" strokeWidth="1" />
+    <Path d="M22 28.5 h 7" stroke="#CBD5E1" strokeWidth="2.5" strokeLinecap="round" />
+
+    {/* Checklist Item 3 (Unchecked) */}
+    <Rect x="15" y="34" width="5" height="5" rx="1.5" fill="#F8FAFC" stroke="#94A3B8" strokeWidth="1" />
+    <Path d="M22 36.5 h 4" stroke="#CBD5E1" strokeWidth="2.5" strokeLinecap="round" />
+
+    {/* Pencil */}
+    <Path d="M32 18 h 5 v 12 h -5 z" fill="#FBBF24" transform="rotate(35, 34, 26)" />
+    <Path d="M32 30 l 2.5 5 l 2.5 -5 z" fill="#FDBA74" transform="rotate(35, 34, 26)" />
+    <Path d="M34.5 33 l 0 2" stroke="#475569" strokeWidth="2" strokeLinecap="round" transform="rotate(35, 34, 26)" />
+    <Path d="M32 15 h 5 v 3 h -5 z" fill="#FCA5A5" transform="rotate(35, 34, 26)" />
   </Svg>
 );
 
 const IconProgress = () => (
-  <Svg width="36" height="36" viewBox="0 0 48 48">
+  <Svg width="42" height="42" viewBox="0 0 48 48">
     <Rect x="6" y="8" width="36" height="32" rx="6" fill="#E0F2FE" />
     <Rect x="12" y="24" width="6" height="12" rx="2" fill="#34D399" />
     <Rect x="21" y="18" width="6" height="18" rx="2" fill="#FBBF24" />
@@ -152,14 +210,27 @@ const IconProgress = () => (
 );
 
 const IconNilai = () => (
-  <Svg width="36" height="36" viewBox="0 0 48 48">
-    <Circle cx="24" cy="24" r="18" fill="#FEE2E2" />
-    <Path d="M16 24l6 6 12-12" stroke="#EF4444" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+  <Svg width="42" height="42" viewBox="0 0 48 48">
+    {/* Paper Background */}
+    <Rect x="6" y="4" width="36" height="40" rx="4" fill="#DBEAFE" />
+
+    {/* Header */}
+    <Rect x="12" y="10" width="14" height="5" rx="2.5" fill="#1E3A8A" />
+
+    {/* Table Rows (Course + Grade blocks) */}
+    <Rect x="12" y="20" width="16" height="4" rx="2" fill="#93C5FD" />
+    <Rect x="32" y="19" width="6" height="6" rx="2" fill="#10B981" />
+
+    <Rect x="12" y="28" width="12" height="4" rx="2" fill="#93C5FD" />
+    <Rect x="32" y="27" width="6" height="6" rx="2" fill="#3B82F6" />
+
+    <Rect x="12" y="36" width="18" height="4" rx="2" fill="#93C5FD" />
+    <Rect x="32" y="35" width="6" height="6" rx="2" fill="#F59E0B" />
   </Svg>
 );
 
 const IconSertifikat = () => (
-  <Svg width="36" height="36" viewBox="0 0 48 48">
+  <Svg width="42" height="42" viewBox="0 0 48 48">
     <Rect x="10" y="6" width="28" height="36" rx="4" fill="#FEF3C7" />
     <Circle cx="24" cy="20" r="6" fill="#F59E0B" />
     <Path d="M22 26l-2 8 4-2 4 2-2-8" fill="#F59E0B" />
@@ -330,7 +401,7 @@ export default function HomeScreen({ navigation, route }) {
   const isRegistered = route?.params?.isRegistered || false;
   const user = route?.params?.user || null;
   const token = route?.params?.token || null;
-  
+
   const [searchText, setSearchText] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeJadwalIndex, setActiveJadwalIndex] = useState(0);
@@ -356,10 +427,10 @@ export default function HomeScreen({ navigation, route }) {
       const fetchDashboard = async () => {
         setIsLoading(true);
         try {
-          const API_URL = Platform.OS === 'android' 
-            ? 'http://10.0.2.2:8000/api/mahasiswa/dashboard' 
+          const API_URL = Platform.OS === 'android'
+            ? 'http://10.0.2.2:8000/api/mahasiswa/dashboard'
             : 'http://localhost:8000/api/mahasiswa/dashboard';
-            
+
           const response = await fetch(API_URL, {
             method: 'GET',
             headers: {
@@ -368,7 +439,7 @@ export default function HomeScreen({ navigation, route }) {
               'Authorization': `Bearer ${token}`
             }
           });
-          
+
           const json = await response.json();
           if (json.status === 'success') {
             setDashboardData({
@@ -383,7 +454,7 @@ export default function HomeScreen({ navigation, route }) {
           setIsLoading(false);
         }
       };
-      
+
       fetchDashboard();
     }
   }, [isRegistered, token]);
@@ -485,7 +556,7 @@ export default function HomeScreen({ navigation, route }) {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ── */}
-        <LinearGradient 
+        <LinearGradient
           colors={['#24665A', '#45A493']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -493,9 +564,9 @@ export default function HomeScreen({ navigation, route }) {
         >
           <View style={styles.headerLeft}>
             {isRegistered ? (
-              <Image 
-                source={{ uri: user?.foto_profil ? `http://10.0.2.2:8000/storage/${user.foto_profil}` : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop' }} 
-                style={styles.avatarImage} 
+              <Image
+                source={{ uri: user?.foto_profil ? `http://10.0.2.2:8000/storage/${user.foto_profil}` : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop' }}
+                style={styles.avatarImage}
               />
             ) : (
               <UserAvatarIcon />
@@ -567,7 +638,7 @@ export default function HomeScreen({ navigation, route }) {
               <Text style={styles.progressDesc}>
                 Kamu menyelesaikan {dashboardData.progress.completed_modules} modul{'\n'}pembelajaran bulan ini. Pertahankan{'\n'}semangat kamu!
               </Text>
-              
+
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <View style={[styles.progressBarFill, { width: `${dashboardData.progress.percentage}%` }]} />
@@ -575,8 +646,8 @@ export default function HomeScreen({ navigation, route }) {
                 <Text style={styles.progressPercent}>{dashboardData.progress.percentage}%</Text>
               </View>
 
-              <TouchableOpacity 
-                style={styles.progressBtn} 
+              <TouchableOpacity
+                style={styles.progressBtn}
                 activeOpacity={0.8}
                 onPress={() => navigation.navigate('ProgressBelajar')}
               >
@@ -584,9 +655,9 @@ export default function HomeScreen({ navigation, route }) {
               </TouchableOpacity>
             </View>
             <View style={styles.progressRight}>
-              <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&q=80' }} 
-                style={styles.progressIllustration} 
+              <Image
+                source={{ uri: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&q=80' }}
+                style={styles.progressIllustration}
               />
             </View>
           </View>
@@ -622,7 +693,7 @@ export default function HomeScreen({ navigation, route }) {
                 </View>
               )}
             </View>
-            
+
             {jadwals.length === 0 && !isLoading ? (
               <View style={{ padding: 20, alignItems: 'center' }}>
                 <Text style={{ color: '#6B7280', fontSize: 13 }}>Tidak ada jadwal perkuliahan hari ini.</Text>
@@ -683,7 +754,7 @@ export default function HomeScreen({ navigation, route }) {
         {!isRegistered && (
           <View style={styles.menuGridExpanded}>
             <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" onPress={() => navigation.navigate('MataKuliah')} />
-            <MenuIcon icon={<IconJadwal />} label="Jadwal" onPress={() => navigation.navigate('JadwalKelas')} />
+            <MenuIcon icon={<IconJadwal />} label="Jadwal" isLocked onPress={openDaftarModal} />
             <MenuIcon icon={<IconMateri />} label="Materi" isLocked onPress={openDaftarModal} />
             <MenuIcon icon={<IconTugas />} label={"Tugas\n&kuis"} isLocked onPress={openDaftarModal} />
             <MenuIcon icon={<IconProgress />} label={'Progress\nbelajar'} isLocked onPress={openDaftarModal} />
@@ -707,7 +778,7 @@ export default function HomeScreen({ navigation, route }) {
                 </View>
               )}
             </View>
-            
+
             {materis.length === 0 && !isLoading ? (
               <View style={{ padding: 20, alignItems: 'center' }}>
                 <Text style={{ color: '#6B7280', fontSize: 13 }}>Belum ada materi terbaru.</Text>
@@ -798,16 +869,16 @@ export default function HomeScreen({ navigation, route }) {
 
       {/* ── Modal Pop-up Daftar ── */}
       {modalVisible && (
-        <Animated.View 
+        <Animated.View
           style={[
-            StyleSheet.absoluteFill, 
+            StyleSheet.absoluteFill,
             { opacity: fadeAnim, zIndex: 9999 }
           ]}
         >
           <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill}>
-            <TouchableOpacity 
-              style={styles.modalOverlay} 
-              activeOpacity={1} 
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
               onPress={closeDaftarModal}
             >
               <TouchableOpacity activeOpacity={1} style={styles.modalContentSmall}>
@@ -817,7 +888,7 @@ export default function HomeScreen({ navigation, route }) {
                 <Text style={styles.modalMessage}>
                   Silahkan daftar untuk{'\n'}mengakses fitur
                 </Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.modalDaftarButton}
                   activeOpacity={0.8}
                   onPress={() => {
@@ -1095,7 +1166,7 @@ const styles = StyleSheet.create({
   // ── Registered User Specific Styles ──
   avatarImage: { width: 46, height: 46, borderRadius: 23, borderWidth: 2, borderColor: '#fff' },
   greetSubText: { color: 'rgba(255,255,255,0.85)', fontSize: 13, marginBottom: 2 },
-  
+
   progressCard: {
     backgroundColor: '#35645B',
     marginHorizontal: 18,
