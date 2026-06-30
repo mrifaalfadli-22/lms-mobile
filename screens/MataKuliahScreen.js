@@ -2,12 +2,66 @@ import { API_BASE_URL } from '../config/api';
 import React, { useState, useEffect, useCallback } from 'react';
 import AppText from '../components/AppText';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, Image, StatusBar, FlatList, ImageBackground, Platform, ActivityIndicator, Modal } from 'react-native';
-import Svg, { Polyline, Path, Circle } from 'react-native-svg';
+import { View, StyleSheet, TouchableOpacity, Image, StatusBar, FlatList, ImageBackground, Platform, ActivityIndicator, Modal, TextInput, ScrollView } from 'react-native';
+import Svg, { Polyline, Path, Circle, Rect, Line } from 'react-native-svg';
 import { BlurView } from 'expo-blur';
 
 const BG = '#F8FAFC';
 const PRIMARY = '#116E63';
+
+// Icon Search
+const SearchIcon = () => (
+  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <Circle cx="11" cy="11" r="8" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Line x1="16.5" y1="16.5" x2="22" y2="22" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+// Icon Filter
+const FilterIcon = () => (
+  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <Line x1="4" y1="21" x2="4" y2="14" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Line x1="4" y1="10" x2="4" y2="3" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Line x1="12" y1="21" x2="12" y2="12" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Line x1="12" y1="8" x2="12" y2="3" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Line x1="20" y1="21" x2="20" y2="16" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Line x1="20" y1="12" x2="20" y2="3" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Line x1="1" y1="14" x2="7" y2="14" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Line x1="9" y1="8" x2="15" y2="8" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Line x1="17" y1="16" x2="23" y2="16" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const CloseIcon = () => (
+  <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <Path d="M18 6L6 18M6 6l12 12" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const CheckboxEmpty = () => (
+  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <Rect x="3" y="3" width="18" height="18" rx="4" stroke="#6B7280" strokeWidth="2" />
+  </Svg>
+);
+
+const CheckboxFilled = () => (
+  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <Rect x="3" y="3" width="18" height="18" rx="4" fill="#116E63" />
+    <Path d="M8 12.5L11 15.5L16 9.5" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const ChevronDown = () => (
+  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <Polyline points="6 9 12 15 18 9" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const ChevronUp = () => (
+  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <Polyline points="18 15 12 9 6 15" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
 
 // Icon Chevron Left
 const ChevronLeft = () => (
@@ -53,6 +107,14 @@ export default function MataKuliahScreen({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPeriode, setSelectedPeriode] = useState('2025/2026');
   const [modalPeriodeVisible, setModalPeriodeVisible] = useState(false);
+
+  // Filter & Search States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [modalFilterVisible, setModalFilterVisible] = useState(false);
+  const [selectedHari, setSelectedHari] = useState([]);
+  const [selectedDosen, setSelectedDosen] = useState([]);
+  const [selectedKelas, setSelectedKelas] = useState([]);
+  const [expandedAccordion, setExpandedAccordion] = useState(null);
 
   const PERIODES = ['2023/2024', '2024/2025', '2025/2026', '2026/2027'];
 
@@ -208,14 +270,155 @@ export default function MataKuliahScreen({ navigation, route }) {
   const sourceData = activeTab === 'diambil' ? coursesData.diambil : coursesData.tersedia;
   const safeSourceData = Array.isArray(sourceData) ? sourceData : [];
 
-  // Filter berdasarkan periode yang dipilih
+  const filterOptions = {
+    Hari: [...new Set(safeSourceData.map(item => item.hari).filter(Boolean))],
+    Dosen: [...new Set(safeSourceData.map(item => item.dosen).filter(Boolean))],
+    Kelas: [...new Set(safeSourceData.map(item => item.kelas).filter(Boolean))]
+  };
+
   const currentData = safeSourceData.filter(item => {
-    if (!item || !item.tahun) return true; // Jika data lama tidak memiliki tahun, tampilkan saja
-    return item.tahun === selectedPeriode;
+    if (item.tahun && item.tahun !== selectedPeriode) return false;
+    
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const titleMatch = item.title?.toLowerCase().includes(q);
+      const dosenMatch = item.dosen?.toLowerCase().includes(q);
+      if (!titleMatch && !dosenMatch) return false;
+    }
+
+    if (selectedHari.length > 0 && !selectedHari.includes(item.hari)) return false;
+    if (selectedDosen.length > 0 && !selectedDosen.includes(item.dosen)) return false;
+    if (selectedKelas.length > 0 && !selectedKelas.includes(item.kelas)) return false;
+
+    return true;
   });
+
+  const toggleCheckbox = (type, value) => {
+    let current, setter;
+    if (type === 'Hari') { current = selectedHari; setter = setSelectedHari; }
+    else if (type === 'Dosen') { current = selectedDosen; setter = setSelectedDosen; }
+    else { current = selectedKelas; setter = setSelectedKelas; }
+
+    if (current.includes(value)) {
+      setter(current.filter(item => item !== value));
+    } else {
+      setter([...current, value]);
+    }
+  };
+
+  const renderFilterModal = () => (
+    <Modal
+      transparent={true}
+      visible={modalFilterVisible}
+      animationType="slide"
+      onRequestClose={() => setModalFilterVisible(false)}
+    >
+      <View style={styles.bottomSheetOverlay}>
+        <View style={styles.bottomSheetContainer}>
+          <View style={styles.bottomSheetHeader}>
+            <View style={{ width: 24 }} />
+            <AppText style={styles.bottomSheetTitle}>Urutkan dan Filter</AppText>
+            <TouchableOpacity onPress={() => setModalFilterVisible(false)}>
+              <CloseIcon />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.bottomSheetContent} showsVerticalScrollIndicator={false}>
+            {Object.keys(filterOptions).map((type) => {
+              const isExpanded = expandedAccordion === type;
+              const options = filterOptions[type];
+              
+              let currentSelected = [];
+              if (type === 'Hari') currentSelected = selectedHari;
+              if (type === 'Dosen') currentSelected = selectedDosen;
+              if (type === 'Kelas') currentSelected = selectedKelas;
+
+              return (
+                <View key={type} style={styles.accordionContainer}>
+                  <TouchableOpacity
+                    style={styles.accordionHeader}
+                    activeOpacity={0.7}
+                    onPress={() => setExpandedAccordion(isExpanded ? null : type)}
+                  >
+                    <AppText style={styles.accordionTitle}>{type}</AppText>
+                    {isExpanded ? <ChevronUp /> : <ChevronDown />}
+                  </TouchableOpacity>
+                  
+                  {isExpanded && (
+                    <View style={styles.accordionContent}>
+                      {options.length === 0 ? (
+                        <AppText style={styles.noFilterText}>Tidak ada opsi {type.toLowerCase()}</AppText>
+                      ) : (
+                        options.map((option, idx) => (
+                          <TouchableOpacity
+                            key={idx}
+                            style={styles.checkboxRow}
+                            activeOpacity={0.7}
+                            onPress={() => toggleCheckbox(type, option)}
+                          >
+                            <AppText style={styles.checkboxLabel}>{option}</AppText>
+                            {currentSelected.includes(option) ? <CheckboxFilled /> : <CheckboxEmpty />}
+                          </TouchableOpacity>
+                        ))
+                      )}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </ScrollView>
+
+          <View style={styles.bottomSheetFooter}>
+            <TouchableOpacity
+              style={styles.btnTampilkan}
+              activeOpacity={0.8}
+              onPress={() => setModalFilterVisible(false)}
+            >
+              <AppText style={styles.btnTampilkanText}>
+                Tampilkan {currentData.length} Hasil
+              </AppText>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.btnHapusFilter}
+              activeOpacity={0.7}
+              onPress={() => {
+                setSelectedHari([]);
+                setSelectedDosen([]);
+                setSelectedKelas([]);
+              }}
+            >
+              <AppText style={styles.btnHapusFilterText}>Hapus Filter</AppText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
 
   const innerContent = (
     <View style={styles.content}>
+      {/* ── Search Bar ── */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchBar}>
+          <SearchIcon />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Cari mata kuliah atau dosen..."
+            placeholderTextColor="#9CA3AF"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+        <TouchableOpacity
+          style={styles.filterBtn}
+          activeOpacity={0.7}
+          onPress={() => setModalFilterVisible(true)}
+        >
+          <FilterIcon />
+        </TouchableOpacity>
+      </View>
+
       {/* ── Tabs ── */}
       {renderTabs()}
 
@@ -283,6 +486,7 @@ export default function MataKuliahScreen({ navigation, route }) {
       )}
 
       {renderPeriodeModal()}
+      {renderFilterModal()}
     </View>
   );
 }
@@ -502,5 +706,132 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
     textDecorationLine: 'underline',
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#111827',
+  },
+  filterBtn: {
+    width: 48,
+    height: 48,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  bottomSheetOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+  },
+  bottomSheetContainer: {
+    backgroundColor: '#FFFFFF', // Changed to white
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '75%',
+  },
+  bottomSheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB', // Lighter border
+  },
+  bottomSheetTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827', // Dark text
+  },
+  bottomSheetContent: {
+    flex: 1,
+  },
+  accordionContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB', // Lighter border
+  },
+  accordionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+  },
+  accordionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827', // Dark text
+  },
+  accordionContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  checkboxLabel: {
+    fontSize: 13,
+    color: '#4B5563', // Gray text
+  },
+  noFilterText: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    fontStyle: 'italic',
+    paddingVertical: 8,
+  },
+  bottomSheetFooter: {
+    padding: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB', // Lighter border
+  },
+  btnTampilkan: {
+    backgroundColor: PRIMARY, // Brand color for primary action
+    borderRadius: 30,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  btnTampilkanText: {
+    color: '#FFFFFF', // White text
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  btnHapusFilter: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 30,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  btnHapusFilterText: {
+    color: '#6B7280',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

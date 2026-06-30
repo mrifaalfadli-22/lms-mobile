@@ -33,7 +33,7 @@ const ScheduleIcon = ({ color }) => (
       <Path d="M3 10 h18 M3 16 h18 M12 10 v12" stroke="black" strokeWidth="2" />
       <Circle cx="17" cy="17" r="7" fill="black" />
     </Mask>
-    
+
     <Mask id="clockHandsMask">
       <Rect x="0" y="0" width="24" height="24" fill="white" />
       <Path d="M17 14 v 3.5 l 2 2" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
@@ -86,7 +86,7 @@ export default function MainTabNavigator({ route }) {
         component={HomeScreen}
         initialParams={{ isRegistered, user, token }}
         options={{
-          tabBarLabel: 'Home',
+          tabBarLabel: 'Beranda',
         }}
       />
       <Tab.Screen

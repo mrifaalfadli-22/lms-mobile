@@ -424,7 +424,7 @@ export default function DetailSesiScreen({ route }) {
             <AppText style={styles.cardContentText}>Belum ada tugas yang dibagikan.</AppText>
           ) : (
             tugasList.map((tugas, index) => {
-              const statusText = "Belum dikumpulkan"; // default status
+              const statusText = "Belum Dikerjakan"; // default status
 
               return (
                 <View key={index} style={styles.taskItem}>
@@ -596,7 +596,7 @@ export default function DetailSesiScreen({ route }) {
                     <View style={styles.modalInfoRow}>
                       <AppText style={styles.modalInfoLabel}>Status:</AppText>
                       <View style={styles.statusBadgeUnfinished}>
-                        <AppText style={styles.statusBadgeTextUnfinished}>Belum dikumpulkan</AppText>
+                        <AppText style={styles.statusBadgeTextUnfinished}>Belum Dikerjakan</AppText>
                       </View>
                     </View>
                   </>

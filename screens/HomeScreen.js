@@ -79,6 +79,15 @@ const CloseIcon = () => (
   </Svg>
 );
 
+const UsersIcon = () => (
+  <Svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+    <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Circle cx="9" cy="7" r="4" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
 const UserAvatarIcon = () => (
   <Svg width="46" height="46" viewBox="0 0 24 24" fill="none">
     <Circle cx="12" cy="12" r="12" fill="white" />
@@ -334,7 +343,7 @@ const AnimatedCourseCard = ({ item, index, activeIndex, scrollToIndex, navigatio
   );
 };
 
-const AnimatedMateriCard = ({ item, index, activeIndex, scrollToIndex, materisLength }) => {
+const AnimatedMateriCard = ({ item, index, activeIndex, scrollToIndex, materisLength, navigation, userToken }) => {
   const isActive = index === activeIndex;
   const anim = useRef(new Animated.Value(isActive ? 1 : 0)).current;
 
@@ -350,13 +359,48 @@ const AnimatedMateriCard = ({ item, index, activeIndex, scrollToIndex, materisLe
   const marginTop = anim.interpolate({ inputRange: [0, 1], outputRange: [15, 0] });
   const opacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] });
 
+  const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] });
+
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={() => scrollToIndex(index)}
+      onPress={() => !isActive ? scrollToIndex(index) : navigation.navigate('DetailSesi', { 
+        meeting: { 
+          id: item.id_sesi,
+          title: item.session_title,
+          topic: item.topic,
+          method: item.method,
+          link_kelas_daring: item.link_kelas_daring,
+          time: item.time,
+          lecturer: item.lecturer
+        }, 
+        course: { title: item.course }, 
+        userToken 
+      })}
       style={{ marginRight: index === materisLength - 1 ? SIDE_PEEK : CARD_GAP }}
     >
-      <Animated.Image source={{ uri: item.image }} style={[styles.materiImageCard, { height, marginTop, opacity }]} />
+      <Animated.View style={[styles.jadwalRegisteredCard, { transform: [{ scale }], opacity }]}>
+        <Image source={{ uri: item.image }} style={styles.jrcImage} />
+        <View style={styles.jrcContent}>
+          <AppText style={styles.jrcTitle} numberOfLines={2}>{item.title}</AppText>
+          <View style={styles.jrcRow}>
+            <CalendarDarkIcon />
+            <AppText style={styles.jrcInfo} numberOfLines={1}>{item.course}</AppText>
+          </View>
+          <View style={styles.jrcRow}>
+            <UsersIcon />
+            <AppText style={styles.jrcInfo}>{item.fakultas} • {item.kelas}</AppText>
+          </View>
+          <View style={styles.jrcDivider} />
+          <View style={styles.jrcLecturerRow}>
+            <Image source={{ uri: item.avatar }} style={styles.jrcAvatar} />
+            <View style={{ flex: 1 }}>
+              <AppText style={styles.jrcLecturerName} numberOfLines={1}>{item.lecturer}</AppText>
+              <AppText style={styles.jrcLecturerRole}>Dosen Pengampu</AppText>
+            </View>
+          </View>
+        </View>
+      </Animated.View>
     </TouchableOpacity>
   );
 };
@@ -681,8 +725,22 @@ export default function HomeScreen({ navigation, route }) {
               placeholderTextColor="#9CA3AF"
               value={searchText}
               onChangeText={setSearchText}
+              onSubmitEditing={() => {
+                if (searchText.trim()) {
+                  navigation.navigate('Search', { query: searchText.trim(), userToken: token });
+                }
+              }}
+              returnKeyType="search"
             />
-            <TouchableOpacity style={styles.searchBtn} activeOpacity={0.85}>
+            <TouchableOpacity 
+              style={styles.searchBtn} 
+              activeOpacity={0.85}
+              onPress={() => {
+                if (searchText.trim()) {
+                  navigation.navigate('Search', { query: searchText.trim(), userToken: token });
+                }
+              }}
+            >
               <SearchIcon />
             </TouchableOpacity>
           </View>
@@ -882,6 +940,8 @@ export default function HomeScreen({ navigation, route }) {
                     activeIndex={activeMateriIndex}
                     scrollToIndex={scrollToMateriIndex}
                     materisLength={materis.length}
+                    navigation={navigation}
+                    userToken={token}
                   />
                 )}
               />
