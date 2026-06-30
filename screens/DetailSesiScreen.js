@@ -424,7 +424,21 @@ export default function DetailSesiScreen({ route }) {
             <AppText style={styles.cardContentText}>Belum ada tugas yang dibagikan.</AppText>
           ) : (
             tugasList.map((tugas, index) => {
-              const statusText = "Belum Dikerjakan"; // default status
+              const hasGrade = tugas.nilai !== null && tugas.nilai !== undefined;
+              const hasDone = tugas.status_pengerjaan === 'Sudah Dikerjakan';
+              let statusText = "Belum Dikerjakan";
+              let badgeStyle = styles.statusBadgeUnfinished;
+              let textStyle = styles.statusBadgeTextUnfinished;
+
+              if (hasGrade) {
+                statusText = "Sudah Dinilai";
+                badgeStyle = styles.statusBadgeFinished;
+                textStyle = styles.statusBadgeTextFinished;
+              } else if (hasDone) {
+                statusText = "Sudah Dikerjakan";
+                badgeStyle = styles.statusBadgeFinished; 
+                textStyle = styles.statusBadgeTextFinished;
+              }
 
               return (
                 <View key={index} style={styles.taskItem}>
@@ -438,8 +452,15 @@ export default function DetailSesiScreen({ route }) {
                     </View>
                   </View>
                   <View style={styles.taskActionRow}>
-                    <View style={styles.statusBadgeUnfinished}>
-                      <AppText style={styles.statusBadgeTextUnfinished}>{statusText}</AppText>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <View style={badgeStyle}>
+                        <AppText style={textStyle}>{statusText}</AppText>
+                      </View>
+                      {hasGrade && (
+                        <AppText style={{ fontSize: 13, fontWeight: '700', color: '#116E63' }}>
+                          Nilai: {parseFloat(tugas.nilai)}
+                        </AppText>
+                      )}
                     </View>
                     <TouchableOpacity
                       style={styles.uploadBtn}
@@ -595,9 +616,24 @@ export default function DetailSesiScreen({ route }) {
 
                     <View style={styles.modalInfoRow}>
                       <AppText style={styles.modalInfoLabel}>Status:</AppText>
-                      <View style={styles.statusBadgeUnfinished}>
-                        <AppText style={styles.statusBadgeTextUnfinished}>Belum Dikerjakan</AppText>
-                      </View>
+                      {selectedTugas.nilai !== null && selectedTugas.nilai !== undefined ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <View style={styles.statusBadgeFinished}>
+                            <AppText style={styles.statusBadgeTextFinished}>Sudah Dinilai</AppText>
+                          </View>
+                          <AppText style={{ fontSize: 13, fontWeight: '700', color: '#116E63' }}>
+                            Nilai: {parseFloat(selectedTugas.nilai)}
+                          </AppText>
+                        </View>
+                      ) : selectedTugas.status_pengerjaan === 'Sudah Dikerjakan' ? (
+                        <View style={styles.statusBadgeFinished}>
+                          <AppText style={styles.statusBadgeTextFinished}>Sudah Dikerjakan</AppText>
+                        </View>
+                      ) : (
+                        <View style={styles.statusBadgeUnfinished}>
+                          <AppText style={styles.statusBadgeTextUnfinished}>Belum Dikerjakan</AppText>
+                        </View>
+                      )}
                     </View>
                   </>
                 )}
@@ -813,6 +849,17 @@ const styles = StyleSheet.create({
   statusBadgeTextUnfinished: {
     fontSize: 11,
     color: '#DC2626',
+    fontWeight: '600',
+  },
+  statusBadgeFinished: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  statusBadgeTextFinished: {
+    fontSize: 11,
+    color: '#059669',
     fontWeight: '600',
   },
   uploadBtn: {
