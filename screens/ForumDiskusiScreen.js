@@ -1,8 +1,9 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState, useRef, useEffect } from 'react';
 import AppText from '../components/AppText';
-import { 
-  View,  StyleSheet, TextInput, TouchableOpacity, 
-  FlatList, KeyboardAvoidingView, Platform, ImageBackground, Image, Modal, Alert 
+import {
+  View, StyleSheet, TextInput, TouchableOpacity,
+  FlatList, KeyboardAvoidingView, Platform, ImageBackground, Image, Modal, Alert
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
@@ -71,7 +72,7 @@ export default function ForumDiskusiScreen({ route }) {
   const [selectedMessage, setSelectedMessage] = useState(null);
 
   const flatListRef = useRef(null);
-  const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+  const baseUrl = API_BASE_URL;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -187,7 +188,8 @@ export default function ForumDiskusiScreen({ route }) {
   const handleDelete = () => {
     Alert.alert("Hapus Pesan", "Anda yakin ingin menghapus pesan ini?", [
       { text: "Batal", style: "cancel" },
-      { text: "Hapus", style: "destructive", onPress: async () => {
+      {
+        text: "Hapus", style: "destructive", onPress: async () => {
           try {
             const res = await fetch(`${baseUrl}/api/forum/${selectedMessage.id_pesan}`, {
               method: 'DELETE',
@@ -218,12 +220,12 @@ export default function ForumDiskusiScreen({ route }) {
 
   const renderMessage = ({ item }) => {
     const isMe = currentUser && currentUser.id_user === item.id_pengirim;
-    
+
     const timeAgo = (dateString) => {
       if (!dateString) return '';
       const diff = new Date() - new Date(dateString);
       const hours = Math.floor(diff / 3600000);
-      if (hours >= 24) return `${Math.floor(hours/24)} hari yang lalu`;
+      if (hours >= 24) return `${Math.floor(hours / 24)} hari yang lalu`;
       if (hours > 0) return `${hours} jam yang lalu`;
       const mins = Math.floor(diff / 60000);
       if (mins > 0) return `${mins} menit yang lalu`;
@@ -248,7 +250,7 @@ export default function ForumDiskusiScreen({ route }) {
                 <DotsIcon />
               </TouchableOpacity>
             </View>
-            
+
             {item.parent_pesan && (
               <View style={styles.replyBubble}>
                 <AppText style={styles.replySender}>{item.parent_pesan.pengirim?.nama_lengkap || 'Anonim'}</AppText>
@@ -257,13 +259,13 @@ export default function ForumDiskusiScreen({ route }) {
             )}
 
             <AppText style={styles.messageText}>{item.isi_pesan}</AppText>
-            
+
             <View style={styles.messageMeta}>
               {item.is_edited && <AppText style={styles.editedText}>Diedit</AppText>}
               <AppText style={styles.messageTime}>{timeAgo(item.waktu_kirim)}</AppText>
             </View>
           </View>
-          
+
           <TouchableOpacity style={styles.balasBtn} onPress={() => { setSelectedMessage(item); handleReply(); }}>
             <AppText style={styles.balasText}>Balas</AppText>
           </TouchableOpacity>
@@ -281,7 +283,7 @@ export default function ForumDiskusiScreen({ route }) {
                 <DotsIcon />
               </TouchableOpacity>
             </View>
-            
+
             {item.parent_pesan && (
               <View style={styles.replyBubble}>
                 <AppText style={styles.replySender}>{item.parent_pesan.pengirim?.nama_lengkap || 'Anonim'}</AppText>
@@ -290,13 +292,13 @@ export default function ForumDiskusiScreen({ route }) {
             )}
 
             <AppText style={styles.messageText}>{item.isi_pesan}</AppText>
-            
+
             <View style={styles.messageMeta}>
               {item.is_edited && <AppText style={styles.editedText}>Diedit</AppText>}
               <AppText style={styles.messageTime}>{timeAgo(item.waktu_kirim)}</AppText>
             </View>
           </View>
-          
+
           <TouchableOpacity style={styles.balasBtn} onPress={() => { setSelectedMessage(item); handleReply(); }}>
             <AppText style={styles.balasText}>Balas</AppText>
           </TouchableOpacity>
@@ -309,7 +311,7 @@ export default function ForumDiskusiScreen({ route }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center'}} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => navigation.goBack()}>
           <View style={styles.backBtn}>
             <BackIcon />
           </View>
@@ -359,8 +361,8 @@ export default function ForumDiskusiScreen({ route }) {
               onChangeText={setInputText}
               multiline
             />
-            <TouchableOpacity 
-              style={[styles.sendBtn, !inputText.trim() && styles.sendBtnDisabled]} 
+            <TouchableOpacity
+              style={[styles.sendBtn, !inputText.trim() && styles.sendBtnDisabled]}
               onPress={handleSend}
               disabled={!inputText.trim()}
             >
@@ -373,29 +375,29 @@ export default function ForumDiskusiScreen({ route }) {
       {/* Options Modal */}
       <Modal transparent visible={modalVisible} animationType="fade" onRequestClose={() => setModalVisible(false)}>
         <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVisible(false)}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.modalOption} onPress={handleReply}>
-              <ReplyIcon />
-              <AppText style={styles.modalOptionText}>Balas</AppText>
-            </TouchableOpacity>
-            
-            {selectedMessage && currentUser && selectedMessage.id_pengirim === currentUser.id_user && (
-              <>
-                <View style={styles.modalDivider} />
-                <TouchableOpacity style={styles.modalOption} onPress={handleEdit}>
-                  <EditIcon />
-                  <AppText style={styles.modalOptionText}>Edit</AppText>
-                </TouchableOpacity>
-                <View style={styles.modalDivider} />
-                <TouchableOpacity style={styles.modalOption} onPress={handleDelete}>
-                  <DeleteIcon />
-                  <AppText style={[styles.modalOptionText, { color: '#EF4444' }]}>Hapus</AppText>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVisible(false)}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity style={styles.modalOption} onPress={handleReply}>
+                <ReplyIcon />
+                <AppText style={styles.modalOptionText}>Balas</AppText>
+              </TouchableOpacity>
+
+              {selectedMessage && currentUser && selectedMessage.id_pengirim === currentUser.id_user && (
+                <>
+                  <View style={styles.modalDivider} />
+                  <TouchableOpacity style={styles.modalOption} onPress={handleEdit}>
+                    <EditIcon />
+                    <AppText style={styles.modalOptionText}>Edit</AppText>
+                  </TouchableOpacity>
+                  <View style={styles.modalDivider} />
+                  <TouchableOpacity style={styles.modalOption} onPress={handleDelete}>
+                    <DeleteIcon />
+                    <AppText style={[styles.modalOptionText, { color: '#EF4444' }]}>Hapus</AppText>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </TouchableOpacity>
         </BlurView>
       </Modal>
 

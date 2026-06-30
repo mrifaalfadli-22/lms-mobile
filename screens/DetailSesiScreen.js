@@ -1,6 +1,7 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import AppText from '../components/AppText';
-import { View,  StyleSheet, ScrollView, TouchableOpacity, ImageBackground, Image, Platform, Linking, Modal } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, ImageBackground, Image, Platform, Linking, Modal } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Rect, Polyline, Circle } from 'react-native-svg';
@@ -95,8 +96,8 @@ export default function DetailSesiScreen({ route }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
-        
+        const baseUrl = API_BASE_URL;
+
         // Fetch Materials
         const resMateri = await fetch(`${baseUrl}/api/materi/sesi/${meeting?.id}`, {
           headers: {
@@ -142,7 +143,7 @@ export default function DetailSesiScreen({ route }) {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+        const baseUrl = API_BASE_URL;
         const res = await fetch(`${baseUrl}/api/user`, {
           headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${userToken}` }
         });
@@ -156,7 +157,7 @@ export default function DetailSesiScreen({ route }) {
   useEffect(() => {
     const fetchPresensi = async () => {
       try {
-        const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+        const baseUrl = API_BASE_URL;
         const res = await fetch(`${baseUrl}/api/presensi/sesi/${meeting?.id}/saya`, {
           headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${userToken}` }
         });
@@ -323,10 +324,10 @@ export default function DetailSesiScreen({ route }) {
                     <AppText style={styles.fileNameText} numberOfLines={1}>{fileName}</AppText>
                     <AppText style={styles.fileSizeText}>{ext.toUpperCase()}</AppText>
                   </View>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.downloadIconBtn}
                     onPress={() => {
-                      const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+                      const baseUrl = API_BASE_URL;
                       Linking.openURL(`${baseUrl}/api/public/download?path=${file}&title=${encodeURIComponent(meetingTitle)}`);
                     }}
                   >
@@ -355,7 +356,7 @@ export default function DetailSesiScreen({ route }) {
                   onPress={async () => {
                     setIsMarkingPresensi(true);
                     try {
-                      const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+                      const baseUrl = API_BASE_URL;
                       const res = await fetch(`${baseUrl}/api/presensi/hadir-sendiri`, {
                         method: 'POST',
                         headers: {
@@ -424,7 +425,7 @@ export default function DetailSesiScreen({ route }) {
           ) : (
             tugasList.map((tugas, index) => {
               const statusText = "Belum dikumpulkan"; // default status
-              
+
               return (
                 <View key={index} style={styles.taskItem}>
                   <View style={styles.taskHeaderRow}>
@@ -440,7 +441,7 @@ export default function DetailSesiScreen({ route }) {
                     <View style={styles.statusBadgeUnfinished}>
                       <AppText style={styles.statusBadgeTextUnfinished}>{statusText}</AppText>
                     </View>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.uploadBtn}
                       onPress={() => {
                         setSelectedTugas(tugas);
@@ -460,8 +461,8 @@ export default function DetailSesiScreen({ route }) {
 
         {/* Forum diskusi Card */}
         <View style={styles.card}>
-          <TouchableOpacity 
-            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }} 
+          <TouchableOpacity
+            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
             onPress={() => setIsForumExpanded(!isForumExpanded)}
             activeOpacity={0.7}
           >
@@ -489,7 +490,7 @@ export default function DetailSesiScreen({ route }) {
                       if (!dateString) return '';
                       const diff = new Date() - new Date(dateString);
                       const hours = Math.floor(diff / 3600000);
-                      if (hours >= 24) return `${Math.floor(hours/24)} hari yang lalu`;
+                      if (hours >= 24) return `${Math.floor(hours / 24)} hari yang lalu`;
                       if (hours > 0) return `${hours} jam yang lalu`;
                       const mins = Math.floor(diff / 60000);
                       if (mins > 0) return `${mins} menit yang lalu`;
@@ -545,64 +546,64 @@ export default function DetailSesiScreen({ route }) {
         onRequestClose={() => setIsTugasModalVisible(false)}
       >
         <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <AppText style={styles.modalTitle}>Detail Tugas</AppText>
-              <TouchableOpacity onPress={() => setIsTugasModalVisible(false)} style={styles.closeModalBtn}>
-                <AppText style={{ fontSize: 16, color: '#6B7280', fontWeight: 'bold' }}>X</AppText>
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalBody}>
-              {selectedTugas && (
-                <>
-                  <AppText style={styles.modalTaskTitle}>{selectedTugas.judul_tugas}</AppText>
-                  <AppText style={styles.modalTaskDesc}>{selectedTugas.deskripsi_tugas || "Tidak ada deskripsi untuk tugas ini."}</AppText>
-                  
-                  <View style={styles.modalInfoRow}>
-                    <AppText style={styles.modalInfoLabel}>Tenggat Waktu:</AppText>
-                    <AppText style={styles.modalInfoValueRed}>{formatTugasDate(selectedTugas.batas_waktu)}</AppText>
-                  </View>
-                  
-                  {selectedTugas.link_cbt && (
-                    <View style={styles.modalInfoRow}>
-                      <AppText style={styles.modalInfoLabel}>Link CBT:</AppText>
-                      <TouchableOpacity onPress={() => Linking.openURL(selectedTugas.link_cbt)}>
-                        <AppText style={styles.modalInfoValueBlue}>{selectedTugas.link_cbt}</AppText>
-                      </TouchableOpacity>
-                    </View>
-                  )}
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalHeader}>
+                <AppText style={styles.modalTitle}>Detail Tugas</AppText>
+                <TouchableOpacity onPress={() => setIsTugasModalVisible(false)} style={styles.closeModalBtn}>
+                  <AppText style={{ fontSize: 16, color: '#6B7280', fontWeight: 'bold' }}>X</AppText>
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={styles.modalBody}>
+                {selectedTugas && (
+                  <>
+                    <AppText style={styles.modalTaskTitle}>{selectedTugas.judul_tugas}</AppText>
+                    <AppText style={styles.modalTaskDesc}>{selectedTugas.deskripsi_tugas || "Tidak ada deskripsi untuk tugas ini."}</AppText>
 
-                  {selectedTugas.token_cbt && (
                     <View style={styles.modalInfoRow}>
-                      <AppText style={styles.modalInfoLabel}>Token CBT:</AppText>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={{ backgroundColor: '#F3F4F6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, marginRight: 8 }}>
-                          <AppText style={styles.modalInfoValueBold}>{selectedTugas.token_cbt}</AppText>
-                        </View>
-                        <TouchableOpacity 
-                          onPress={async () => {
-                            await Clipboard.setStringAsync(selectedTugas.token_cbt);
-                          }}
-                          style={{ padding: 6, backgroundColor: '#ECFDF5', borderRadius: 6 }}
-                        >
-                          <CopyIcon />
+                      <AppText style={styles.modalInfoLabel}>Tenggat Waktu:</AppText>
+                      <AppText style={styles.modalInfoValueRed}>{formatTugasDate(selectedTugas.batas_waktu)}</AppText>
+                    </View>
+
+                    {selectedTugas.link_cbt && (
+                      <View style={styles.modalInfoRow}>
+                        <AppText style={styles.modalInfoLabel}>Link CBT:</AppText>
+                        <TouchableOpacity onPress={() => Linking.openURL(selectedTugas.link_cbt)}>
+                          <AppText style={styles.modalInfoValueBlue}>{selectedTugas.link_cbt}</AppText>
                         </TouchableOpacity>
                       </View>
-                    </View>
-                  )}
+                    )}
 
-                  <View style={styles.modalInfoRow}>
-                    <AppText style={styles.modalInfoLabel}>Status:</AppText>
-                    <View style={styles.statusBadgeUnfinished}>
-                      <AppText style={styles.statusBadgeTextUnfinished}>Belum dikumpulkan</AppText>
+                    {selectedTugas.token_cbt && (
+                      <View style={styles.modalInfoRow}>
+                        <AppText style={styles.modalInfoLabel}>Token CBT:</AppText>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ backgroundColor: '#F3F4F6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, marginRight: 8 }}>
+                            <AppText style={styles.modalInfoValueBold}>{selectedTugas.token_cbt}</AppText>
+                          </View>
+                          <TouchableOpacity
+                            onPress={async () => {
+                              await Clipboard.setStringAsync(selectedTugas.token_cbt);
+                            }}
+                            style={{ padding: 6, backgroundColor: '#ECFDF5', borderRadius: 6 }}
+                          >
+                            <CopyIcon />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
+
+                    <View style={styles.modalInfoRow}>
+                      <AppText style={styles.modalInfoLabel}>Status:</AppText>
+                      <View style={styles.statusBadgeUnfinished}>
+                        <AppText style={styles.statusBadgeTextUnfinished}>Belum dikumpulkan</AppText>
+                      </View>
                     </View>
-                  </View>
-                </>
-              )}
-            </ScrollView>
+                  </>
+                )}
+              </ScrollView>
+            </View>
           </View>
-        </View>
         </BlurView>
       </Modal>
     </View>

@@ -1,7 +1,8 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState, useEffect, useCallback } from 'react';
 import AppText from '../components/AppText';
 import { useFocusEffect } from '@react-navigation/native';
-import { View,  StyleSheet, TouchableOpacity, Image, StatusBar, FlatList, ImageBackground, Platform, ActivityIndicator, Modal } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, StatusBar, FlatList, ImageBackground, Platform, ActivityIndicator, Modal } from 'react-native';
 import Svg, { Polyline, Path, Circle } from 'react-native-svg';
 import { BlurView } from 'expo-blur';
 
@@ -67,21 +68,21 @@ export default function MataKuliahScreen({ navigation, route }) {
           };
 
           if (isRegistered && token) {
-            API_URL = Platform.OS === 'android' 
-              ? 'http://10.0.2.2:8000/api/mahasiswa/mata-kuliah' 
-              : 'http://localhost:8000/api/mahasiswa/mata-kuliah';
+            API_URL = Platform.OS === 'android'
+              ? `${API_BASE_URL}/api/mahasiswa/mata-kuliah`
+              : `http://localhost:8000/api/mahasiswa/mata-kuliah`;
             headers['Authorization'] = `Bearer ${token}`;
           } else {
-            API_URL = Platform.OS === 'android' 
-              ? 'http://10.0.2.2:8000/api/public/mata-kuliah' 
-              : 'http://localhost:8000/api/public/mata-kuliah';
+            API_URL = Platform.OS === 'android'
+              ? `${API_BASE_URL}/api/public/mata-kuliah`
+              : `http://localhost:8000/api/public/mata-kuliah`;
           }
-            
+
           const response = await fetch(API_URL, {
             method: 'GET',
             headers: headers
           });
-          
+
           const json = await response.json();
           if (json.status === 'success') {
             setCoursesData({
@@ -95,7 +96,7 @@ export default function MataKuliahScreen({ navigation, route }) {
           setIsLoading(false);
         }
       };
-      
+
       fetchMataKuliah();
     }, [isRegistered, token])
   );
@@ -120,39 +121,39 @@ export default function MataKuliahScreen({ navigation, route }) {
     const isDiambil = activeTab === 'diambil';
     return (
       <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={() => navigation.navigate('DetailMataKuliah', { course: item, isRegistered, user, token, isDiambil })}>
-      <Image source={{ uri: item?.image || 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80' }} style={styles.cardImage} />
-      <View style={styles.cardContent}>
-        <AppText style={styles.cardTitle} numberOfLines={2}>{item?.title || 'Judul Tidak Tersedia'}</AppText>
-        <View style={styles.cardRow}>
-          <UsersIcon />
-          <AppText style={styles.cardInfo} numberOfLines={1}>{item?.type || 'Tipe Tidak Tersedia'}</AppText>
-        </View>
-        <View style={styles.cardRow}>
-          <ClockIcon />
-          <AppText style={styles.cardInfo}>{item?.time || 'Waktu Tidak Tersedia'}</AppText>
-        </View>
-        <View style={styles.dosenRow}>
-          <Image source={{ uri: item?.avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80' }} style={styles.dosenAvatar} />
-          <View>
-            <AppText style={styles.dosenName} numberOfLines={1}>{item?.dosen || 'Dosen Tidak Tersedia'}</AppText>
-            <AppText style={styles.dosenRole}>{item?.role || 'Dosen pengampu'}</AppText>
+        <Image source={{ uri: item?.image || 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80' }} style={styles.cardImage} />
+        <View style={styles.cardContent}>
+          <AppText style={styles.cardTitle} numberOfLines={2}>{item?.title || 'Judul Tidak Tersedia'}</AppText>
+          <View style={styles.cardRow}>
+            <UsersIcon />
+            <AppText style={styles.cardInfo} numberOfLines={1}>{item?.type || 'Tipe Tidak Tersedia'}</AppText>
+          </View>
+          <View style={styles.cardRow}>
+            <ClockIcon />
+            <AppText style={styles.cardInfo}>{item?.time || 'Waktu Tidak Tersedia'}</AppText>
+          </View>
+          <View style={styles.dosenRow}>
+            <Image source={{ uri: item?.avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80' }} style={styles.dosenAvatar} />
+            <View>
+              <AppText style={styles.dosenName} numberOfLines={1}>{item?.dosen || 'Dosen Tidak Tersedia'}</AppText>
+              <AppText style={styles.dosenRole}>{item?.role || 'Dosen pengampu'}</AppText>
+            </View>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
-};
+      </TouchableOpacity>
+    );
+  };
 
   const renderTabs = () => (
     <View style={styles.tabContainer}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.tabButton, activeTab === 'diambil' && styles.tabButtonActive]}
         onPress={() => setActiveTab('diambil')}
         activeOpacity={0.8}
       >
         <AppText style={[styles.tabText, activeTab === 'diambil' && styles.tabTextActive]}>Diambil</AppText>
       </TouchableOpacity>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.tabButton, activeTab === 'tersedia' && styles.tabButtonActive]}
         onPress={() => setActiveTab('tersedia')}
         activeOpacity={0.8}
@@ -170,35 +171,35 @@ export default function MataKuliahScreen({ navigation, route }) {
       onRequestClose={() => setModalPeriodeVisible(false)}
     >
       <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
-        <TouchableOpacity 
-          style={styles.modalOverlay} 
-          activeOpacity={1} 
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
           onPress={() => setModalPeriodeVisible(false)}
         >
-        <View style={styles.modalContent}>
-          <AppText style={styles.modalTitle}>Pilih Periode</AppText>
-          {PERIODES.map((periode, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={[
-                styles.periodeOption, 
-                selectedPeriode === periode && styles.periodeOptionActive
-              ]}
-              onPress={() => {
-                setSelectedPeriode(periode);
-                setModalPeriodeVisible(false);
-              }}
-            >
-              <AppText style={[
-                styles.periodeOptionText,
-                selectedPeriode === periode && styles.periodeOptionTextActive
-              ]}>
-                {periode}
-              </AppText>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </TouchableOpacity>
+          <View style={styles.modalContent}>
+            <AppText style={styles.modalTitle}>Pilih Periode</AppText>
+            {PERIODES.map((periode, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.periodeOption,
+                  selectedPeriode === periode && styles.periodeOptionActive
+                ]}
+                onPress={() => {
+                  setSelectedPeriode(periode);
+                  setModalPeriodeVisible(false);
+                }}
+              >
+                <AppText style={[
+                  styles.periodeOptionText,
+                  selectedPeriode === periode && styles.periodeOptionTextActive
+                ]}>
+                  {periode}
+                </AppText>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
       </BlurView>
     </Modal>
   );
@@ -206,7 +207,7 @@ export default function MataKuliahScreen({ navigation, route }) {
   // Filter berdasarkan tab aktif (diambil/tersedia)
   const sourceData = activeTab === 'diambil' ? coursesData.diambil : coursesData.tersedia;
   const safeSourceData = Array.isArray(sourceData) ? sourceData : [];
-  
+
   // Filter berdasarkan periode yang dipilih
   const currentData = safeSourceData.filter(item => {
     if (!item || !item.tahun) return true; // Jika data lama tidak memiliki tahun, tampilkan saja
@@ -221,8 +222,8 @@ export default function MataKuliahScreen({ navigation, route }) {
       {/* ── Periode Selector ── */}
       <View style={styles.periodeRow}>
         <AppText style={styles.periodeLabel}>Periode :</AppText>
-        <TouchableOpacity 
-          style={styles.periodeSelector} 
+        <TouchableOpacity
+          style={styles.periodeSelector}
           activeOpacity={0.7}
           onPress={() => setModalPeriodeVisible(true)}
         >
@@ -258,7 +259,7 @@ export default function MataKuliahScreen({ navigation, route }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={BG} />
-      
+
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>

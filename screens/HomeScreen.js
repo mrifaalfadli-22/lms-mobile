@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import AppText from '../components/AppText';
 import {
@@ -481,8 +482,8 @@ export default function HomeScreen({ navigation, route }) {
         setIsLoading(true);
         try {
           const API_URL = Platform.OS === 'android'
-            ? 'http://10.0.2.2:8000/api/mahasiswa/dashboard'
-            : 'http://localhost:8000/api/mahasiswa/dashboard';
+            ? `${API_BASE_URL}/api/mahasiswa/dashboard`
+            : `http://localhost:8000/api/mahasiswa/dashboard`;
 
           const response = await fetch(API_URL, {
             method: 'GET',
@@ -622,7 +623,7 @@ export default function HomeScreen({ navigation, route }) {
               {isRegistered ? (
                 user?.foto_profil ? (
                   <Image
-                    source={{ uri: `http://10.0.2.2:8000/storage/${user.foto_profil}` }}
+                    source={{ uri: `${API_BASE_URL}/storage/${user.foto_profil}` }}
                     style={styles.avatarImage}
                   />
                 ) : (

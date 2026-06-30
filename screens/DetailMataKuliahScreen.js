@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState, useRef, useEffect } from 'react';
 import AppText from '../components/AppText';
 import {
@@ -87,12 +88,12 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
 
           if (isRegistered && userToken) {
             API_URL = Platform.OS === 'android'
-              ? `http://10.0.2.2:8000/api/sesi-pertemuan/jadwal/${course.id}`
+              ? `${API_BASE_URL}/api/sesi-pertemuan/jadwal/${course.id}`
               : `http://localhost:8000/api/sesi-pertemuan/jadwal/${course.id}`;
             headers['Authorization'] = `Bearer ${userToken}`;
           } else {
             API_URL = Platform.OS === 'android'
-              ? `http://10.0.2.2:8000/api/public/sesi-pertemuan/jadwal/${course.id}`
+              ? `${API_BASE_URL}/api/public/sesi-pertemuan/jadwal/${course.id}`
               : `http://localhost:8000/api/public/sesi-pertemuan/jadwal/${course.id}`;
           }
 
@@ -141,7 +142,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
       const fetchMaterials = async () => {
         setIsLoadingMaterials(true);
         try {
-          const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+          const baseUrl = API_BASE_URL;
           const response = await fetch(`${baseUrl}/api/materi/jadwal/${course.id}`, {
             headers: {
               'Accept': 'application/json',
@@ -162,7 +163,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
       const fetchAssignments = async () => {
         setIsLoadingAssignments(true);
         try {
-          const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+          const baseUrl = API_BASE_URL;
           const response = await fetch(`${baseUrl}/api/tugas/jadwal/${course.id}`, {
             headers: {
               'Accept': 'application/json',
@@ -259,8 +260,8 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
     setIsEnrolling(true);
     try {
       const API_URL = Platform.OS === 'android'
-        ? 'http://10.0.2.2:8000/api/peserta-kelas/enroll'
-        : 'http://localhost:8000/api/peserta-kelas/enroll';
+        ? `${API_BASE_URL}/api/peserta-kelas/enroll`
+        : `http://localhost:8000/api/peserta-kelas/enroll`;
 
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -529,7 +530,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                                 <TouchableOpacity
                                   style={{ paddingHorizontal: 8, paddingVertical: 4 }}
                                   onPress={() => {
-                                    const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+                                    const baseUrl = API_BASE_URL;
                                     Linking.openURL(`${baseUrl}/api/public/download?path=${file}&title=${encodeURIComponent(item.title)}`);
                                   }}
                                 >

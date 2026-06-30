@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/api';
 import React, { useState } from 'react';
 import AppText from '../components/AppText';
 import {
@@ -94,7 +95,7 @@ export default function LoginScreen({ navigation }) {
       // Endpoint API backend Laravel Anda. 
       // Ganti dengan IP lokal Anda jika menggunakan physical device (contoh: http://192.168.1.100:8000/api/login)
       // Gunakan 10.0.2.2 untuk Android Emulator.
-      const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8000/api/login' : 'http://localhost:8000/api/login';
+      const API_URL = Platform.OS === 'android' ? `${API_BASE_URL}/api/login` : `http://localhost:8000/api/login`;
 
       const response = await fetch(API_URL, {
         method: 'POST',
