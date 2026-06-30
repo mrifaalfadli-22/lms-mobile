@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppText from '../components/AppText';
 import {
   View,
-
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   TextInput,
   Image,
-  StatusBar
+  StatusBar,
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
+import { API_BASE_URL } from '../config/api';
 
 const BackIcon = () => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -34,104 +37,145 @@ const ChevronRightIcon = () => (
 
 const CourseCard = ({ course, onPress }) => (
   <TouchableOpacity style={styles.courseCard} onPress={onPress} activeOpacity={0.7}>
+    <LinearGradient
+      colors={['#F8F9FA']}
+      start={{ x: 0, y: 0.5 }}
+      end={{ x: 1, y: 0.5 }}
+      style={StyleSheet.absoluteFillObject}
+    />
     <View style={styles.courseIconBox}>
-      <AppText style={styles.courseIconText}>{course.courseName.substring(0, 2).toUpperCase()}</AppText>
+      <AppText style={styles.courseIconText}>{course?.title ? course.title.substring(0, 2).toUpperCase() : 'MK'}</AppText>
     </View>
     <View style={styles.courseContent}>
-      <AppText style={styles.courseTitleText}>{course.courseName}</AppText>
-      <AppText style={styles.courseDosenText}>{course.dosen}</AppText>
-      <AppText style={styles.courseNidnText}>NIDN: {course.nidn}</AppText>
+      <AppText style={styles.courseTitleText}>{course.title}</AppText>
+      <AppText style={styles.courseNidnText}>{(course.prodi || 'Program Studi')} . {(course.kelas || 'Kelas')}</AppText>
+      <View style={styles.separator} />
+      <AppText style={styles.courseDosenText}>{course.dosen || 'Dosen tidak diketahui'}</AppText>
     </View>
     <ChevronRightIcon />
   </TouchableOpacity>
 );
 
-const AssignmentCard = ({ item }) => (
-  <View style={styles.card}>
-    <View style={styles.cardHeader}>
-      <Image source={item.avatar} style={styles.avatar} />
-      <View style={styles.headerInfo}>
-        <AppText style={styles.lecturerText}>{item.lecturer} - {item.course}</AppText>
-        <AppText style={styles.dateText}>Diupload : {item.date}</AppText>
+const AssignmentCard = ({ item, course, onPress }) => {
+  const isDinilai = item.nilai !== null && item.nilai !== undefined;
+  const isDikerjakan = item.status_pengerjaan === 'Sudah Dikerjakan';
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <View style={styles.headerInfo}>
+          <AppText style={styles.dateText}>
+            Batas waktu : {new Date(item.batas_waktu).toLocaleDateString('id-ID')}, {new Date(item.batas_waktu).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).replace(/\./g, ':')}
+          </AppText>
+        </View>
+      </View>
+      <AppText style={styles.titleText}>{item.judul_tugas}</AppText>
+      <AppText style={styles.descText}>{item.deskripsi_tugas}</AppText>
+
+      <View style={styles.actionRow}>
+        <TouchableOpacity style={styles.btnLihat} onPress={onPress}>
+          <AppText style={styles.btnLihatText}>Lihat tugas</AppText>
+        </TouchableOpacity>
+
+        {isDikerjakan ? (
+          <View style={[styles.statusBadge, { backgroundColor: isDinilai ? '#E0F2F1' : '#E5E7EB' }]}>
+            <AppText style={[styles.statusText, { color: isDinilai ? '#116E63' : '#4B5563' }]}>
+              {isDinilai ? `Sudah Dinilai - ${item.nilai}` : 'Sudah Dikerjakan'}
+            </AppText>
+          </View>
+        ) : (
+          <View style={[styles.statusBadge, { backgroundColor: '#FEE2E2' }]}>
+            <AppText style={[styles.statusText, { color: '#DC2626' }]}>Belum Dikerjakan</AppText>
+          </View>
+        )}
       </View>
     </View>
-    <AppText style={styles.titleText}>{item.title}</AppText>
-    <AppText style={styles.descText}>{item.desc}</AppText>
-    <TouchableOpacity style={styles.btnLihat}>
-      <AppText style={styles.btnLihatText}>Lihat tugas</AppText>
-    </TouchableOpacity>
-  </View>
-);
+  );
+};
 
-export default function TugasKuisScreen() {
+export default function TugasKuisScreen({ route }) {
   const navigation = useNavigation();
+  const isRegistered = route?.params?.isRegistered || false;
+  const user = route?.params?.user || null;
+  const token = route?.params?.token || null;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCourse, setSelectedCourse] = useState(null);
 
-  const courseTasks = [
-    {
-      id: 'c1',
-      courseName: 'Pemrograman Web + Praktikum',
-      dosen: 'Yulianto, M.Kom',
-      nidn: '0412345678',
-      tasks: [
-        {
-          id: '1',
-          lecturer: 'Yulianto, M.Kom',
-          course: 'Pemrograman Web + Praktikum',
-          date: '16 Juni 2026 - 20.26',
-          title: 'Tugas Akhir Semester: Aplikasi E-Commerce',
-          desc: 'Buatlah aplikasi web e-commerce menggunakan React.js dan Node.js. Pastikan ada fitur keranjang dan checkout. Tenggat waktu 30 Juni 2026.',
-          avatar: require('../assets/dosen.png')
-        },
-        {
-          id: '2',
-          lecturer: 'Yulianto, M.Kom',
-          course: 'Pemrograman Web + Praktikum',
-          date: '10 Juni 2026 - 13.00',
-          title: 'Kuis 1: Dasar HTML & CSS',
-          desc: 'Kerjakan soal pilihan ganda tentang struktur dasar HTML dan layouting dengan CSS.',
-          avatar: require('../assets/dosen.png')
+  const [courses, setCourses] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchMataKuliah = async () => {
+      setIsLoading(true);
+      try {
+        let API_URL = '';
+        let headers = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        };
+
+        if (isRegistered && token) {
+          API_URL = `${API_BASE_URL}/api/mahasiswa/mata-kuliah`;
+          headers['Authorization'] = `Bearer ${token}`;
+        } else {
+          API_URL = `${API_BASE_URL}/api/public/mata-kuliah`;
         }
-      ]
-    },
-    {
-      id: 'c2',
-      courseName: 'Kalkulus 1',
-      dosen: 'Dr. Ahmad Fauzi, M.Si.',
-      nidn: '0498765432',
-      tasks: [
-        {
-          id: '3',
-          lecturer: 'Dr. Ahmad Fauzi, M.Si.',
-          course: 'Kalkulus 1',
-          date: '18 Juni 2026 - 08.00',
-          title: 'Latihan Soal Limit dan Kontinuitas',
-          desc: 'Kerjakan soal latihan bab 2 nomor 1 sampai 10 di kertas folio. Scan lalu kumpulkan dalam format PDF.',
-          avatar: require('../assets/dosen.png')
+
+        const response = await fetch(API_URL, { headers });
+        const json = await response.json();
+        if (json.status === 'success') {
+          setCourses(isRegistered ? (json.data.diambil || []) : (json.data.tersedia || []));
         }
-      ]
+      } catch (error) {
+        console.error("Fetch Courses Error: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMataKuliah();
+  }, [isRegistered, token]);
+
+  const fetchTasks = async (courseId) => {
+    setIsLoading(true);
+    try {
+      const baseUrl = API_BASE_URL;
+      const headers = { 'Accept': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${baseUrl}/api/tugas/jadwal/${courseId}`, { headers });
+      const json = await response.json();
+      if (json.status === 'success') {
+        setTasks(json.data || []);
+      }
+    } catch (error) {
+      console.error("Fetch Tasks Error: ", error);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   const handleBack = () => {
     if (selectedCourse) {
       setSelectedCourse(null);
       setSearchQuery('');
+      setTasks([]);
     } else {
       navigation.goBack();
     }
   };
 
-  const filteredCourses = courseTasks.filter(c =>
-    c.courseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.dosen.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCourses = courses.filter(c =>
+    (c.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (c.dosen || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredTasks = selectedCourse ? selectedCourse.tasks.filter(t =>
-    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.desc.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  const filteredTasks = tasks.filter(t =>
+    (t.judul_tugas || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (t.deskripsi_tugas || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <View style={styles.safeArea}>
@@ -165,34 +209,59 @@ export default function TugasKuisScreen() {
           {!selectedCourse ? (
             /* COURSE LIST VIEW */
             <>
-              {filteredCourses.length === 0 && (
-                <AppText style={styles.emptyText}>Mata kuliah tidak ditemukan.</AppText>
+              {isLoading ? (
+                <ActivityIndicator size="large" color="#116E63" style={{ marginTop: 20 }} />
+              ) : (
+                <>
+                  {filteredCourses.length === 0 && (
+                    <AppText style={styles.emptyText}>Mata kuliah tidak ditemukan.</AppText>
+                  )}
+                  {filteredCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      onPress={() => {
+                        setSelectedCourse(course);
+                        setSearchQuery('');
+                        fetchTasks(course.id);
+                      }}
+                    />
+                  ))}
+                </>
               )}
-              {filteredCourses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  onPress={() => {
-                    setSelectedCourse(course);
-                    setSearchQuery('');
-                  }}
-                />
-              ))}
             </>
           ) : (
             /* TASKS LIST VIEW */
             <>
               <View style={styles.selectedCourseHeader}>
-                <AppText style={styles.selectedCourseTitle}>{selectedCourse.courseName}</AppText>
+                <AppText style={styles.selectedCourseTitle}>{selectedCourse.title}</AppText>
                 <AppText style={styles.selectedCourseDosen}>{selectedCourse.dosen}</AppText>
               </View>
 
-              {filteredTasks.length === 0 && (
-                <AppText style={styles.emptyText}>Tidak ada tugas untuk saat ini.</AppText>
+              {isLoading ? (
+                <ActivityIndicator size="large" color="#116E63" style={{ marginTop: 20 }} />
+              ) : (
+                <>
+                  {filteredTasks.length === 0 && (
+                    <AppText style={styles.emptyText}>Tidak ada tugas untuk saat ini.</AppText>
+                  )}
+                  {filteredTasks.map(task => (
+                    <AssignmentCard
+                      key={task.id_tugas}
+                      item={task}
+                      course={selectedCourse}
+                      onPress={() => {
+                        const meeting = {
+                          ...task.sesi_pertemuan,
+                          ...task.sesiPertemuan,
+                          id: task.id_sesi
+                        };
+                        navigation.navigate('DetailSesi', { meeting, course: selectedCourse, userToken: token });
+                      }}
+                    />
+                  ))}
+                </>
               )}
-              {filteredTasks.map(task => (
-                <AssignmentCard key={task.id} item={task} />
-              ))}
             </>
           )}
 
@@ -279,7 +348,6 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: 14,
   },
-  // Course Card Styles (Matched with MateriScreen)
   courseCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -294,6 +362,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    overflow: 'hidden',
   },
   courseIconBox: {
     width: 48,
@@ -303,6 +372,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    zIndex: 1,
   },
   courseIconText: {
     color: '#116E63',
@@ -311,6 +381,7 @@ const styles = StyleSheet.create({
   },
   courseContent: {
     flex: 1,
+    zIndex: 1,
   },
   courseTitleText: {
     fontSize: 15,
@@ -321,13 +392,18 @@ const styles = StyleSheet.create({
   courseDosenText: {
     fontSize: 14,
     color: '#4B5563',
-    marginBottom: 2,
+    marginTop: 6,
   },
   courseNidnText: {
     fontSize: 13,
     color: '#909090',
   },
-  // Selected Course Header
+  separator: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    width: '100%',
+    marginTop: 8,
+  },
   selectedCourseHeader: {
     marginBottom: 20,
     paddingBottom: 16,
@@ -344,7 +420,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#4B5563',
   },
-  // Assignment Card Styles
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -378,9 +453,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111827',
   },
+  subtitleText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#111827',
+  },
   dateText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#be3147ff',
     marginTop: 2,
   },
   titleText: {
@@ -396,9 +476,13 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginBottom: 16,
   },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   btnLihat: {
     backgroundColor: '#116E63',
-    alignSelf: 'flex-start',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 6,
@@ -406,6 +490,15 @@ const styles = StyleSheet.create({
   btnLihatText: {
     color: '#FFFFFF',
     fontSize: 13,
+    fontWeight: '600',
+  },
+  statusBadge: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+  statusText: {
+    fontSize: 12,
     fontWeight: '600',
   }
 });

@@ -58,10 +58,10 @@ const MateriCard = ({ item }) => {
         <Image
           source={
             item.type === 'ppt' ? require('../assets/ppt.png') :
-            item.type === 'doc' ? require('../assets/doc.png') :
-            item.type === 'xls' ? require('../assets/xls.png') :
-            item.type === 'pdf' ? require('../assets/pdf.png') :
-            require('../assets/other.png')
+              item.type === 'doc' ? require('../assets/doc.png') :
+                item.type === 'xls' ? require('../assets/xls.png') :
+                  item.type === 'pdf' ? require('../assets/pdf.png') :
+                    require('../assets/other.png')
           }
           style={styles.fileIcon}
           resizeMode="contain"
@@ -89,12 +89,10 @@ const CourseCard = ({ course, onPress }) => (
       <View style={styles.courseContent}>
         <AppText style={styles.courseTitleText}>{course.title}</AppText>
         <AppText style={styles.courseNidnText}>{(course.prodi || 'Program Studi')} . {(course.kelas || 'Kelas')}</AppText>
+        <View style={styles.separator} />
+        <AppText style={styles.courseDosenText}>{course.dosen}</AppText>
       </View>
       <ChevronRightIcon />
-    </View>
-    <View style={styles.courseCardDivider} />
-    <View style={styles.courseCardBottom}>
-      <AppText style={styles.courseDosenText}>{course.dosen}</AppText>
     </View>
   </TouchableOpacity>
 );
@@ -107,7 +105,7 @@ export default function MateriScreen({ route }) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCourse, setSelectedCourse] = useState(null);
-  
+
   const [courses, setCourses] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -155,7 +153,7 @@ export default function MateriScreen({ route }) {
       const baseUrl = Platform.OS === 'android' ? API_BASE_URL : 'http://localhost:8000';
       const headers = { 'Accept': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      
+
       const response = await fetch(`${baseUrl}/api/materi/jadwal/${courseId}`, { headers });
       const json = await response.json();
       if (json.status === 'success') {
@@ -169,11 +167,11 @@ export default function MateriScreen({ route }) {
               else if (['ppt', 'pptx'].includes(ext)) type = 'ppt';
               else if (['doc', 'docx'].includes(ext)) type = 'doc';
               else if (['xls', 'xlsx'].includes(ext)) type = 'xls';
-              
+
               // Extract filename
               let fileName = filePath.split('/').pop();
               fileName = fileName.replace(/^[a-f0-9\-]+_/, '');
-              
+
               allMaterials.push({
                 id: `${materi.id}_${index}`,
                 judulMateri: materi.judul,
@@ -396,6 +394,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   // Course Card Styles
+  separator: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    width: '100%',
+    marginTop: 8,
+  },
   courseCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -450,9 +454,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   courseDosenText: {
-    fontSize: 13,
-    color: '#6B7280',
-    fontWeight: '500',
+    fontSize: 14,
+    color: '#4B5563',
+    marginTop: 6,
   },
   courseNidnText: {
     fontSize: 13,
