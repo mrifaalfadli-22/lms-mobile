@@ -200,7 +200,9 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                 time: timeStr,
                 title: tugas.judul_tugas,
                 desc: tugas.deskripsi_tugas,
-                id_sesi: tugas.id_sesi
+                id_sesi: tugas.id_sesi,
+                status_pengerjaan: tugas.status_pengerjaan,
+                nilai: tugas.nilai
               };
             });
             setAssignments(fetchedAssignments);
@@ -455,18 +457,43 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                       </View>
                       <AppText style={styles.assignmentTitle}>{item.title}</AppText>
                       <AppText style={styles.assignmentDesc}>{item.desc}</AppText>
-                      <TouchableOpacity
-                        style={styles.lihatTugasBtn}
-                        activeOpacity={0.8}
-                        onPress={() => {
-                          const meeting = meetings.find(m => m.id === item.id_sesi);
-                          if (meeting) {
-                            navigation.navigate('DetailSesi', { meeting: meeting, course: course, userToken: userToken });
-                          }
-                        }}
-                      >
-                        <AppText style={styles.lihatTugasText}>Lihat tugas</AppText>
-                      </TouchableOpacity>
+
+                      {/* TAMPILAN STATUS TUGAS */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          {item.nilai !== null && item.nilai !== undefined ? (
+                            <>
+                              <View style={styles.statusBadgeFinished}>
+                                <AppText style={styles.statusBadgeTextFinished}>Sudah Dinilai</AppText>
+                              </View>
+                              <AppText style={{ fontSize: 13, fontWeight: '700', color: '#116E63' }}>
+                                Nilai: {parseFloat(item.nilai)}
+                              </AppText>
+                            </>
+                          ) : item.status_pengerjaan === 'Sudah Dikerjakan' ? (
+                            <View style={styles.statusBadgeFinished}>
+                              <AppText style={styles.statusBadgeTextFinished}>Sudah Dikerjakan</AppText>
+                            </View>
+                          ) : (
+                            <View style={styles.statusBadgeUnfinished}>
+                              <AppText style={styles.statusBadgeTextUnfinished}>Belum Dikerjakan</AppText>
+                            </View>
+                          )}
+                        </View>
+
+                        <TouchableOpacity
+                          style={styles.lihatTugasBtn}
+                          activeOpacity={0.8}
+                          onPress={() => {
+                            const meeting = meetings.find(m => m.id === item.id_sesi);
+                            if (meeting) {
+                              navigation.navigate('DetailSesi', { meeting: meeting, course: course, userToken: userToken });
+                            }
+                          }}
+                        >
+                          <AppText style={styles.lihatTugasText}>Lihat tugas</AppText>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
                 ))
@@ -970,7 +997,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#4B5563',
     lineHeight: 18,
-    marginBottom: 16,
+    marginBottom: 8,
+  },
+  statusBadgeUnfinished: {
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  statusBadgeTextUnfinished: {
+    fontSize: 11,
+    color: '#DC2626',
+    fontWeight: '600',
+  },
+  statusBadgeFinished: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  statusBadgeTextFinished: {
+    fontSize: 11,
+    color: '#059669',
+    fontWeight: '600',
   },
   lihatTugasBtn: {
     backgroundColor: PRIMARY,
