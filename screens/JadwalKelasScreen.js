@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import AppText from '../components/AppText';
-import { View, StyleSheet, TouchableOpacity, Image, StatusBar, Modal, FlatList, ImageBackground } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, StatusBar, Modal, FlatList, ImageBackground, Platform, ActivityIndicator } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Polyline, Path, Circle } from 'react-native-svg';
 import { format, startOfWeek, addDays, isSameDay, subWeeks, addWeeks } from 'date-fns';
 import { id } from 'date-fns/locale/id';
+
+import { useFocusEffect } from '@react-navigation/native';
+import { API_BASE_URL } from '../config/api';
 
 const ACTIVE_BG = '#116E63';
 const PRIMARY = '#116E63';
@@ -53,19 +56,15 @@ const ClockRedIcon = () => (
   </Svg>
 );
 
-const MOCK_JADWAL = Array(3).fill({
-  title: 'Pemrograman Web + Praktikum',
-  pertemuan: 'Pertemuan 1',
-  time: '08.10 - 9.10',
-  dosen: 'Yulianto M.kom',
-  role: 'Dosen utama',
-}).map((item, idx) => ({ ...item, id: String(idx) }));
-
 export default function JadwalKelasScreen({ navigation, route }) {
   const isRegistered = route?.params?.isRegistered || false;
+  const token = route?.params?.token || null;
+  const user = route?.params?.user || null;
 
   const [activeDate, setActiveDate] = useState(new Date());
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [schedulesData, setSchedulesData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // State untuk Modal Picker Bulan
   const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -75,6 +74,36 @@ export default function JadwalKelasScreen({ navigation, route }) {
     'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
     'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
   ];
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchJadwal = async () => {
+        if (!isRegistered || !token) return;
+        setIsLoading(true);
+        try {
+          const API_URL = Platform.OS === 'android' 
+            ? `${API_BASE_URL}/api/mahasiswa/jadwal-kelas` 
+            : `http://localhost:8000/api/mahasiswa/jadwal-kelas`;
+            
+          const response = await fetch(API_URL, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json'
+            }
+          });
+          const json = await response.json();
+          if (json.status === 'success') {
+            setSchedulesData(json.data);
+          }
+        } catch (error) {
+          console.error("Fetch jadwal error:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchJadwal();
+    }, [isRegistered, token])
+  );
 
   const handleSelectMonth = (monthIndex) => {
     const newDate = new Date(pickerYear, monthIndex, 1);
@@ -100,11 +129,18 @@ export default function JadwalKelasScreen({ navigation, route }) {
   const isToday = isSameDay(activeDate, new Date());
   const scheduleTitle = isToday ? 'Jadwal hari ini' : `Jadwal ${format(activeDate, 'EEEE, d MMM', { locale: id })}`;
 
+  const activeDateString = format(activeDate, 'yyyy-MM-dd');
+  const displayedSchedules = schedulesData.filter(item => item.date === activeDateString);
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.8}
-      onPress={() => navigation.navigate('DetailMataKuliah', { course: { ...item, lecturer: item.dosen }, isRegistered: isRegistered })}
+      onPress={() => navigation.navigate('DetailSesi', { 
+        meeting: { ...item, title: item.pertemuan },
+        course: { title: item.course },
+        userToken: token 
+      })}
     >
       <Image source={require('../assets/dosen.png')} style={styles.cardImage} />
       <View style={styles.cardContent}>
@@ -118,9 +154,10 @@ export default function JadwalKelasScreen({ navigation, route }) {
           <AppText style={styles.cardInfo}>{item.time}</AppText>
         </View>
         <View style={styles.dosenRow}>
-          <Image source={require('../assets/dosen.png')} style={styles.dosenAvatar} />
+          <Image source={{ uri: item.avatar }} style={styles.dosenAvatar} />
           <View>
             <AppText style={styles.dosenName}>{item.dosen}</AppText>
+            <AppText style={styles.dosenRole}>{item.role}</AppText>
           </View>
         </View>
       </View>
@@ -170,13 +207,24 @@ export default function JadwalKelasScreen({ navigation, route }) {
       <AppText style={styles.sectionTitle}>{scheduleTitle}</AppText>
 
       {isRegistered ? (
-        <FlatList
-          data={MOCK_JADWAL}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        isLoading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={PRIMARY} />
+          </View>
+        ) : (
+          <FlatList
+            data={displayedSchedules}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={() => (
+              <View style={[styles.emptyState, { paddingTop: 40 }]}>
+                <AppText style={styles.emptyText}>Tidak ada jadwal kelas pada tanggal ini.</AppText>
+              </View>
+            )}
+          />
+        )
       ) : (
         <View style={styles.emptyState}>
           <Image

@@ -364,8 +364,8 @@ const AnimatedMateriCard = ({ item, index, activeIndex, scrollToIndex, materisLe
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={() => !isActive ? scrollToIndex(index) : navigation.navigate('DetailSesi', { 
-        meeting: { 
+      onPress={() => !isActive ? scrollToIndex(index) : navigation.navigate('DetailSesi', {
+        meeting: {
           id: item.id_sesi,
           title: item.session_title,
           topic: item.topic,
@@ -373,9 +373,9 @@ const AnimatedMateriCard = ({ item, index, activeIndex, scrollToIndex, materisLe
           link_kelas_daring: item.link_kelas_daring,
           time: item.time,
           lecturer: item.lecturer
-        }, 
-        course: { title: item.course }, 
-        userToken 
+        },
+        course: { title: item.course },
+        userToken
       })}
       style={{ marginRight: index === materisLength - 1 ? SIDE_PEEK : CARD_GAP }}
     >
@@ -396,7 +396,7 @@ const AnimatedMateriCard = ({ item, index, activeIndex, scrollToIndex, materisLe
             <Image source={{ uri: item.avatar }} style={styles.jrcAvatar} />
             <View style={{ flex: 1 }}>
               <AppText style={styles.jrcLecturerName} numberOfLines={1}>{item.lecturer}</AppText>
-              <AppText style={styles.jrcLecturerRole}>Dosen Pengampu</AppText>
+              <AppText style={styles.jrcLecturerRole}>Dosen Utama</AppText>
             </View>
           </View>
         </View>
@@ -405,7 +405,7 @@ const AnimatedMateriCard = ({ item, index, activeIndex, scrollToIndex, materisLe
   );
 };
 
-const AnimatedJadwalCard = ({ item, index, activeIndex, scrollToIndex, jadwalsLength }) => {
+const AnimatedJadwalCard = ({ item, index, activeIndex, scrollToIndex, jadwalsLength, navigation, userToken }) => {
   const isActive = index === activeIndex;
   const anim = useRef(new Animated.Value(isActive ? 1 : 0)).current;
 
@@ -423,13 +423,27 @@ const AnimatedJadwalCard = ({ item, index, activeIndex, scrollToIndex, jadwalsLe
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={() => scrollToIndex(index)}
+      onPress={() => {
+        if (isActive) {
+          navigation.navigate('DetailSesi', {
+            meeting: { ...item, title: item.pertemuan },
+            course: { title: item.course },
+            userToken: userToken
+          });
+        } else {
+          scrollToIndex(index);
+        }
+      }}
       style={{ marginRight: index === jadwalsLength - 1 ? SIDE_PEEK : CARD_GAP }}
     >
       <Animated.View style={[styles.jadwalRegisteredCard, { transform: [{ scale }], opacity }]}>
         <Image source={{ uri: item.image }} style={styles.jrcImage} />
         <View style={styles.jrcContent}>
           <AppText style={styles.jrcTitle}>{item.title}</AppText>
+          <View style={styles.jrcRow}>
+            <UsersIcon />
+            <AppText style={styles.jrcInfo}>{item.pertemuan}</AppText>
+          </View>
           <View style={styles.jrcRow}>
             <CalendarDarkIcon />
             <AppText style={styles.jrcInfo}>{item.date}</AppText>
@@ -732,8 +746,8 @@ export default function HomeScreen({ navigation, route }) {
               }}
               returnKeyType="search"
             />
-            <TouchableOpacity 
-              style={styles.searchBtn} 
+            <TouchableOpacity
+              style={styles.searchBtn}
               activeOpacity={0.85}
               onPress={() => {
                 if (searchText.trim()) {
@@ -858,6 +872,8 @@ export default function HomeScreen({ navigation, route }) {
                     activeIndex={activeJadwalIndex}
                     scrollToIndex={scrollToJadwalIndex}
                     jadwalsLength={jadwals.length}
+                    navigation={navigation}
+                    userToken={token}
                   />
                 )}
               />
