@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
 import { API_BASE_URL } from '../config/api';
 
 const BackIcon = () => (
@@ -37,22 +36,20 @@ const ChevronRightIcon = () => (
 
 const CourseCard = ({ course, onPress }) => (
   <TouchableOpacity style={styles.courseCard} onPress={onPress} activeOpacity={0.7}>
-    <LinearGradient
-      colors={['#F8F9FA']}
-      start={{ x: 0, y: 0.5 }}
-      end={{ x: 1, y: 0.5 }}
-      style={StyleSheet.absoluteFillObject}
-    />
-    <View style={styles.courseIconBox}>
-      <AppText style={styles.courseIconText}>{course?.title ? course.title.substring(0, 2).toUpperCase() : 'MK'}</AppText>
+    <View style={styles.courseCardTop}>
+      <View style={styles.courseIconBox}>
+        <AppText style={styles.courseIconText}>{course?.title ? course.title.substring(0, 2).toUpperCase() : 'MK'}</AppText>
+      </View>
+      <View style={styles.courseContent}>
+        <AppText style={styles.courseTitleText}>{course.title}</AppText>
+        <AppText style={styles.courseNidnText}>{(course.prodi || 'Program Studi')} . {(course.kelas || 'Kelas')}</AppText>
+      </View>
+      <ChevronRightIcon />
     </View>
-    <View style={styles.courseContent}>
-      <AppText style={styles.courseTitleText}>{course.title}</AppText>
-      <AppText style={styles.courseNidnText}>{(course.prodi || 'Program Studi')} . {(course.kelas || 'Kelas')}</AppText>
-      <View style={styles.separator} />
+    <View style={styles.courseCardDivider} />
+    <View style={styles.courseCardBottom}>
       <AppText style={styles.courseDosenText}>{course.dosen || 'Dosen tidak diketahui'}</AppText>
     </View>
-    <ChevronRightIcon />
   </TouchableOpacity>
 );
 
@@ -351,10 +348,8 @@ const styles = StyleSheet.create({
   courseCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
     marginBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -362,7 +357,23 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    overflow: 'hidden',
+  },
+  courseCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  courseCardDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 16,
+  },
+  courseCardBottom: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FAFAFA',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
   courseIconBox: {
     width: 48,
@@ -372,7 +383,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
-    zIndex: 1,
   },
   courseIconText: {
     color: '#116E63',
@@ -381,7 +391,6 @@ const styles = StyleSheet.create({
   },
   courseContent: {
     flex: 1,
-    zIndex: 1,
   },
   courseTitleText: {
     fontSize: 15,
@@ -392,17 +401,10 @@ const styles = StyleSheet.create({
   courseDosenText: {
     fontSize: 14,
     color: '#4B5563',
-    marginTop: 6,
   },
   courseNidnText: {
     fontSize: 13,
     color: '#909090',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    width: '100%',
-    marginTop: 8,
   },
   selectedCourseHeader: {
     marginBottom: 20,

@@ -89,10 +89,12 @@ const CourseCard = ({ course, onPress }) => (
       <View style={styles.courseContent}>
         <AppText style={styles.courseTitleText}>{course.title}</AppText>
         <AppText style={styles.courseNidnText}>{(course.prodi || 'Program Studi')} . {(course.kelas || 'Kelas')}</AppText>
-        <View style={styles.separator} />
-        <AppText style={styles.courseDosenText}>{course.dosen}</AppText>
       </View>
       <ChevronRightIcon />
+    </View>
+    <View style={styles.courseCardDivider} />
+    <View style={styles.courseCardBottom}>
+      <AppText style={styles.courseDosenText}>{course.dosen}</AppText>
     </View>
   </TouchableOpacity>
 );
@@ -456,7 +458,6 @@ const styles = StyleSheet.create({
   courseDosenText: {
     fontSize: 14,
     color: '#4B5563',
-    marginTop: 6,
   },
   courseNidnText: {
     fontSize: 13,
