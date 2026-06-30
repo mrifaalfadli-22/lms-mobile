@@ -323,7 +323,9 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
           />
           {/* Gradient Overlay using expo-linear-gradient */}
           <LinearGradient
-            colors={['transparent', 'rgba(37, 138, 122, 0.4)', 'rgba(37, 138, 122, 0.9)']}
+            colors={['transparent', 'rgba(17, 110, 99, 0.7)', 'rgba(17, 110, 99, 1)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
             style={styles.gradientOverlay}
           />
           <View style={styles.heroTextContainer}>
@@ -662,10 +664,13 @@ const styles = StyleSheet.create({
     height: 250,
     width: '100%',
     position: 'relative',
+    overflow: 'hidden',
   },
   heroImage: {
     width: '100%',
-    height: '100%',
+    height: width, // Use window width to keep aspect ratio 1:1 since the image is square
+    position: 'absolute',
+    top: -100, // Shifted further up to show down to the hips/thighs
   },
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -676,6 +681,10 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     alignItems: 'center',
+    backgroundColor: 'rgba(17, 110, 99, 0.75)', // Explicit green overlay around text
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
   },
   heroTitle: {
     color: '#ffffff',
@@ -683,11 +692,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   heroSubtitle: {
     color: '#ffffff',
     fontSize: 13,
     fontWeight: '400',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   patternSpacer: {
     height: 35, // Spacer to expose the background pattern before the content card starts
