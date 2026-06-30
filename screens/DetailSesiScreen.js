@@ -328,7 +328,7 @@ export default function DetailSesiScreen({ route }) {
                     style={styles.downloadIconBtn}
                     onPress={() => {
                       const baseUrl = API_BASE_URL;
-                      Linking.openURL(`${baseUrl}/api/public/download?path=${file}&title=${encodeURIComponent(meetingTitle)}`);
+                      Linking.openURL(`${baseUrl}/api/public/download?path=${encodeURIComponent(file)}&title=${encodeURIComponent(meetingTitle)}`);
                     }}
                   >
                     <AppText style={styles.downloadLink}>Unduh</AppText>

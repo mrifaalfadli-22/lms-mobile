@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppText from '../components/AppText';
 import {
   View,
-
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   TextInput,
   StatusBar,
-  Image
+  Image,
+  Platform,
+  Linking,
+  ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle, Polyline, Line } from 'react-native-svg';
+import { API_BASE_URL } from '../config/api';
 
 const BackIcon = () => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -40,70 +43,157 @@ const ChevronRightIcon = () => (
   </Svg>
 );
 
-const MateriCard = ({ item }) => (
-  <View style={styles.card}>
-    <View style={styles.iconContainer}>
-      <Image
-        source={item.type === 'ppt' ? require('../assets/ppt.png') : require('../assets/pdf.png')}
-        style={styles.fileIcon}
-        resizeMode="contain"
-      />
+const MateriCard = ({ item }) => {
+  const handleDownload = () => {
+    if (item.filePath) {
+      const baseUrl = API_BASE_URL;
+      const downloadUrl = `${baseUrl}/api/public/download?path=${encodeURIComponent(item.filePath)}&title=${encodeURIComponent(item.judulMateri)}`;
+      Linking.openURL(downloadUrl).catch(err => console.error("Couldn't load page", err));
+    }
+  };
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.iconContainer}>
+        <Image
+          source={
+            item.type === 'ppt' ? require('../assets/ppt.png') :
+            item.type === 'doc' ? require('../assets/doc.png') :
+            item.type === 'xls' ? require('../assets/xls.png') :
+            item.type === 'pdf' ? require('../assets/pdf.png') :
+            require('../assets/other.png')
+          }
+          style={styles.fileIcon}
+          resizeMode="contain"
+        />
+      </View>
+      <View style={styles.cardContent}>
+        <AppText style={styles.titleText}>{item.fileName}</AppText>
+        <AppText style={styles.courseText}>{item.judulMateri}</AppText>
+        <AppText style={styles.courseText}>{item.pertemuan}</AppText>
+        <AppText style={styles.dateText}>{item.date}</AppText>
+      </View>
+      <TouchableOpacity style={styles.downloadBtn} onPress={handleDownload} activeOpacity={0.7}>
+        <DownloadIcon />
+      </TouchableOpacity>
     </View>
-    <View style={styles.cardContent}>
-      <AppText style={styles.titleText}>{item.title}</AppText>
-      <AppText style={styles.courseText}>{item.course}</AppText>
-      <AppText style={styles.dateText}>{item.date}</AppText>
-    </View>
-    <TouchableOpacity style={styles.downloadBtn}>
-      <DownloadIcon />
-    </TouchableOpacity>
-  </View>
-);
+  );
+};
 
 const CourseCard = ({ course, onPress }) => (
   <TouchableOpacity style={styles.courseCard} onPress={onPress} activeOpacity={0.7}>
-    <View style={styles.courseIconBox}>
-      <AppText style={styles.courseIconText}>{course.courseName.substring(0, 2).toUpperCase()}</AppText>
+    <View style={styles.courseCardTop}>
+      <View style={styles.courseIconBox}>
+        <AppText style={styles.courseIconText}>{course?.title ? course.title.substring(0, 2).toUpperCase() : 'MK'}</AppText>
+      </View>
+      <View style={styles.courseContent}>
+        <AppText style={styles.courseTitleText}>{course.title}</AppText>
+        <AppText style={styles.courseNidnText}>{(course.prodi || 'Program Studi')} . {(course.kelas || 'Kelas')}</AppText>
+      </View>
+      <ChevronRightIcon />
     </View>
-    <View style={styles.courseContent}>
-      <AppText style={styles.courseTitleText}>{course.courseName}</AppText>
+    <View style={styles.courseCardDivider} />
+    <View style={styles.courseCardBottom}>
       <AppText style={styles.courseDosenText}>{course.dosen}</AppText>
-      <AppText style={styles.courseNidnText}>NIDN: {course.nidn}</AppText>
     </View>
-    <ChevronRightIcon />
   </TouchableOpacity>
 );
 
-export default function MateriScreen() {
+export default function MateriScreen({ route }) {
   const navigation = useNavigation();
+  const isRegistered = route?.params?.isRegistered || false;
+  const user = route?.params?.user || null;
+  const token = route?.params?.token || null;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCourse, setSelectedCourse] = useState(null);
+  
+  const [courses, setCourses] = useState([]);
+  const [materials, setMaterials] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const courseMaterials = [
-    {
-      id: 'c1',
-      courseName: 'Pemrograman Web + Praktikum',
-      dosen: 'Rifa Alfadli, S.Kom., M.Kom.',
-      nidn: '0412345678',
-      materials: [
-        { id: '1', title: 'Pengenalan dasar HTML', date: '15 Juni 2026', type: 'ppt' },
-        { id: '3', title: 'CSS Dasar dan Layouting', date: '16 Juni 2026', type: 'pdf' },
-        { id: '4', title: 'JavaScript DOM', date: '17 Juni 2026', type: 'pdf' },
-        { id: '5', title: 'React JS Introduction', date: '18 Juni 2026', type: 'ppt' },
-      ]
-    },
-    {
-      id: 'c2',
-      courseName: 'Kalkulus 1',
-      dosen: 'Dr. Ahmad Fauzi, M.Si.',
-      nidn: '0498765432',
-      materials: [
-        { id: '2', title: 'Limit dan Kontinuitas', date: '15 Juni 2026', type: 'pdf' },
-        { id: '6', title: 'Turunan Dasar', date: '20 Juni 2026', type: 'pdf' },
-        { id: '7', title: 'Aplikasi Turunan', date: '22 Juni 2026', type: 'ppt' },
-      ]
+  useEffect(() => {
+    const fetchMataKuliah = async () => {
+      setIsLoading(true);
+      try {
+        let API_URL = '';
+        let headers = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        };
+
+        if (isRegistered && token) {
+          API_URL = Platform.OS === 'android'
+            ? `${API_BASE_URL}/api/mahasiswa/mata-kuliah`
+            : `http://localhost:8000/api/mahasiswa/mata-kuliah`;
+          headers['Authorization'] = `Bearer ${token}`;
+        } else {
+          API_URL = Platform.OS === 'android'
+            ? `${API_BASE_URL}/api/public/mata-kuliah`
+            : `http://localhost:8000/api/public/mata-kuliah`;
+        }
+
+        const response = await fetch(API_URL, { headers });
+        const json = await response.json();
+        if (json.status === 'success') {
+          // If registered, show 'diambil'. Else show 'tersedia'.
+          setCourses(isRegistered ? (json.data.diambil || []) : (json.data.tersedia || []));
+        }
+      } catch (error) {
+        console.error("Fetch Courses Error: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMataKuliah();
+  }, [isRegistered, token]);
+
+  const fetchMaterials = async (courseId) => {
+    setIsLoading(true);
+    try {
+      const baseUrl = Platform.OS === 'android' ? API_BASE_URL : 'http://localhost:8000';
+      const headers = { 'Accept': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      const response = await fetch(`${baseUrl}/api/materi/jadwal/${courseId}`, { headers });
+      const json = await response.json();
+      if (json.status === 'success') {
+        let allMaterials = [];
+        json.data.forEach(materi => {
+          if (materi.file_materi && materi.file_materi.length > 0) {
+            materi.file_materi.forEach((filePath, index) => {
+              let ext = filePath.split('.').pop().toLowerCase();
+              let type = 'other';
+              if (['pdf'].includes(ext)) type = 'pdf';
+              else if (['ppt', 'pptx'].includes(ext)) type = 'ppt';
+              else if (['doc', 'docx'].includes(ext)) type = 'doc';
+              else if (['xls', 'xlsx'].includes(ext)) type = 'xls';
+              
+              // Extract filename
+              let fileName = filePath.split('/').pop();
+              fileName = fileName.replace(/^[a-f0-9\-]+_/, '');
+              
+              allMaterials.push({
+                id: `${materi.id}_${index}`,
+                judulMateri: materi.judul,
+                pertemuan: materi.pertemuan,
+                fileName: fileName,
+                date: materi.tanggal || '-',
+                type: type,
+                filePath: filePath,
+              });
+            });
+          }
+        });
+        setMaterials(allMaterials);
+      }
+    } catch (error) {
+      console.error("Fetch Materials Error: ", error);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   const handleBack = () => {
     if (selectedCourse) {
@@ -114,13 +204,15 @@ export default function MateriScreen() {
     }
   };
 
-  const filteredCourses = courseMaterials.filter(c =>
-    c.courseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.dosen.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCourses = courses.filter(c => {
+    const titleMatch = c.title ? c.title.toLowerCase().includes(searchQuery.toLowerCase()) : false;
+    const dosenMatch = c.dosen ? c.dosen.toLowerCase().includes(searchQuery.toLowerCase()) : false;
+    return titleMatch || dosenMatch;
+  });
 
-  const filteredMaterials = selectedCourse ? selectedCourse.materials.filter(m =>
-    m.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredMaterials = selectedCourse ? materials.filter(m =>
+    (m.fileName && m.fileName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (m.judulMateri && m.judulMateri.toLowerCase().includes(searchQuery.toLowerCase()))
   ) : [];
 
   return (
@@ -155,34 +247,58 @@ export default function MateriScreen() {
           {!selectedCourse ? (
             /* COURSE LIST VIEW */
             <>
-              {filteredCourses.length === 0 && (
-                <AppText style={styles.emptyText}>Mata kuliah tidak ditemukan.</AppText>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#116E63" />
+                  <AppText style={styles.loadingText}>Memuat data...</AppText>
+                </View>
+              ) : (
+                <>
+                  {filteredCourses.length === 0 && (
+                    <AppText style={styles.emptyText}>Mata kuliah tidak ditemukan.</AppText>
+                  )}
+                  {filteredCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      onPress={() => {
+                        setSelectedCourse(course);
+                        setSearchQuery('');
+                        if (isRegistered && token) {
+                          fetchMaterials(course.id);
+                        } else {
+                          // Optionally, public users don't see materials or use another API
+                          // For now, if there is a public API, fetch it (but we assume it requires login for materials)
+                        }
+                      }}
+                    />
+                  ))}
+                </>
               )}
-              {filteredCourses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  onPress={() => {
-                    setSelectedCourse(course);
-                    setSearchQuery('');
-                  }}
-                />
-              ))}
             </>
           ) : (
             /* MATERIALS LIST VIEW */
             <>
               <View style={styles.selectedCourseHeader}>
-                <AppText style={styles.selectedCourseTitle}>{selectedCourse.courseName}</AppText>
+                <AppText style={styles.selectedCourseTitle}>{selectedCourse.title}</AppText>
                 <AppText style={styles.selectedCourseDosen}>{selectedCourse.dosen}</AppText>
               </View>
 
-              {filteredMaterials.length === 0 && (
-                <AppText style={styles.emptyText}>Materi tidak ditemukan.</AppText>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#116E63" />
+                  <AppText style={styles.loadingText}>Memuat data...</AppText>
+                </View>
+              ) : (
+                <>
+                  {filteredMaterials.length === 0 && (
+                    <AppText style={styles.emptyText}>Materi tidak ditemukan.</AppText>
+                  )}
+                  {filteredMaterials.map(materi => (
+                    <MateriCard key={materi.id} item={{ ...materi, course: selectedCourse.title }} />
+                  ))}
+                </>
               )}
-              {filteredMaterials.map(materi => (
-                <MateriCard key={materi.id} item={{ ...materi, course: selectedCourse.courseName }} />
-              ))}
             </>
           )}
 
@@ -269,14 +385,22 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: 14,
   },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    color: '#6B7280',
+    fontSize: 14,
+  },
   // Course Card Styles
   courseCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
     marginBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -284,6 +408,23 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+  },
+  courseCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  courseCardDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 16,
+  },
+  courseCardBottom: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FAFAFA',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
   courseIconBox: {
     width: 48,
@@ -309,9 +450,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   courseDosenText: {
-    fontSize: 14,
-    color: '#4B5563',
-    marginBottom: 2,
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   courseNidnText: {
     fontSize: 13,

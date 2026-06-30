@@ -814,14 +814,14 @@ export default function HomeScreen({ navigation, route }) {
         {/* ── Menu Grid (Registered: right after progress card) ── */}
         {isRegistered && (
           <View style={styles.menuGridExpanded}>
-            <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" onPress={() => navigation.navigate('MataKuliah')} />
-            <MenuIcon icon={<IconJadwal />} label="Jadwal" onPress={() => navigation.navigate('JadwalKelas')} />
-            <MenuIcon icon={<IconMateri />} label="Materi" onPress={() => navigation.navigate('Materi')} />
-            <MenuIcon icon={<IconTugas />} label={"Tugas\n&Kuis"} onPress={() => navigation.navigate('TugasKuis')} />
-            <MenuIcon icon={<IconProgress />} label={'Progress\nbelajar'} onPress={() => navigation.navigate('ProgressBelajar')} />
-            <MenuIcon icon={<IconNilai />} label="Lihat nilai" onPress={() => navigation.navigate('LihatNilai')} />
-            <MenuIcon icon={<IconSertifikat />} label="Sertifikat" onPress={() => navigation.navigate('Sertifikat')} />
-            <MenuIcon icon={<IconVerifikasi />} label="Verifikasi" onPress={() => navigation.navigate('VerifikasiSertifikat')} />
+            <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" onPress={() => navigation.navigate('MataKuliah', { isRegistered, user, token })} />
+            <MenuIcon icon={<IconJadwal />} label="Jadwal" onPress={() => navigation.navigate('JadwalKelas', { isRegistered, user, token })} />
+            <MenuIcon icon={<IconMateri />} label="Materi" onPress={() => navigation.navigate('Materi', { isRegistered, user, token })} />
+            <MenuIcon icon={<IconTugas />} label={"Tugas\n&Kuis"} onPress={() => navigation.navigate('TugasKuis', { isRegistered, user, token })} />
+            <MenuIcon icon={<IconProgress />} label={'Progress\nbelajar'} onPress={() => navigation.navigate('ProgressBelajar', { isRegistered, user, token })} />
+            <MenuIcon icon={<IconNilai />} label="Lihat nilai" onPress={() => navigation.navigate('LihatNilai', { isRegistered, user, token })} />
+            <MenuIcon icon={<IconSertifikat />} label="Sertifikat" onPress={() => navigation.navigate('Sertifikat', { isRegistered, user, token })} />
+            <MenuIcon icon={<IconVerifikasi />} label="Verifikasi" onPress={() => navigation.navigate('VerifikasiSertifikat', { isRegistered, user, token })} />
           </View>
         )}
 

@@ -14,7 +14,8 @@ import {
   Animated,
   TextInput,
   Alert,
-  Platform
+  Platform,
+  Linking
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -558,7 +559,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                                   style={{ paddingHorizontal: 8, paddingVertical: 4 }}
                                   onPress={() => {
                                     const baseUrl = API_BASE_URL;
-                                    Linking.openURL(`${baseUrl}/api/public/download?path=${file}&title=${encodeURIComponent(item.title)}`);
+                                    Linking.openURL(`${baseUrl}/api/public/download?path=${encodeURIComponent(file)}&title=${encodeURIComponent(item.judul)}`);
                                   }}
                                 >
                                   <AppText style={{ fontSize: 12, fontWeight: '600', color: '#116E63' }}>Unduh</AppText>
