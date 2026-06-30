@@ -78,17 +78,26 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
       const fetchMeetings = async () => {
         setIsLoadingMeetings(true);
         try {
-          const API_URL = Platform.OS === 'android' 
-            ? `http://10.0.2.2:8000/api/sesi-pertemuan/jadwal/${course.id}` 
-            : `http://localhost:8000/api/sesi-pertemuan/jadwal/${course.id}`;
+          let API_URL = '';
+          let headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          };
+          
+          if (isRegistered && userToken) {
+            API_URL = Platform.OS === 'android' 
+              ? `http://10.0.2.2:8000/api/sesi-pertemuan/jadwal/${course.id}` 
+              : `http://localhost:8000/api/sesi-pertemuan/jadwal/${course.id}`;
+            headers['Authorization'] = `Bearer ${userToken}`;
+          } else {
+            API_URL = Platform.OS === 'android' 
+              ? `http://10.0.2.2:8000/api/public/sesi-pertemuan/jadwal/${course.id}` 
+              : `http://localhost:8000/api/public/sesi-pertemuan/jadwal/${course.id}`;
+          }
             
           const response = await fetch(API_URL, {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'Authorization': `Bearer ${userToken}`
-            }
+            headers: headers
           });
           
           const json = await response.json();
@@ -122,6 +131,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
           }
         } catch (error) {
           console.error("Fetch Meetings Error: ", error);
+          Alert.alert("Fetch Error", error.message || error.toString());
         } finally {
           setIsLoadingMeetings(false);
         }
@@ -201,12 +211,24 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
       };
 
       fetchMeetings();
-      fetchMaterials();
-      fetchAssignments();
+      if (isRegistered && userToken) {
+        fetchMaterials();
+        fetchAssignments();
+      }
     }
-  }, [course?.id, userToken, lecturer]);
+  }, [course?.id, userToken, lecturer, isRegistered]);
 
   const openMeetingModal = (meeting) => {
+    if (!isRegistered) {
+      setModalVisible(true);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+      return;
+    }
+    
     setSelectedMeeting(meeting);
     setModalVisible(true);
     Animated.timing(fadeAnim, {
@@ -378,13 +400,13 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                     <View style={styles.meetingCardContent}>
                       <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4}}>
                         <Text style={[styles.meetingTitle, { flex: 1, marginBottom: 0, marginRight: 8 }]}>{item.title}</Text>
-                        {item.method && (
+                        {!!item.method ? (
                           <View style={[styles.methodBadge, item.method.toLowerCase() === 'synchronous' ? styles.badgeSync : styles.badgeAsync]}>
                             <Text style={[styles.methodBadgeText, item.method.toLowerCase() === 'synchronous' ? styles.badgeTextSync : styles.badgeTextAsync]}>
                               {item.method.toLowerCase() === 'synchronous' ? 'Synchronous' : 'Asynchronous'}
                             </Text>
                           </View>
-                        )}
+                        ) : null}
                       </View>
                       <Text style={styles.meetingTopic}>{item.topic}</Text>
                       <Text style={styles.meetingLecturer}>{lecturer}</Text>
@@ -475,7 +497,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                     <View style={styles.materialCardBody}>
                       <Text style={styles.materialInstruction}>{item.deskripsi || 'Pelajari materi berikut ini'}</Text>
                       
-                      {item.file_materi && item.file_materi.length > 0 && (
+                      {!!(item.file_materi && item.file_materi.length > 0) ? (
                         <View style={styles.fileListContainer}>
                           {item.file_materi.map((file, idx) => {
                              const ext = file.split('.').pop().toLowerCase();
@@ -514,9 +536,9 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                              );
                           })}
                         </View>
-                      )}
+                      ) : null}
 
-                      {item.link_video && (item.link_video.includes('youtube.com/watch?v=') || item.link_video.includes('youtu.be/')) && (
+                      {!!(item.link_video && (item.link_video.includes('youtube.com/watch?v=') || item.link_video.includes('youtu.be/'))) ? (
                         <View style={styles.videoContainer}>
                           <YoutubePlayer
                             height={180}
@@ -524,7 +546,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                             videoId={item.link_video.includes('youtu.be/') ? item.link_video.split('youtu.be/')[1]?.split('?')[0] : item.link_video.split('v=')[1]?.split('&')[0]}
                           />
                         </View>
-                      )}
+                      ) : null}
                     </View>
                   </View>
                 ))
@@ -547,7 +569,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
             { opacity: fadeAnim }
           ]}
         >
-          <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill}>
+          <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
             <TouchableOpacity 
               style={styles.modalOverlay} 
               activeOpacity={1} 

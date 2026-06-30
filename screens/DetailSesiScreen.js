@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ImageBackground, Image, Platform, Linking, Modal } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Rect, Polyline, Circle } from 'react-native-svg';
 import YoutubePlayer from 'react-native-youtube-iframe';
@@ -9,6 +10,18 @@ const CopyIcon = () => (
   <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
     <Rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="#116E63" strokeWidth="2" />
     <Path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="#116E63" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const ChevronDown = () => (
+  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <Path d="M6 9l6 6 6-6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+const ChevronUp = () => (
+  <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <Path d="M18 15l-6-6-6 6" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </Svg>
 );
 
@@ -71,6 +84,7 @@ export default function DetailSesiScreen({ route }) {
   const [isMarkingPresensi, setIsMarkingPresensi] = useState(false);
   const [isTugasModalVisible, setIsTugasModalVisible] = useState(false);
   const [selectedTugas, setSelectedTugas] = useState(null);
+  const [isForumExpanded, setIsForumExpanded] = useState(false);
 
   // Get data from params
   const meeting = route?.params?.meeting;
@@ -445,68 +459,79 @@ export default function DetailSesiScreen({ route }) {
 
         {/* Forum diskusi Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Forum diskusi</Text>
-
-          {/* Chat bubbles */}
-          <View style={styles.chatContainer}>
-            {forumList.length === 0 ? (
-              <Text style={styles.cardContentText}>Belum ada diskusi di forum ini.</Text>
-            ) : (
-              forumList.slice(-2).map((msg, index) => {
-                const getInitials = (name) => {
-                  if (!name) return 'A';
-                  const names = name.split(' ').filter(n => n);
-                  if (names.length === 0) return 'A';
-                  if (names.length === 1) return names[0].substring(0, 1).toUpperCase();
-                  return (names[0].substring(0, 1) + names[1].substring(0, 1)).toUpperCase();
-                };
-
-                const timeAgo = (dateString) => {
-                  if (!dateString) return '';
-                  const diff = new Date() - new Date(dateString);
-                  const hours = Math.floor(diff / 3600000);
-                  if (hours >= 24) return `${Math.floor(hours/24)} hari yang lalu`;
-                  if (hours > 0) return `${hours} jam yang lalu`;
-                  const mins = Math.floor(diff / 60000);
-                  if (mins > 0) return `${mins} menit yang lalu`;
-                  return 'Baru saja';
-                };
-
-                const isMe = currentUser && currentUser.id_user === msg.id_pengirim;
-                const avatarView = (
-                  <View style={[styles.avatar, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#116E63' }]}>
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
-                      {getInitials(msg.pengirim?.nama_lengkap)}
-                    </Text>
-                  </View>
-                );
-
-                return isMe ? (
-                  <View key={index} style={styles.chatRowRight}>
-                    <View style={[styles.chatBubbleRight, { backgroundColor: '#D1FAE5' }]}>
-                      <Text style={styles.chatName}>{msg.pengirim?.nama_lengkap || 'Anonim'}</Text>
-                      <Text style={styles.chatText}>{msg.isi_pesan}</Text>
-                      <Text style={styles.chatTime}>{timeAgo(msg.waktu_kirim)}</Text>
-                    </View>
-                    {avatarView}
-                  </View>
-                ) : (
-                  <View key={index} style={styles.chatRowLeft}>
-                    {avatarView}
-                    <View style={styles.chatBubbleLeft}>
-                      <Text style={styles.chatName}>{msg.pengirim?.nama_lengkap || 'Anonim'}</Text>
-                      <Text style={styles.chatText}>{msg.isi_pesan}</Text>
-                      <Text style={styles.chatTime}>{timeAgo(msg.waktu_kirim)}</Text>
-                    </View>
-                  </View>
-                );
-              })
-            )}
-          </View>
-
-          <TouchableOpacity style={styles.forumLinkBtn} onPress={() => navigation.navigate('ForumDiskusi', { meeting, userToken, topic })}>
-            <Text style={styles.forumLinkText}>Lihat forum diskusi</Text>
+          <TouchableOpacity 
+            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }} 
+            onPress={() => setIsForumExpanded(!isForumExpanded)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.cardTitle, { marginBottom: 0 }]}>Forum diskusi</Text>
+            {isForumExpanded ? <ChevronUp /> : <ChevronDown />}
           </TouchableOpacity>
+
+          {/* Collapsible Content */}
+          {isForumExpanded && (
+            <>
+              <View style={[styles.chatContainer, { marginTop: 16 }]}>
+                {forumList.length === 0 ? (
+                  <Text style={styles.cardContentText}>Belum ada diskusi di forum ini.</Text>
+                ) : (
+                  forumList.slice(-2).map((msg, index) => {
+                    const getInitials = (name) => {
+                      if (!name) return 'A';
+                      const names = name.split(' ').filter(n => n);
+                      if (names.length === 0) return 'A';
+                      if (names.length === 1) return names[0].substring(0, 1).toUpperCase();
+                      return (names[0].substring(0, 1) + names[1].substring(0, 1)).toUpperCase();
+                    };
+
+                    const timeAgo = (dateString) => {
+                      if (!dateString) return '';
+                      const diff = new Date() - new Date(dateString);
+                      const hours = Math.floor(diff / 3600000);
+                      if (hours >= 24) return `${Math.floor(hours/24)} hari yang lalu`;
+                      if (hours > 0) return `${hours} jam yang lalu`;
+                      const mins = Math.floor(diff / 60000);
+                      if (mins > 0) return `${mins} menit yang lalu`;
+                      return 'Baru saja';
+                    };
+
+                    const isMe = currentUser && currentUser.id_user === msg.id_pengirim;
+                    const avatarView = (
+                      <View style={[styles.avatar, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#116E63' }]}>
+                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                          {getInitials(msg.pengirim?.nama_lengkap)}
+                        </Text>
+                      </View>
+                    );
+
+                    return isMe ? (
+                      <View key={index} style={styles.chatRowRight}>
+                        <View style={[styles.chatBubbleRight, { backgroundColor: '#D1FAE5' }]}>
+                          <Text style={styles.chatName}>{msg.pengirim?.nama_lengkap || 'Anonim'}</Text>
+                          <Text style={styles.chatText}>{msg.isi_pesan}</Text>
+                          <Text style={styles.chatTime}>{timeAgo(msg.waktu_kirim)}</Text>
+                        </View>
+                        {avatarView}
+                      </View>
+                    ) : (
+                      <View key={index} style={styles.chatRowLeft}>
+                        {avatarView}
+                        <View style={styles.chatBubbleLeft}>
+                          <Text style={styles.chatName}>{msg.pengirim?.nama_lengkap || 'Anonim'}</Text>
+                          <Text style={styles.chatText}>{msg.isi_pesan}</Text>
+                          <Text style={styles.chatTime}>{timeAgo(msg.waktu_kirim)}</Text>
+                        </View>
+                      </View>
+                    );
+                  })
+                )}
+              </View>
+
+              <TouchableOpacity style={styles.forumLinkBtn} onPress={() => navigation.navigate('ForumDiskusi', { meeting, userToken, topic })}>
+                <Text style={styles.forumLinkText}>Lihat forum diskusi</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
       </ScrollView>
@@ -518,6 +543,7 @@ export default function DetailSesiScreen({ route }) {
         animationType="fade"
         onRequestClose={() => setIsTugasModalVisible(false)}
       >
+        <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
@@ -576,6 +602,7 @@ export default function DetailSesiScreen({ route }) {
             </ScrollView>
           </View>
         </View>
+        </BlurView>
       </Modal>
     </View>
   );

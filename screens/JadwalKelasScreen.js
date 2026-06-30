@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar, Modal, FlatList, ImageBackground } from 'react-native';
+import { BlurView } from 'expo-blur';
 import Svg, { Polyline, Path, Circle } from 'react-native-svg';
 import { format, startOfWeek, addDays, isSameDay, subWeeks, addWeeks } from 'date-fns';
 import { id } from 'date-fns/locale/id';
@@ -222,6 +223,7 @@ export default function JadwalKelasScreen({ navigation, route }) {
 
       {/* ── Month Picker Modal ── */}
       <Modal visible={showMonthPicker} transparent animationType="fade">
+        <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowMonthPicker(false)}>
           <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
             <View style={styles.modalYearRow}>
@@ -242,6 +244,7 @@ export default function JadwalKelasScreen({ navigation, route }) {
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
+        </BlurView>
       </Modal>
 
     </View>

@@ -8,6 +8,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import Svg, { Path, Circle, Line, Polyline } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
@@ -127,6 +128,7 @@ export default function NotificationPopup({
       animationType="fade"
       onRequestClose={onClose}
     >
+      <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
       <View style={styles.overlay}>
         <Animated.View
           style={[
@@ -159,6 +161,7 @@ export default function NotificationPopup({
           </TouchableOpacity>
         </Animated.View>
       </View>
+      </BlurView>
     </Modal>
   );
 }

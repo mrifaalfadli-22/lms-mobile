@@ -10,9 +10,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Ellipse } from 'react-native-svg';
+import { fakultasData } from '../data/fakultasData';
 
 const { width, height } = Dimensions.get('window');
 const PRIMARY = '#116E63';
@@ -49,13 +52,39 @@ const BackgroundBlobs = () => (
 export default function RegisterScreen({ navigation }) {
   const [form, setForm] = useState({
     nama: '',
-    universitas: '',
-    alamatEmail: '', // This label is "Alamat email" in the mockup
     npm: '',
     email: '',
+    fakultas: '',
+    programStudi: '',
+    tahunAngkatan: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+
+  // ── Modal & Select Logic ──
+  const [modalType, setModalType] = useState(null); // 'fakultas' | 'prodi' | null
+  const [searchText, setSearchText] = useState('');
+
+  const filteredFakultas = fakultasData.filter((f) =>
+    f.label.toLowerCase().includes(searchText.toLowerCase())
+  );
+  const selectedFakultasObj = fakultasData.find((f) => f.label === form.fakultas);
+  const prodiList = selectedFakultasObj ? selectedFakultasObj.prodi : [];
+  const filteredProdi = prodiList.filter((p) =>
+    p.label.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const handleSelectFakultas = (fakultasLabel) => {
+    setForm({ ...form, fakultas: fakultasLabel, programStudi: '' });
+    setModalType(null);
+    setSearchText('');
+  };
+
+  const handleSelectProdi = (prodiLabel) => {
+    setForm({ ...form, programStudi: prodiLabel });
+    setModalType(null);
+    setSearchText('');
+  };
 
   const handleRegister = () => {
     // Navigasi ke Main/Login setelah daftar
@@ -92,7 +121,7 @@ export default function RegisterScreen({ navigation }) {
           {/* ── Form ── */}
           <View style={styles.form}>
             {/* Nama lengkap */}
-            <Text style={styles.label}>Nama lengkap</Text>
+            <Text style={styles.label}>Nama Lengkap</Text>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
@@ -102,38 +131,76 @@ export default function RegisterScreen({ navigation }) {
               />
             </View>
 
-            {/* Universitas asal */}
-            <Text style={styles.label}>Universitas asal</Text>
+            {/* Baris 1: NPM & Tahun Angkatan */}
+            <View style={styles.row}>
+              <View style={styles.half}>
+                <Text style={styles.label}>NPM</Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={form.npm}
+                    onChangeText={(v) => setForm({ ...form, npm: v })}
+                    keyboardType="numeric"
+                  />
+                </View>
+              </View>
+              <View style={styles.spacer} />
+              <View style={styles.half}>
+                <Text style={styles.label}>Tahun Angkatan</Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={form.tahunAngkatan}
+                    onChangeText={(v) => setForm({ ...form, tahunAngkatan: v })}
+                    keyboardType="numeric"
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Fakultas */}
+            <Text style={styles.label}>Fakultas</Text>
+            <TouchableOpacity
+              style={styles.inputWrapper}
+              activeOpacity={0.8}
+              onPress={() => {
+                setSearchText('');
+                setModalType('fakultas');
+              }}
+            >
+              <Text style={[styles.selectText, !form.fakultas && { color: '#9CA3AF' }]} numberOfLines={1}>
+                {form.fakultas || 'Pilih...'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Program Studi */}
+            <Text style={styles.label}>Program Studi</Text>
+            <TouchableOpacity
+              style={styles.inputWrapper}
+              activeOpacity={0.8}
+              onPress={() => {
+                if (form.fakultas) {
+                  setSearchText('');
+                  setModalType('prodi');
+                }
+              }}
+            >
+              <Text style={[styles.selectText, (!form.programStudi || !form.fakultas) && { color: '#9CA3AF' }]} numberOfLines={1}>
+                {!form.fakultas ? 'Pilih Fakultas' : form.programStudi || 'Pilih...'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Email */}
+            <Text style={styles.label}>Email</Text>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                value={form.universitas}
-                onChangeText={(v) => setForm({ ...form, universitas: v })}
+                value={form.email}
+                onChangeText={(v) => setForm({ ...form, email: v })}
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
             </View>
-
-            {/* Alamat email */}
-            <Text style={styles.label}>Alamat email</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                value={form.alamatEmail}
-                onChangeText={(v) => setForm({ ...form, alamatEmail: v })}
-              />
-            </View>
-
-            {/* Masukkan NPM */}
-            <Text style={styles.label}>Masukkan NPM</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                value={form.npm}
-                onChangeText={(v) => setForm({ ...form, npm: v })}
-                keyboardType="numeric"
-              />
-            </View>
-
-
 
             {/* Password */}
             <Text style={styles.label}>Password</Text>
@@ -174,6 +241,52 @@ export default function RegisterScreen({ navigation }) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* ── Modal for Searchable Select ── */}
+      <Modal visible={modalType !== null} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {modalType === 'fakultas' ? 'Pilih Fakultas' : 'Pilih Program Studi'}
+              </Text>
+              <TouchableOpacity onPress={() => setModalType(null)}>
+                <Text style={styles.closeBtn}>Tutup</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalSearchWrapper}>
+              <TextInput
+                style={styles.modalSearchInput}
+                placeholder="Cari..."
+                value={searchText}
+                onChangeText={setSearchText}
+              />
+            </View>
+
+            <FlatList
+              data={modalType === 'fakultas' ? filteredFakultas : filteredProdi}
+              keyExtractor={(item) => item.value}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() =>
+                    modalType === 'fakultas'
+                      ? handleSelectFakultas(item.label)
+                      : handleSelectProdi(item.label)
+                  }
+                >
+                  <Text style={styles.modalItemText}>{item.label}</Text>
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>Tidak ditemukan</Text>
+              }
+            />
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -186,7 +299,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingTop: 40,
-    paddingBottom: 20,
+    paddingBottom: 24,
     justifyContent: 'center',
   },
   headerContainer: {
@@ -198,16 +311,25 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '800',
     color: '#000000',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   subheadline: {
     fontSize: 13,
     color: '#333333',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
   },
   form: {
     paddingHorizontal: 24,
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  half: {
+    flex: 1,
+  },
+  spacer: {
+    width: 16,
   },
   label: {
     fontSize: 14,
@@ -220,7 +342,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    marginBottom: 12,
+    marginBottom: 16,
     paddingHorizontal: 14,
     height: 44,
     justifyContent: 'center',
@@ -235,6 +357,10 @@ const styles = StyleSheet.create({
     color: '#374151',
     height: '100%',
     padding: 0,
+  },
+  selectText: {
+    fontSize: 14,
+    color: '#374151',
   },
   eyeBtn: {
     paddingLeft: 8,
@@ -260,7 +386,7 @@ const styles = StyleSheet.create({
   loginLinkContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 24,
   },
   loginLinkText: {
     fontSize: 13,
@@ -270,5 +396,65 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: PRIMARY,
     fontWeight: '700',
+  },
+  
+  // ── Modal Styles ──
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    height: height * 0.6,
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333333',
+  },
+  closeBtn: {
+    fontSize: 14,
+    color: PRIMARY,
+    fontWeight: '600',
+  },
+  modalSearchWrapper: {
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  modalSearchInput: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 40,
+    fontSize: 14,
+    color: '#374151',
+  },
+  modalItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  modalItemText: {
+    fontSize: 14,
+    color: '#4A4A4A',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#9CA3AF',
+    fontSize: 14,
   },
 });

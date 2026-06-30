@@ -17,6 +17,11 @@ import DetailProgressBelajarScreen from '../screens/DetailProgressBelajarScreen'
 import DetailEvaluasiScreen from '../screens/DetailEvaluasiScreen';
 import MainTabNavigator from './MainTabNavigator';
 
+// New Settings Screens
+import PasswordScreen from '../screens/PasswordScreen';
+import BantuanScreen from '../screens/BantuanScreen';
+import TentangKamiScreen from '../screens/TentangKamiScreen';
+
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
@@ -37,6 +42,11 @@ export default function RootNavigator() {
       <Stack.Screen name="DetailSesi" component={DetailSesiScreen} />
       <Stack.Screen name="DetailProgressBelajar" component={DetailProgressBelajarScreen} />
       <Stack.Screen name="DetailEvaluasi" component={DetailEvaluasiScreen} />
+      
+      {/* Settings Screens */}
+      <Stack.Screen name="Password" component={PasswordScreen} />
+      <Stack.Screen name="Bantuan" component={BantuanScreen} />
+      <Stack.Screen name="TentangKami" component={TentangKamiScreen} />
     </Stack.Navigator>
   );
 }

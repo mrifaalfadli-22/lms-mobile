@@ -142,7 +142,7 @@ const IconJadwal = () => (
     <Rect x="30" y="26" width="5" height="5" rx="1" fill="#CBD5E1" />
     
     <Rect x="12" y="34" width="5" height="5" rx="1" fill="#CBD5E1" />
-    <Rect x="21" y="34" width="5" height="5" rx="1" fill="#34D399" /> {/* Highlighted Date */}
+    <Rect x="21" y="34" width="5" height="5" rx="1" fill="#34D399" />
     <Rect x="30" y="34" width="5" height="5" rx="1" fill="#CBD5E1" />
   </Svg>
 );
@@ -407,6 +407,7 @@ export default function HomeScreen({ navigation, route }) {
   const [activeJadwalIndex, setActiveJadwalIndex] = useState(0);
   const [activeMateriIndex, setActiveMateriIndex] = useState(0);
   const [adzanExpanded, setAdzanExpanded] = useState(true);
+  const [nextAdzan, setNextAdzan] = useState({ name: 'Memuat...', time: '--:--' });
   const flatListRef = useRef(null);
   const jadwalListRef = useRef(null);
   const materiListRef = useRef(null);
@@ -421,6 +422,47 @@ export default function HomeScreen({ navigation, route }) {
     materiTerbaru: []
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAdzan = async () => {
+      try {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const url = `https://api.myquran.com/v2/sholat/jadwal/1301/${year}/${month}/${day}`;
+        
+        const response = await fetch(url);
+        const json = await response.json();
+        if (json.status && json.data?.jadwal) {
+          const jadwal = json.data.jadwal;
+          const currentMinutes = date.getHours() * 60 + date.getMinutes();
+          
+          const parseTime = (timeStr) => {
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m;
+          };
+
+          const prayerTimes = [
+            { name: 'Subuh', time: jadwal.subuh, val: parseTime(jadwal.subuh) },
+            { name: 'Dzuhur', time: jadwal.dzuhur, val: parseTime(jadwal.dzuhur) },
+            { name: 'Ashar', time: jadwal.ashar, val: parseTime(jadwal.ashar) },
+            { name: 'Maghrib', time: jadwal.maghrib, val: parseTime(jadwal.maghrib) },
+            { name: 'Isya', time: jadwal.isya, val: parseTime(jadwal.isya) },
+          ];
+
+          let next = prayerTimes.find(p => p.val > currentMinutes);
+          if (!next) next = { name: 'Subuh', time: jadwal.subuh }; // default next day
+          
+          setNextAdzan(next);
+        }
+      } catch (error) {
+        console.log('Error fetching adzan:', error);
+      }
+    };
+    
+    fetchAdzan();
+  }, []);
 
   useEffect(() => {
     if (isRegistered && token) {
@@ -502,7 +544,9 @@ export default function HomeScreen({ navigation, route }) {
     },
   ];
 
-  const suggestions = ['Kuis html', 'Materi kalkukus', 'Live class'];
+  const suggestions = isRegistered 
+    ? ['Kuis html', 'Materi kalkukus', 'Live class']
+    : ['Pemrograman Web', 'Kalkulus 1', 'Basis Data'];
 
   const today = new Date();
   const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -624,7 +668,9 @@ export default function HomeScreen({ navigation, route }) {
             </View>
             <View style={styles.tagsRowCenter}>
               <TouchableOpacity style={styles.tag} activeOpacity={0.75}>
-                <Text style={styles.tagText}>Materi pemprogram berbasis web</Text>
+                <Text style={styles.tagText}>
+                  {isRegistered ? 'Materi pemprogram berbasis web' : 'Struktur Data & Algoritma'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -736,10 +782,6 @@ export default function HomeScreen({ navigation, route }) {
                 <Text style={styles.jadwalCardSmall}>Jadwal hari ini</Text>
                 <Text style={styles.jadwalCardDate}>{dateStr}</Text>
               </View>
-              <TouchableOpacity style={styles.jadwalBtn} activeOpacity={0.8} onPress={() => navigation.navigate('JadwalKelas')}>
-                <CalendarSmallIcon />
-                <Text style={styles.jadwalBtnText}>lihat jadwal</Text>
-              </TouchableOpacity>
             </View>
             <Text style={styles.jadwalInfo}>
               Kamu belum memilih mata kuliah, yuk isi untuk{'\n'}menggunakan fitur lainnya
@@ -875,7 +917,7 @@ export default function HomeScreen({ navigation, route }) {
             { opacity: fadeAnim, zIndex: 9999 }
           ]}
         >
-          <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill}>
+          <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
             <TouchableOpacity
               style={styles.modalOverlay}
               activeOpacity={1}
@@ -913,7 +955,7 @@ export default function HomeScreen({ navigation, route }) {
             activeOpacity={0.9}
             onPress={() => setAdzanExpanded(false)}
           >
-            <Text style={styles.adzanText}>{'>'} Adzan berikutnya : Dzuhur (12.10)</Text>
+            <Text style={styles.adzanText}>{'>'} Adzan berikutnya : {nextAdzan.name} ({nextAdzan.time})</Text>
           </TouchableOpacity>
         ) : null}
 

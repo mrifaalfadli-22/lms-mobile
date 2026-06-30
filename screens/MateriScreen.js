@@ -59,60 +59,33 @@ export default function MateriScreen() {
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const newMateri = [
+  const courseMaterials = [
     {
-      id: '1',
-      title: 'Pengenalan dasar HTML',
-      course: 'Pemprogaman web + Praktikum',
-      date: '15 Juni 2026',
-      type: 'ppt',
+      courseName: 'Pemrograman Web + Praktikum',
+      materials: [
+        { id: '1', title: 'Pengenalan dasar HTML', date: '15 Juni 2026', type: 'ppt' },
+        { id: '3', title: 'CSS Dasar dan Layouting', date: '16 Juni 2026', type: 'pdf' },
+        { id: '4', title: 'JavaScript DOM', date: '17 Juni 2026', type: 'pdf' },
+        { id: '5', title: 'React JS Introduction', date: '18 Juni 2026', type: 'ppt' },
+      ]
     },
     {
-      id: '2',
-      title: 'Limit dan Kontinuitas',
-      course: 'Kalkulus 1',
-      date: '15 Juni 2026',
-      type: 'pdf',
+      courseName: 'Kalkulus 1',
+      materials: [
+        { id: '2', title: 'Limit dan Kontinuitas', date: '15 Juni 2026', type: 'pdf' },
+        { id: '6', title: 'Turunan Dasar', date: '20 Juni 2026', type: 'pdf' },
+        { id: '7', title: 'Aplikasi Turunan', date: '22 Juni 2026', type: 'ppt' },
+      ]
     }
   ];
 
-  const sharedMateri = [
-    {
-      id: '3',
-      title: 'Pengenalan dasar HTML',
-      course: 'Pemprogaman web + Praktikum',
-      date: '15 Juni 2026',
-      type: 'ppt',
-    },
-    {
-      id: '4',
-      title: 'Pengenalan dasar HTML',
-      course: 'Pemprogaman web + Praktikum',
-      date: '15 Juni 2026',
-      type: 'pdf',
-    },
-    {
-      id: '5',
-      title: 'Pengenalan dasar HTML',
-      course: 'Pemprogaman web + Praktikum',
-      date: '15 Juni 2026',
-      type: 'pdf',
-    },
-    {
-      id: '6',
-      title: 'Pengenalan dasar HTML',
-      course: 'Pemprogaman web + Praktikum',
-      date: '15 Juni 2026',
-      type: 'pdf',
-    },
-    {
-      id: '7',
-      title: 'Pengenalan dasar HTML',
-      course: 'Pemprogaman web + Praktikum',
-      date: '15 Juni 2026',
-      type: 'pdf',
-    }
-  ];
+  const filteredCourses = courseMaterials.map(course => {
+    const filteredMaterials = course.materials.filter(materi => 
+      materi.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      course.courseName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    return { ...course, materials: filteredMaterials };
+  }).filter(course => course.materials.length > 0);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -143,16 +116,17 @@ export default function MateriScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Materi Terbaru */}
-          <Text style={styles.sectionTitle}>Materi terbaru</Text>
-          {newMateri.map(materi => (
-            <MateriCard key={materi.id} item={materi} />
-          ))}
+          {filteredCourses.length === 0 && (
+            <Text style={{ textAlign: 'center', marginTop: 40, color: '#9CA3AF' }}>Materi tidak ditemukan.</Text>
+          )}
 
-          {/* Materi Dibagikan */}
-          <Text style={styles.sectionTitle}>Materi dibagikan</Text>
-          {sharedMateri.map(materi => (
-            <MateriCard key={materi.id} item={materi} />
+          {filteredCourses.map((course, index) => (
+            <View key={index}>
+              <Text style={styles.sectionTitle}>{course.courseName}</Text>
+              {course.materials.map(materi => (
+                <MateriCard key={materi.id} item={{ ...materi, course: course.courseName }} />
+              ))}
+            </View>
           ))}
 
         </ScrollView>

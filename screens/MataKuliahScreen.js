@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar, FlatList, ImageBackground, Platform, ActivityIndicator, Modal } from 'react-native';
 import Svg, { Polyline, Path, Circle } from 'react-native-svg';
+import { BlurView } from 'expo-blur';
 
 const BG = '#F8FAFC';
 const PRIMARY = '#116E63';
@@ -42,52 +43,59 @@ export default function MataKuliahScreen({ navigation, route }) {
   const user = route?.params?.user || null;
   const token = route?.params?.token || null;
 
-  const [activeTab, setActiveTab] = useState('diambil'); // 'diambil' | 'tersedia'
+  const [activeTab, setActiveTab] = useState(isRegistered ? 'diambil' : 'tersedia'); // 'diambil' | 'tersedia'
   const [coursesData, setCoursesData] = useState({
     diambil: [],
     tersedia: []
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPeriode, setSelectedPeriode] = useState('2024/2025');
+  const [selectedPeriode, setSelectedPeriode] = useState('2025/2026');
   const [modalPeriodeVisible, setModalPeriodeVisible] = useState(false);
 
   const PERIODES = ['2023/2024', '2024/2025', '2025/2026', '2026/2027'];
 
   useFocusEffect(
     useCallback(() => {
-      if (isRegistered && token) {
-        const fetchMataKuliah = async () => {
-          setIsLoading(true);
-          try {
-            const API_URL = Platform.OS === 'android' 
+      const fetchMataKuliah = async () => {
+        setIsLoading(true);
+        try {
+          let API_URL = '';
+          let headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          };
+
+          if (isRegistered && token) {
+            API_URL = Platform.OS === 'android' 
               ? 'http://10.0.2.2:8000/api/mahasiswa/mata-kuliah' 
               : 'http://localhost:8000/api/mahasiswa/mata-kuliah';
-              
-            const response = await fetch(API_URL, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            });
-            
-            const json = await response.json();
-            if (json.status === 'success') {
-              setCoursesData({
-                diambil: json.data.diambil,
-                tersedia: json.data.tersedia
-              });
-            }
-          } catch (error) {
-            console.error("Mata Kuliah Fetch Error: ", error);
-          } finally {
-            setIsLoading(false);
+            headers['Authorization'] = `Bearer ${token}`;
+          } else {
+            API_URL = Platform.OS === 'android' 
+              ? 'http://10.0.2.2:8000/api/public/mata-kuliah' 
+              : 'http://localhost:8000/api/public/mata-kuliah';
           }
-        };
-        
-        fetchMataKuliah();
-      }
+            
+          const response = await fetch(API_URL, {
+            method: 'GET',
+            headers: headers
+          });
+          
+          const json = await response.json();
+          if (json.status === 'success') {
+            setCoursesData({
+              diambil: json.data.diambil,
+              tersedia: json.data.tersedia
+            });
+          }
+        } catch (error) {
+          console.error("Mata Kuliah Fetch Error: ", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      fetchMataKuliah();
     }, [isRegistered, token])
   );
 
@@ -160,11 +168,12 @@ export default function MataKuliahScreen({ navigation, route }) {
       animationType="fade"
       onRequestClose={() => setModalPeriodeVisible(false)}
     >
-      <TouchableOpacity 
-        style={styles.modalOverlay} 
-        activeOpacity={1} 
-        onPress={() => setModalPeriodeVisible(false)}
-      >
+      <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setModalPeriodeVisible(false)}
+        >
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Pilih Periode</Text>
           {PERIODES.map((periode, index) => (
@@ -189,6 +198,7 @@ export default function MataKuliahScreen({ navigation, route }) {
           ))}
         </View>
       </TouchableOpacity>
+      </BlurView>
     </Modal>
   );
 
@@ -205,7 +215,7 @@ export default function MataKuliahScreen({ navigation, route }) {
   const innerContent = (
     <View style={styles.content}>
       {/* ── Tabs ── */}
-      {isRegistered && renderTabs()}
+      {renderTabs()}
 
       {/* ── Periode Selector ── */}
       <View style={styles.periodeRow}>
@@ -220,28 +230,26 @@ export default function MataKuliahScreen({ navigation, route }) {
         </TouchableOpacity>
       </View>
 
-      {isRegistered ? (
-        isLoading ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={PRIMARY} />
-          </View>
-        ) : currentData.length > 0 ? (
-          <FlatList
-            data={currentData}
-            keyExtractor={(item, index) => item?.id ? item.id.toString() : index.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
-        ) : (
-          <View style={{ flex: 1, alignItems: 'center', paddingTop: 40 }}>
-            <Text style={{ color: '#6B7280', fontSize: 14 }}>
-              Tidak ada kelas {activeTab === 'diambil' ? 'yang diambil' : 'yang tersedia'}.
-            </Text>
-          </View>
-        )
-      ) : (
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={PRIMARY} />
+        </View>
+      ) : activeTab === 'diambil' && !isRegistered ? (
         renderEmptyState()
+      ) : currentData.length > 0 ? (
+        <FlatList
+          data={currentData}
+          keyExtractor={(item, index) => item?.id ? item.id.toString() : index.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={{ flex: 1, alignItems: 'center', paddingTop: 40 }}>
+          <Text style={{ color: '#6B7280', fontSize: 14 }}>
+            Tidak ada kelas {activeTab === 'diambil' ? 'yang diambil' : 'yang tersedia'}.
+          </Text>
+        </View>
       )}
     </View>
   );

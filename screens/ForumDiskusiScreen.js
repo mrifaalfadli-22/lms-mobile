@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, 
   FlatList, KeyboardAvoidingView, Platform, ImageBackground, Image, Modal, Alert 
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
 
@@ -370,6 +371,7 @@ export default function ForumDiskusiScreen({ route }) {
 
       {/* Options Modal */}
       <Modal transparent visible={modalVisible} animationType="fade" onRequestClose={() => setModalVisible(false)}>
+        <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVisible(false)}>
           <View style={styles.modalContent}>
             <TouchableOpacity style={styles.modalOption} onPress={handleReply}>
@@ -393,6 +395,7 @@ export default function ForumDiskusiScreen({ route }) {
             )}
           </View>
         </TouchableOpacity>
+        </BlurView>
       </Modal>
 
     </View>
