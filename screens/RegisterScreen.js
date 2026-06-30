@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import AppText from '../components/AppText';
 import {
   View,
-  Text,
+
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -112,16 +113,16 @@ export default function RegisterScreen({ navigation }) {
         >
           {/* ── Header ── */}
           <View style={styles.headerContainer}>
-            <Text style={styles.headline}>Buat akun</Text>
-            <Text style={styles.subheadline}>
+            <AppText style={styles.headline}>Buat akun</AppText>
+            <AppText style={styles.subheadline}>
               Isi data diri di bawah untuk mendaftarkan{'\n'}diri kamu
-            </Text>
+            </AppText>
           </View>
 
           {/* ── Form ── */}
           <View style={styles.form}>
             {/* Nama lengkap */}
-            <Text style={styles.label}>Nama Lengkap</Text>
+            <AppText style={styles.label}>Nama Lengkap</AppText>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
@@ -134,7 +135,7 @@ export default function RegisterScreen({ navigation }) {
             {/* Baris 1: NPM & Tahun Angkatan */}
             <View style={styles.row}>
               <View style={styles.half}>
-                <Text style={styles.label}>NPM</Text>
+                <AppText style={styles.label}>NPM</AppText>
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
@@ -146,7 +147,7 @@ export default function RegisterScreen({ navigation }) {
               </View>
               <View style={styles.spacer} />
               <View style={styles.half}>
-                <Text style={styles.label}>Tahun Angkatan</Text>
+                <AppText style={styles.label}>Tahun Angkatan</AppText>
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
@@ -159,7 +160,7 @@ export default function RegisterScreen({ navigation }) {
             </View>
 
             {/* Fakultas */}
-            <Text style={styles.label}>Fakultas</Text>
+            <AppText style={styles.label}>Fakultas</AppText>
             <TouchableOpacity
               style={styles.inputWrapper}
               activeOpacity={0.8}
@@ -168,13 +169,13 @@ export default function RegisterScreen({ navigation }) {
                 setModalType('fakultas');
               }}
             >
-              <Text style={[styles.selectText, !form.fakultas && { color: '#9CA3AF' }]} numberOfLines={1}>
+              <AppText style={[styles.selectText, !form.fakultas && { color: '#9CA3AF' }]} numberOfLines={1}>
                 {form.fakultas || 'Pilih...'}
-              </Text>
+              </AppText>
             </TouchableOpacity>
 
             {/* Program Studi */}
-            <Text style={styles.label}>Program Studi</Text>
+            <AppText style={styles.label}>Program Studi</AppText>
             <TouchableOpacity
               style={styles.inputWrapper}
               activeOpacity={0.8}
@@ -185,13 +186,13 @@ export default function RegisterScreen({ navigation }) {
                 }
               }}
             >
-              <Text style={[styles.selectText, (!form.programStudi || !form.fakultas) && { color: '#9CA3AF' }]} numberOfLines={1}>
-                {!form.fakultas ? 'Pilih Fakultas' : form.programStudi || 'Pilih...'}
-              </Text>
+              <AppText style={[styles.selectText, (!form.programStudi || !form.fakultas) && { color: '#9CA3AF' }]} numberOfLines={1}>
+                {!form.fakultas ? 'Pilih Fakultas Terlebih Dahulu' : form.programStudi || 'Pilih...'}
+              </AppText>
             </TouchableOpacity>
 
             {/* Email */}
-            <Text style={styles.label}>Email</Text>
+            <AppText style={styles.label}>Email</AppText>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
@@ -203,7 +204,7 @@ export default function RegisterScreen({ navigation }) {
             </View>
 
             {/* Password */}
-            <Text style={styles.label}>Password</Text>
+            <AppText style={styles.label}>Password</AppText>
             <View style={[styles.inputWrapper, styles.passwordWrapper]}>
               <TextInput
                 style={[styles.input, { flex: 1 }]}
@@ -227,14 +228,14 @@ export default function RegisterScreen({ navigation }) {
               activeOpacity={0.85}
               onPress={handleRegister}
             >
-              <Text style={styles.primaryBtnText}>Daftar</Text>
+              <AppText style={styles.primaryBtnText}>Daftar</AppText>
             </TouchableOpacity>
 
             {/* Login Link */}
             <View style={styles.loginLinkContainer}>
-              <Text style={styles.loginLinkText}>Sudah punya akun? </Text>
+              <AppText style={styles.loginLinkText}>Sudah punya akun? </AppText>
               <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.loginLinkAction}>Masuk sekarang</Text>
+                <AppText style={styles.loginLinkAction}>Masuk sekarang</AppText>
               </TouchableOpacity>
             </View>
 
@@ -247,11 +248,11 @@ export default function RegisterScreen({ navigation }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <AppText style={styles.modalTitle}>
                 {modalType === 'fakultas' ? 'Pilih Fakultas' : 'Pilih Program Studi'}
-              </Text>
+              </AppText>
               <TouchableOpacity onPress={() => setModalType(null)}>
-                <Text style={styles.closeBtn}>Tutup</Text>
+                <AppText style={styles.closeBtn}>Tutup</AppText>
               </TouchableOpacity>
             </View>
 
@@ -276,11 +277,11 @@ export default function RegisterScreen({ navigation }) {
                       : handleSelectProdi(item.label)
                   }
                 >
-                  <Text style={styles.modalItemText}>{item.label}</Text>
+                  <AppText style={styles.modalItemText}>{item.label}</AppText>
                 </TouchableOpacity>
               )}
               ListEmptyComponent={
-                <Text style={styles.emptyText}>Tidak ditemukan</Text>
+                <AppText style={styles.emptyText}>Tidak ditemukan</AppText>
               }
             />
           </View>
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   subheadline: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#333333',
     textAlign: 'center',
     lineHeight: 18,
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     color: '#4A4A4A',
-    marginBottom: 4,
+    marginBottom: 8,
     fontWeight: '600',
   },
   inputWrapper: {
@@ -389,15 +390,15 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   loginLinkText: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#6B7280',
   },
   loginLinkAction: {
-    fontSize: 13,
+    fontSize: 14,
     color: PRIMARY,
     fontWeight: '700',
   },
-  
+
   // ── Modal Styles ──
   modalOverlay: {
     flex: 1,

@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
+import AppText from '../components/AppText';
 import {
   View,
-  Text,
+
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   StatusBar,
   TextInput,
+  Modal
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
 
@@ -49,10 +50,22 @@ const PAGE_2_QUESTIONS = [
 export default function DetailEvaluasiScreen({ route }) {
   const navigation = useNavigation();
   const item = route?.params?.item;
-  
+
   const [page, setPage] = useState(1);
   const [answers, setAnswers] = useState({});
   const [feedback, setFeedback] = useState('');
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+
+  const validatePage = () => {
+    const currentQuestions = page === 1 ? PAGE_1_QUESTIONS : PAGE_2_QUESTIONS;
+    const isAllAnswered = currentQuestions.every(q => answers[q.id] !== undefined);
+
+    if (!isAllAnswered) {
+      setErrorModalVisible(true);
+      return false;
+    }
+    return true;
+  };
 
   const handleSelect = (qId, value) => {
     setAnswers(prev => ({ ...prev, [qId]: value }));
@@ -63,7 +76,7 @@ export default function DetailEvaluasiScreen({ route }) {
     const totalSelected = Object.values(answers).reduce((acc, val) => acc + val, 0);
     const maxScore = 45; // 9 questions * 5 max
     const percentage = totalSelected / maxScore;
-    let finalScore = Math.floor(70 + (percentage * 30)); 
+    let finalScore = Math.floor(70 + (percentage * 30));
     if (isNaN(finalScore)) finalScore = 95; // default if skipped
 
     // Pass data back via callback and pop screen
@@ -75,12 +88,12 @@ export default function DetailEvaluasiScreen({ route }) {
 
   const renderQuestion = (q) => (
     <View key={q.id} style={styles.questionCard}>
-      <Text style={styles.questionText}>{q.text}</Text>
+      <AppText style={styles.questionText}>{q.text}</AppText>
       <View style={styles.ratingRow}>
-        <Text style={styles.ratingLabelLeft}>Tidak{'\n'}puas</Text>
+        <AppText style={styles.ratingLabelLeft}>Tidak{'\n'}puas</AppText>
         {[1, 2, 3, 4, 5].map((val) => (
-          <TouchableOpacity 
-            key={val} 
+          <TouchableOpacity
+            key={val}
             activeOpacity={0.8}
             onPress={() => handleSelect(q.id, val)}
             style={styles.radioBtn}
@@ -88,33 +101,33 @@ export default function DetailEvaluasiScreen({ route }) {
             {answers[q.id] === val ? <RadioChecked /> : <RadioUnchecked />}
           </TouchableOpacity>
         ))}
-        <Text style={styles.ratingLabelRight}>Sangat{'\n'}Puas</Text>
+        <AppText style={styles.ratingLabelRight}>Sangat{'\n'}Puas</AppText>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerClickArea} onPress={() => navigation.goBack()}>
           <View style={styles.backBtn}>
             <BackIcon />
           </View>
-          <Text style={styles.headerTitle}>Evaluasi</Text>
+          <AppText style={styles.headerTitle}>Evaluasi</AppText>
         </TouchableOpacity>
       </View>
       <View style={styles.headerLine} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+
         {/* Title & Progress */}
         <View style={styles.titleContainer}>
-          <Text style={styles.pageTitle}>Evaluasi pengajar</Text>
-          <Text style={styles.pageSubtitle}>Isi form di bawah untuk dapat melihat nilai</Text>
-          <Text style={styles.pageIndicator}>{page} dari 2</Text>
+          <AppText style={styles.pageTitle}>Evaluasi pengajar</AppText>
+          <AppText style={styles.pageSubtitle}>Isi form di bawah untuk dapat melihat nilai</AppText>
+          <AppText style={styles.pageIndicator}>{page} dari 2</AppText>
         </View>
 
         {/* Questions List */}
@@ -125,11 +138,11 @@ export default function DetailEvaluasiScreen({ route }) {
         ) : (
           <View style={styles.questionsContainer}>
             {PAGE_2_QUESTIONS.map(renderQuestion)}
-            
+
             {/* Feedback Input */}
             <View style={styles.questionCard}>
-              <Text style={styles.questionText}>Kesan, pesan, atau kritik</Text>
-              <TextInput 
+              <AppText style={styles.questionText}>Kesan, pesan, atau kritik</AppText>
+              <TextInput
                 style={styles.feedbackInput}
                 placeholder="Tuliskan pendapat Anda di sini..."
                 placeholderTextColor="#9CA3AF"
@@ -144,8 +157,8 @@ export default function DetailEvaluasiScreen({ route }) {
 
         {/* Action Buttons */}
         <View style={styles.bottomActions}>
-          <TouchableOpacity 
-            style={styles.btnSecondary} 
+          <TouchableOpacity
+            style={styles.btnSecondary}
             activeOpacity={0.7}
             onPress={() => {
               if (page === 1) {
@@ -155,30 +168,50 @@ export default function DetailEvaluasiScreen({ route }) {
               }
             }}
           >
-            <Text style={styles.btnSecondaryText}>
+            <AppText style={styles.btnSecondaryText}>
               {page === 1 ? 'Keluar dari evaluasi' : 'Kembali'}
-            </Text>
+            </AppText>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.btnPrimary} 
+
+          <TouchableOpacity
+            style={styles.btnPrimary}
             activeOpacity={0.8}
             onPress={() => {
-              if (page === 1) {
-                setPage(2);
-              } else {
-                handleFinish();
+              if (validatePage()) {
+                if (page === 1) {
+                  setPage(2);
+                } else {
+                  handleFinish();
+                }
               }
             }}
           >
-            <Text style={styles.btnPrimaryText}>
+            <AppText style={styles.btnPrimaryText}>
               {page === 1 ? 'Lanjutkan' : 'Selesai'}
-            </Text>
+            </AppText>
           </TouchableOpacity>
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Error Modal */}
+      <Modal visible={errorModalVisible} transparent={true} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <AppText style={styles.modalTitle}>Evaluasi Belum Lengkap</AppText>
+            <AppText style={styles.modalDesc}>Harap isi semua pilihan pada pertanyaan sebelum melanjutkan.</AppText>
+            <TouchableOpacity
+              style={styles.modalBtn}
+              activeOpacity={0.8}
+              onPress={() => setErrorModalVisible(false)}
+            >
+              <AppText style={styles.modalBtnText}>Mengerti</AppText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+    </View>
   );
 }
 
@@ -190,7 +223,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 16,
+    paddingTop: 54,
     paddingHorizontal: 20,
     paddingBottom: 16,
     backgroundColor: '#F9FAFB',
@@ -229,12 +262,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   pageSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#6B7280',
     marginBottom: 12,
   },
   pageIndicator: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#9CA3AF',
     textAlign: 'right',
   },
@@ -253,10 +286,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   questionText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500',
     color: '#111827',
-    marginBottom: 16,
+    marginBottom: 18,
     lineHeight: 20,
   },
   ratingRow: {
@@ -265,14 +298,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ratingLabelLeft: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#116E63',
     fontWeight: '600',
     textAlign: 'left',
     width: 40,
   },
   ratingLabelRight: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#116E63',
     fontWeight: '600',
     textAlign: 'right',
@@ -282,13 +315,13 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   feedbackInput: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFF',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     height: 100,
     padding: 12,
-    fontSize: 13,
+    fontSize: 14,
     color: '#111827',
   },
   bottomActions: {
@@ -306,19 +339,65 @@ const styles = StyleSheet.create({
   },
   btnSecondaryText: {
     color: '#4B5563',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
   btnPrimary: {
     flex: 1,
-    backgroundColor: '#2E7D70',
+    backgroundColor: '#116E63',
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
   },
   btnPrimaryText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    width: '100%',
+    padding: 24,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalDesc: {
+    fontSize: 14,
+    color: '#4B5563',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  modalBtn: {
+    backgroundColor: '#116E63',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  }
 });

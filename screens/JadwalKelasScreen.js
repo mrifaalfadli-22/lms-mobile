@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar, Modal, FlatList, ImageBackground } from 'react-native';
+import AppText from '../components/AppText';
+import { View, StyleSheet, TouchableOpacity, Image, StatusBar, Modal, FlatList, ImageBackground } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Svg, { Polyline, Path, Circle } from 'react-native-svg';
 import { format, startOfWeek, addDays, isSameDay, subWeeks, addWeeks } from 'date-fns';
 import { id } from 'date-fns/locale/id';
 
-const ACTIVE_BG = '#258A7A';
-const PRIMARY = '#116E63'; 
+const ACTIVE_BG = '#116E63';
+const PRIMARY = '#116E63';
 const BG = '#F8FAFC';
 
 // Icon Chevron Left
@@ -65,7 +66,7 @@ export default function JadwalKelasScreen({ navigation, route }) {
 
   const [activeDate, setActiveDate] = useState(new Date());
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
-  
+
   // State untuk Modal Picker Bulan
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
@@ -95,32 +96,31 @@ export default function JadwalKelasScreen({ navigation, route }) {
   });
 
   const currentMonthYear = format(currentWeekStart, 'MMMM yyyy', { locale: id });
-  
+
   const isToday = isSameDay(activeDate, new Date());
   const scheduleTitle = isToday ? 'Jadwal hari ini' : `Jadwal ${format(activeDate, 'EEEE, d MMM', { locale: id })}`;
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.card} 
+    <TouchableOpacity
+      style={styles.card}
       activeOpacity={0.8}
       onPress={() => navigation.navigate('DetailMataKuliah', { course: { ...item, lecturer: item.dosen }, isRegistered: isRegistered })}
     >
       <Image source={require('../assets/dosen.png')} style={styles.cardImage} />
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
+        <AppText style={styles.cardTitle}>{item.title}</AppText>
         <View style={styles.cardRow}>
           <UsersIcon />
-          <Text style={styles.cardInfo}>{item.pertemuan}</Text>
+          <AppText style={styles.cardInfo}>{item.pertemuan}</AppText>
         </View>
         <View style={styles.cardRow}>
           <ClockRedIcon />
-          <Text style={styles.cardInfo}>{item.time}</Text>
+          <AppText style={styles.cardInfo}>{item.time}</AppText>
         </View>
         <View style={styles.dosenRow}>
           <Image source={require('../assets/dosen.png')} style={styles.dosenAvatar} />
           <View>
-            <Text style={styles.dosenName}>{item.dosen}</Text>
-            <Text style={styles.dosenRole}>{item.role}</Text>
+            <AppText style={styles.dosenName}>{item.dosen}</AppText>
           </View>
         </View>
       </View>
@@ -134,7 +134,7 @@ export default function JadwalKelasScreen({ navigation, route }) {
         setPickerYear(currentWeekStart.getFullYear());
         setShowMonthPicker(true);
       }}>
-        <Text style={styles.monthText}>{currentMonthYear}</Text>
+        <AppText style={styles.monthText}>{currentMonthYear}</AppText>
         <ChevronDown />
       </TouchableOpacity>
 
@@ -154,8 +154,8 @@ export default function JadwalKelasScreen({ navigation, route }) {
                 onPress={() => setActiveDate(item.date)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.dayNumber, isActive && styles.textWhite]}>{item.day}</Text>
-                <Text style={[styles.dayName, isActive && styles.textWhite]}>{item.dayName}</Text>
+                <AppText style={[styles.dayNumber, isActive && styles.textWhite]}>{item.day}</AppText>
+                <AppText style={[styles.dayName, isActive && styles.textWhite]}>{item.dayName}</AppText>
               </TouchableOpacity>
             );
           })}
@@ -167,7 +167,7 @@ export default function JadwalKelasScreen({ navigation, route }) {
       </View>
 
       {/* ── Jadwal Title ── */}
-      <Text style={styles.sectionTitle}>{scheduleTitle}</Text>
+      <AppText style={styles.sectionTitle}>{scheduleTitle}</AppText>
 
       {isRegistered ? (
         <FlatList
@@ -184,11 +184,11 @@ export default function JadwalKelasScreen({ navigation, route }) {
             style={styles.emptyImage}
             resizeMode="contain"
           />
-          <Text style={styles.emptyText}>
+          <AppText style={styles.emptyText}>
             Kamu belum registrasi, yuk daftar untuk{'\n'}menggunakan fitur menarik{'\n'}lainnya
-          </Text>
+          </AppText>
           <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.registerLink}>Daftar</Text>
+            <AppText style={styles.registerLink}>Daftar</AppText>
           </TouchableOpacity>
         </View>
       )}
@@ -198,12 +198,12 @@ export default function JadwalKelasScreen({ navigation, route }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={BG} />
-      
+
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft />
-          <Text style={styles.headerTitle}>Jadwal</Text>
+          <AppText style={styles.headerTitle}>Jadwal</AppText>
         </TouchableOpacity>
       </View>
 
@@ -224,26 +224,26 @@ export default function JadwalKelasScreen({ navigation, route }) {
       {/* ── Month Picker Modal ── */}
       <Modal visible={showMonthPicker} transparent animationType="fade">
         <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowMonthPicker(false)}>
-          <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
-            <View style={styles.modalYearRow}>
-              <TouchableOpacity onPress={() => setPickerYear(y => y - 1)} style={styles.modalYearBtn}>
-                <ChevronLeftSmall color="#111827" />
-              </TouchableOpacity>
-              <Text style={styles.modalYearText}>{pickerYear}</Text>
-              <TouchableOpacity onPress={() => setPickerYear(y => y + 1)} style={styles.modalYearBtn}>
-                <ChevronRightSmall color="#111827" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.monthGrid}>
-              {monthNames.map((m, i) => (
-                <TouchableOpacity key={i} style={styles.monthGridItem} onPress={() => handleSelectMonth(i)} activeOpacity={0.7}>
-                  <Text style={styles.monthGridText}>{m}</Text>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowMonthPicker(false)}>
+            <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
+              <View style={styles.modalYearRow}>
+                <TouchableOpacity onPress={() => setPickerYear(y => y - 1)} style={styles.modalYearBtn}>
+                  <ChevronLeftSmall color="#111827" />
                 </TouchableOpacity>
-              ))}
-            </View>
+                <AppText style={styles.modalYearText}>{pickerYear}</AppText>
+                <TouchableOpacity onPress={() => setPickerYear(y => y + 1)} style={styles.modalYearBtn}>
+                  <ChevronRightSmall color="#111827" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.monthGrid}>
+                {monthNames.map((m, i) => (
+                  <TouchableOpacity key={i} style={styles.monthGridItem} onPress={() => handleSelectMonth(i)} activeOpacity={0.7}>
+                    <AppText style={styles.monthGridText}>{m}</AppText>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
           </TouchableOpacity>
-        </TouchableOpacity>
         </BlurView>
       </Modal>
 
@@ -384,8 +384,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   cardInfo: {
-    fontSize: 12,
-    color: '#9CA3AF',
+    fontSize: 14,
+    color: '#909090',
     marginLeft: 8,
   },
   dosenRow: {
@@ -400,12 +400,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   dosenName: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '600',
     color: '#111827',
   },
   dosenRole: {
-    fontSize: 9,
+    fontSize: 12,
     color: '#9CA3AF',
     marginTop: 1,
   },

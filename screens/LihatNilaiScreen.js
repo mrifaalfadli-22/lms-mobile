@@ -1,10 +1,11 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
+import AppText from '../components/AppText';
+import {
+  View,
+
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
   StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,23 +23,23 @@ const TableRow = ({ item, index, onEvalPress }) => {
   return (
     <View style={[styles.tableRow, isEven ? styles.rowEven : styles.rowOdd]}>
       <View style={styles.colCourse}>
-        <Text style={styles.courseText}>{item.course}</Text>
+        <AppText style={styles.courseText}>{item.course}</AppText>
       </View>
-      
+
       {item.needsEval ? (
         <TouchableOpacity style={styles.colEval} activeOpacity={0.7} onPress={onEvalPress}>
-          <Text style={styles.evalText}>Silahkan isi evaluasi untuk melihat nilai</Text>
+          <AppText style={styles.evalText}>Silahkan isi evaluasi untuk melihat nilai</AppText>
         </TouchableOpacity>
       ) : (
         <>
           <View style={styles.colSKS}>
-            <Text style={styles.valueText}>{item.sks}</Text>
+            <AppText style={styles.valueText}>{item.sks}</AppText>
           </View>
           <View style={styles.colNilai}>
-            <Text style={styles.valueText}>{item.nilai}</Text>
+            <AppText style={styles.valueText}>{item.nilai}</AppText>
           </View>
           <View style={styles.colHuruf}>
-            <Text style={styles.valueText}>{item.huruf}</Text>
+            <AppText style={styles.valueText}>{item.huruf}</AppText>
           </View>
         </>
       )}
@@ -64,23 +65,23 @@ export default function LihatNilaiScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerClickArea} onPress={() => navigation.goBack()}>
           <View style={styles.backBtn}>
             <BackIcon />
           </View>
-          <Text style={styles.headerTitle}>Lihat nilai</Text>
+          <AppText style={styles.headerTitle}>Lihat nilai</AppText>
         </TouchableOpacity>
       </View>
 
       <View style={styles.summaryContainer}>
         <View style={styles.summaryLeft}>
-          <Text style={styles.summaryText}>TOTAL SKS : 60</Text>
+          <AppText style={styles.summaryText}>TOTAL SKS : 60</AppText>
         </View>
         <View style={styles.summaryRight}>
-          <Text style={styles.summaryText}>IPK : 3.22</Text>
+          <AppText style={styles.summaryText}>IPK : 3.22</AppText>
         </View>
       </View>
 
@@ -88,31 +89,31 @@ export default function LihatNilaiScreen() {
         {/* Table Header */}
         <View style={styles.tableHeader}>
           <View style={styles.colCourse}>
-            <Text style={styles.tableHeaderLabel}>Mata kuliah</Text>
+            <AppText style={styles.tableHeaderLabel}>Mata kuliah</AppText>
           </View>
           <View style={styles.colSKS}>
-            <Text style={styles.tableHeaderLabelCenter}>SKS</Text>
+            <AppText style={styles.tableHeaderLabelCenter}>SKS</AppText>
           </View>
           <View style={styles.colNilai}>
-            <Text style={styles.tableHeaderLabelCenter}>Nilai</Text>
+            <AppText style={styles.tableHeaderLabelCenter}>Nilai</AppText>
           </View>
           <View style={styles.colHuruf}>
-            <Text style={styles.tableHeaderLabelCenter}>Huruf</Text>
+            <AppText style={styles.tableHeaderLabelCenter}>Huruf</AppText>
           </View>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           {nilaiData.map((item, index) => (
-            <TableRow 
-              key={item.id} 
-              item={item} 
-              index={index} 
+            <TableRow
+              key={item.id}
+              item={item}
+              index={index}
               onEvalPress={() => navigation.navigate('Evaluasi')}
             />
           ))}
         </ScrollView>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 16,
+    paddingTop: 54,
     paddingHorizontal: 20,
     paddingBottom: 16,
     backgroundColor: '#F9FAFB',
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
   },
   summaryLeft: {
     flex: 1,
-    backgroundColor: '#1E7C62',
+    backgroundColor: '#116E63',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
   summaryText: {
     color: '#FFFFFF',
     fontWeight: '600',
-    fontSize: 13,
+    fontSize: 14,
   },
   container: {
     flex: 1,
@@ -177,11 +178,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
   },
   tableHeaderLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
+    fontSize: 14,
+    color: '#374151',
   },
   tableHeaderLabelCenter: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#374151',
     textAlign: 'center',
   },
@@ -217,17 +218,17 @@ const styles = StyleSheet.create({
     flex: 2.6,
   },
   courseText: {
-    fontSize: 11,
+    fontSize: 14,
     color: '#374151',
     lineHeight: 16,
   },
   valueText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#111827',
     textAlign: 'center',
   },
   evalText: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#EF4444',
     textAlign: 'center',
   }

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
+import AppText from '../components/AppText';
+import {
+  View,
+
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
   StatusBar,
   TextInput
 } from 'react-native';
@@ -26,18 +27,18 @@ const SearchIcon = () => (
 );
 
 const EvaluasiCard = ({ item, onPress }) => (
-  <TouchableOpacity 
-    style={styles.card} 
-    activeOpacity={0.8} 
+  <TouchableOpacity
+    style={styles.card}
+    activeOpacity={0.8}
     onPress={onPress}
     disabled={item.status === 'Selesai'}
   >
-    <Text style={styles.lecturerText}>{item.lecturer}</Text>
-    <Text style={styles.courseText}>{item.course}</Text>
+    <AppText style={styles.lecturerText}>{item.lecturer}</AppText>
+    <AppText style={styles.courseText}>{item.course}</AppText>
     {item.status === 'Selesai' ? (
-      <Text style={styles.scoreText}>Nilai: {item.score}</Text>
+      <AppText style={styles.scoreText}>Nilai: {item.score}</AppText>
     ) : (
-      <Text style={styles.statusText}>*{item.status}</Text>
+      <AppText style={styles.statusText}>*{item.status}</AppText>
     )}
   </TouchableOpacity>
 );
@@ -61,14 +62,14 @@ export default function EvaluasiScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerClickArea} onPress={() => navigation.goBack()}>
           <View style={styles.backBtn}>
             <BackIcon />
           </View>
-          <Text style={styles.headerTitle}>Evaluasi</Text>
+          <AppText style={styles.headerTitle}>Evaluasi</AppText>
         </TouchableOpacity>
       </View>
       <View style={styles.headerLine} />
@@ -90,10 +91,10 @@ export default function EvaluasiScreen() {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {evaluasiData.map(data => (
-            <EvaluasiCard 
-              key={data.id} 
-              item={data} 
-              onPress={() => navigation.navigate('DetailEvaluasi', { 
+            <EvaluasiCard
+              key={data.id}
+              item={data}
+              onPress={() => navigation.navigate('DetailEvaluasi', {
                 item: data,
                 onComplete: (completedId, score) => {
                   setEvaluasiData(prev => prev.map(i => i.id === completedId ? { ...i, status: 'Selesai', score } : i));
@@ -103,7 +104,7 @@ export default function EvaluasiScreen() {
           ))}
         </ScrollView>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 16,
+    paddingTop: 54,
     paddingHorizontal: 20,
     paddingBottom: 16,
     backgroundColor: '#F9FAFB',
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     color: '#111827',
     paddingVertical: 8,
   },
@@ -194,23 +195,23 @@ const styles = StyleSheet.create({
     borderColor: '#F3F4F6',
   },
   lecturerText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: '#111827',
     marginBottom: 4,
   },
   courseText: {
-    fontSize: 11,
+    fontSize: 13,
     color: '#6B7280',
     marginBottom: 12,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: '#EF4444',
   },
   scoreText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#116E63',
   }

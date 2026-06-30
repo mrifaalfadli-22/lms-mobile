@@ -1,7 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import AppText from '../components/AppText';
 import {
   View,
-  Text,
+
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -21,7 +22,7 @@ import { BlurView } from 'expo-blur';
 const { width, height } = Dimensions.get('window');
 
 // ── Color Palette ──────────────────────────────────────────────────────────────
-const PRIMARY = '#307B70';
+const PRIMARY = '#116E63';
 const BG = '#F8FAFC';
 
 // ── Carousel constants ─────────────────────────────────────────────────────────
@@ -33,7 +34,7 @@ const SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
 const BellIcon = () => (
-  <Svg width="26" height="26" viewBox="0 0 24 24" fill="#FBBF24">
+  <Svg width="32" height="32" viewBox="0 0 24 24" fill="#FBBF24">
     <Path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
   </Svg>
 );
@@ -101,7 +102,7 @@ const IconMataKuliah = () => (
   <Svg width="42" height="42" viewBox="0 0 48 48">
     {/* Book Cover */}
     <Path d="M24 12 c-6-3 -14-1 -18 1 v 26 c4-2 12-4 18-1 c6-3 14-1 18 1 v -26 c-4-2 -12-4 -18-1 z" fill="#0F766E" />
-    
+
     {/* Left Pages */}
     <Path d="M24 14 c-5-2 -12-1 -16 1 v 22 c4-2 11-3 16-1 z" fill="#F1F5F9" />
     {/* Right Pages */}
@@ -109,13 +110,13 @@ const IconMataKuliah = () => (
 
     {/* Center crease */}
     <Path d="M24 14 v 22" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round" />
-    
+
     {/* Page Text Lines Left */}
     <Path d="M12 22h8M12 26h8M12 30h5" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round" />
-    
+
     {/* Page Text Lines Right */}
     <Path d="M28 22h8M28 26h8M28 30h5" stroke="#E2E8F0" strokeWidth="2" strokeLinecap="round" />
-    
+
     {/* Bookmark */}
     <Path d="M16 10 v 14 l 3 -2 l 3 2 v -14 z" fill="#F43F5E" />
   </Svg>
@@ -125,14 +126,14 @@ const IconJadwal = () => (
   <Svg width="42" height="42" viewBox="0 0 48 48">
     {/* Calendar Body */}
     <Rect x="6" y="10" width="36" height="32" rx="4" fill="#EFF6FF" />
-    
+
     {/* Calendar Header */}
     <Path d="M6 14 a4 4 0 0 1 4 -4 h28 a4 4 0 0 1 4 4 v8 h-36 z" fill="#F43F5E" />
-    
+
     {/* Bindings/Rings */}
     <Rect x="12" y="6" width="4" height="8" rx="2" fill="#94A3B8" />
     <Rect x="32" y="6" width="4" height="8" rx="2" fill="#94A3B8" />
-    
+
     {/* Header Text / Year */}
     <Rect x="20" y="14" width="8" height="3" rx="1.5" fill="#FDA4AF" />
 
@@ -140,7 +141,7 @@ const IconJadwal = () => (
     <Rect x="12" y="26" width="5" height="5" rx="1" fill="#CBD5E1" />
     <Rect x="21" y="26" width="5" height="5" rx="1" fill="#CBD5E1" />
     <Rect x="30" y="26" width="5" height="5" rx="1" fill="#CBD5E1" />
-    
+
     <Rect x="12" y="34" width="5" height="5" rx="1" fill="#CBD5E1" />
     <Rect x="21" y="34" width="5" height="5" rx="1" fill="#34D399" />
     <Rect x="30" y="34" width="5" height="5" rx="1" fill="#CBD5E1" />
@@ -170,7 +171,7 @@ const IconTugas = () => (
   <Svg width="42" height="42" viewBox="0 0 48 48">
     {/* Clipboard Base */}
     <Rect x="8" y="10" width="28" height="34" rx="3" fill="#C7D2FE" />
-    
+
     {/* Paper */}
     <Rect x="12" y="14" width="20" height="26" rx="2" fill="#FFFFFF" />
 
@@ -238,6 +239,16 @@ const IconSertifikat = () => (
   </Svg>
 );
 
+const IconVerifikasi = () => (
+  <Svg width="42" height="42" viewBox="0 0 48 48">
+    <Rect x="8" y="10" width="32" height="28" rx="6" fill="#ECFDF5" />
+    <Path d="M24 16 L28 20 L34 14" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <Circle cx="24" cy="24" r="10" stroke="#059669" strokeWidth="2" fill="none" />
+    <Path d="M24 30 L24 34" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
+    <Path d="M14 24 L18 24" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
+  </Svg>
+);
+
 // ── MenuIcon Component ─────────────────────────────────────────────────────────
 const MenuIcon = ({ icon, label, onPress, isLocked }) => (
   <TouchableOpacity style={styles.menuItem} activeOpacity={0.75} onPress={onPress}>
@@ -252,7 +263,7 @@ const MenuIcon = ({ icon, label, onPress, isLocked }) => (
         </View>
       )}
     </View>
-    <Text style={[styles.menuLabel, isLocked && { color: '#9CA3AF' }]}>{label}</Text>
+    <AppText style={[styles.menuLabel, isLocked && { color: '#9CA3AF' }]}>{label}</AppText>
   </TouchableOpacity>
 );
 
@@ -314,8 +325,8 @@ const AnimatedCourseCard = ({ item, index, activeIndex, scrollToIndex, navigatio
       />
       {isActive && (
         <View style={styles.carouselTextBox}>
-          <Text style={styles.courseTitle}>{item.title}</Text>
-          <Text style={styles.courseLecturer}>{item.lecturer}</Text>
+          <AppText style={styles.courseTitle}>{item.title}</AppText>
+          <AppText style={styles.courseLecturer}>{item.lecturer}</AppText>
         </View>
       )}
     </TouchableOpacity>
@@ -373,21 +384,21 @@ const AnimatedJadwalCard = ({ item, index, activeIndex, scrollToIndex, jadwalsLe
       <Animated.View style={[styles.jadwalRegisteredCard, { transform: [{ scale }], opacity }]}>
         <Image source={{ uri: item.image }} style={styles.jrcImage} />
         <View style={styles.jrcContent}>
-          <Text style={styles.jrcTitle}>{item.title}</Text>
+          <AppText style={styles.jrcTitle}>{item.title}</AppText>
           <View style={styles.jrcRow}>
             <CalendarDarkIcon />
-            <Text style={styles.jrcInfo}>{item.date}</Text>
+            <AppText style={styles.jrcInfo}>{item.date}</AppText>
           </View>
           <View style={styles.jrcRow}>
             <ClockDarkIcon />
-            <Text style={styles.jrcInfo}>{item.time}</Text>
+            <AppText style={styles.jrcInfo}>{item.time}</AppText>
           </View>
           <View style={styles.jrcDivider} />
           <View style={styles.jrcLecturerRow}>
             <Image source={{ uri: item.avatar }} style={styles.jrcAvatar} />
             <View>
-              <Text style={styles.jrcLecturerName}>{item.lecturer}</Text>
-              <Text style={styles.jrcLecturerRole}>{item.role}</Text>
+              <AppText style={styles.jrcLecturerName}>{item.lecturer}</AppText>
+              <AppText style={styles.jrcLecturerRole}>{item.role}</AppText>
             </View>
           </View>
         </View>
@@ -431,13 +442,13 @@ export default function HomeScreen({ navigation, route }) {
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const url = `https://api.myquran.com/v2/sholat/jadwal/1301/${year}/${month}/${day}`;
-        
+
         const response = await fetch(url);
         const json = await response.json();
         if (json.status && json.data?.jadwal) {
           const jadwal = json.data.jadwal;
           const currentMinutes = date.getHours() * 60 + date.getMinutes();
-          
+
           const parseTime = (timeStr) => {
             const [h, m] = timeStr.split(':').map(Number);
             return h * 60 + m;
@@ -453,14 +464,14 @@ export default function HomeScreen({ navigation, route }) {
 
           let next = prayerTimes.find(p => p.val > currentMinutes);
           if (!next) next = { name: 'Subuh', time: jadwal.subuh }; // default next day
-          
+
           setNextAdzan(next);
         }
       } catch (error) {
         console.log('Error fetching adzan:', error);
       }
     };
-    
+
     fetchAdzan();
   }, []);
 
@@ -544,7 +555,7 @@ export default function HomeScreen({ navigation, route }) {
     },
   ];
 
-  const suggestions = isRegistered 
+  const suggestions = isRegistered
     ? ['Kuis html', 'Materi kalkukus', 'Live class']
     : ['Pemrograman Web', 'Kalkulus 1', 'Basis Data'];
 
@@ -607,25 +618,43 @@ export default function HomeScreen({ navigation, route }) {
           style={styles.header}
         >
           <View style={styles.headerLeft}>
-            {isRegistered ? (
-              <Image
-                source={{ uri: user?.foto_profil ? `http://10.0.2.2:8000/storage/${user.foto_profil}` : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop' }}
-                style={styles.avatarImage}
-              />
-            ) : (
-              <UserAvatarIcon />
-            )}
+            <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('Profil')}>
+              {isRegistered ? (
+                user?.foto_profil ? (
+                  <Image
+                    source={{ uri: `http://10.0.2.2:8000/storage/${user.foto_profil}` }}
+                    style={styles.avatarImage}
+                  />
+                ) : (
+                  <View style={styles.avatarInitialContainer}>
+                    <AppText style={styles.avatarInitialText}>
+                      {(() => {
+                        const name = user?.nama_lengkap || 'Mahasiswa';
+                        const words = name.trim().split(/\s+/);
+                        if (words.length > 1) return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+                        return name.substring(0, 2).toUpperCase();
+                      })()}
+                    </AppText>
+                  </View>
+                )
+              ) : (
+                <Image
+                  source={require('../assets/guest-avatar-green.png')}
+                  style={styles.avatarImage}
+                />
+              )}
+            </TouchableOpacity>
             <View>
               {isRegistered ? (
                 <>
-                  <Text style={styles.greetSubText}>Selamat datang,</Text>
-                  <Text style={styles.greetText}>{user?.nama_lengkap || 'Mahasiswa'}</Text>
+                  <AppText style={styles.greetSubText}>Selamat datang,</AppText>
+                  <AppText style={styles.greetText}>{user?.nama_lengkap || 'Mahasiswa'}</AppText>
                 </>
               ) : (
                 <>
-                  <Text style={styles.greetText}>Halo sobat</Text>
+                  <AppText style={styles.greetText}>Halo sobat</AppText>
                   <TouchableOpacity style={styles.loginBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Register')}>
-                    <Text style={styles.loginBtnText}>Daftar / Masuk</Text>
+                    <AppText style={styles.loginBtnText}>Daftar / Masuk</AppText>
                   </TouchableOpacity>
                 </>
               )}
@@ -635,7 +664,7 @@ export default function HomeScreen({ navigation, route }) {
             <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Notifikasi')}>
               <BellIcon />
               <View style={styles.bellBadge}>
-                <Text style={styles.bellBadgeText}>1</Text>
+                <AppText style={styles.bellBadgeText}>1</AppText>
               </View>
             </TouchableOpacity>
           )}
@@ -643,7 +672,7 @@ export default function HomeScreen({ navigation, route }) {
 
         {/* ── Search Section ── */}
         <View style={styles.searchSection}>
-          <Text style={styles.searchLabel}>Hari ini mau belajar apa ?</Text>
+          <AppText style={styles.searchLabel}>Hari ini mau belajar apa ?</AppText>
           <View style={styles.searchBar}>
             <TextInput
               style={styles.searchInput}
@@ -659,18 +688,18 @@ export default function HomeScreen({ navigation, route }) {
 
           <View style={styles.tagsContainer}>
             <View style={styles.tagsRow}>
-              <Text style={styles.tagsLabel}>Misal</Text>
+              <AppText style={styles.tagsLabel}>Misal</AppText>
               {suggestions.map((s, i) => (
                 <TouchableOpacity key={i} style={styles.tag} activeOpacity={0.75}>
-                  <Text style={styles.tagText}>{s}</Text>
+                  <AppText style={styles.tagText}>{s}</AppText>
                 </TouchableOpacity>
               ))}
             </View>
             <View style={styles.tagsRowCenter}>
               <TouchableOpacity style={styles.tag} activeOpacity={0.75}>
-                <Text style={styles.tagText}>
+                <AppText style={styles.tagText}>
                   {isRegistered ? 'Materi pemprogram berbasis web' : 'Struktur Data & Algoritma'}
-                </Text>
+                </AppText>
               </TouchableOpacity>
             </View>
           </View>
@@ -680,16 +709,16 @@ export default function HomeScreen({ navigation, route }) {
         {isRegistered && (
           <View style={styles.progressCard}>
             <View style={styles.progressLeft}>
-              <Text style={styles.progressTitle}>Progress pembelajaran{'\n'}kamu</Text>
-              <Text style={styles.progressDesc}>
+              <AppText style={styles.progressTitle}>Progress pembelajaran{'\n'}kamu</AppText>
+              <AppText style={styles.progressDesc}>
                 Kamu menyelesaikan {dashboardData.progress.completed_modules} modul{'\n'}pembelajaran bulan ini. Pertahankan{'\n'}semangat kamu!
-              </Text>
+              </AppText>
 
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBarBg}>
                   <View style={[styles.progressBarFill, { width: `${dashboardData.progress.percentage}%` }]} />
                 </View>
-                <Text style={styles.progressPercent}>{dashboardData.progress.percentage}%</Text>
+                <AppText style={styles.progressPercent}>{dashboardData.progress.percentage}%</AppText>
               </View>
 
               <TouchableOpacity
@@ -697,12 +726,12 @@ export default function HomeScreen({ navigation, route }) {
                 activeOpacity={0.8}
                 onPress={() => navigation.navigate('ProgressBelajar')}
               >
-                <Text style={styles.progressBtnText}>Lihat progress</Text>
+                <AppText style={styles.progressBtnText}>Lihat progress</AppText>
               </TouchableOpacity>
             </View>
             <View style={styles.progressRight}>
               <Image
-                source={{ uri: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&q=80' }}
+                source={require('../assets/progress-illustration.png')}
                 style={styles.progressIllustration}
               />
             </View>
@@ -719,7 +748,7 @@ export default function HomeScreen({ navigation, route }) {
             <MenuIcon icon={<IconProgress />} label={'Progress\nbelajar'} onPress={() => navigation.navigate('ProgressBelajar')} />
             <MenuIcon icon={<IconNilai />} label="Lihat nilai" onPress={() => navigation.navigate('LihatNilai')} />
             <MenuIcon icon={<IconSertifikat />} label="Sertifikat" onPress={() => navigation.navigate('Sertifikat')} />
-            <View style={[styles.menuItem, { opacity: 0 }]} />
+            <MenuIcon icon={<IconVerifikasi />} label="Verifikasi" onPress={() => navigation.navigate('VerifikasiSertifikat')} />
           </View>
         )}
 
@@ -727,7 +756,7 @@ export default function HomeScreen({ navigation, route }) {
         {isRegistered ? (
           <View style={styles.jadwalRegisteredSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Jadwal hari ini</Text>
+              <AppText style={styles.sectionTitle}>Jadwal hari ini</AppText>
               {isLoading && <ActivityIndicator size="small" color={PRIMARY} />}
               {jadwals.length > 1 && (
                 <View style={styles.dotRow}>
@@ -742,7 +771,7 @@ export default function HomeScreen({ navigation, route }) {
 
             {jadwals.length === 0 && !isLoading ? (
               <View style={{ padding: 20, alignItems: 'center' }}>
-                <Text style={{ color: '#6B7280', fontSize: 13 }}>Tidak ada jadwal perkuliahan hari ini.</Text>
+                <AppText style={{ color: '#6B7280', fontSize: 13 }}>Tidak ada jadwal perkuliahan hari ini.</AppText>
               </View>
             ) : (
               <FlatList
@@ -779,15 +808,15 @@ export default function HomeScreen({ navigation, route }) {
           <View style={styles.jadwalCard}>
             <View style={styles.jadwalCardTop}>
               <View>
-                <Text style={styles.jadwalCardSmall}>Jadwal hari ini</Text>
-                <Text style={styles.jadwalCardDate}>{dateStr}</Text>
+                <AppText style={styles.jadwalCardSmall}>Jadwal hari ini</AppText>
+                <AppText style={styles.jadwalCardDate}>{dateStr}</AppText>
               </View>
             </View>
-            <Text style={styles.jadwalInfo}>
+            <AppText style={styles.jadwalInfo}>
               Kamu belum memilih mata kuliah, yuk isi untuk{'\n'}menggunakan fitur lainnya
-            </Text>
+            </AppText>
             <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.jadwalCTA}>Isi sekarang</Text>
+              <AppText style={styles.jadwalCTA}>Isi sekarang</AppText>
             </TouchableOpacity>
           </View>
         )}
@@ -795,21 +824,22 @@ export default function HomeScreen({ navigation, route }) {
         {/* ── Menu Grid (Guest: after Jadwal Card) ── */}
         {!isRegistered && (
           <View style={styles.menuGridExpanded}>
-            <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" onPress={() => navigation.navigate('MataKuliah')} />
+            <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" onPress={() => navigation.navigate('MataKuliah')} isLocked={false} />
             <MenuIcon icon={<IconJadwal />} label="Jadwal" isLocked onPress={openDaftarModal} />
             <MenuIcon icon={<IconMateri />} label="Materi" isLocked onPress={openDaftarModal} />
             <MenuIcon icon={<IconTugas />} label={"Tugas\n&kuis"} isLocked onPress={openDaftarModal} />
             <MenuIcon icon={<IconProgress />} label={'Progress\nbelajar'} isLocked onPress={openDaftarModal} />
             <MenuIcon icon={<IconNilai />} label="Lihat nilai" isLocked onPress={openDaftarModal} />
             <MenuIcon icon={<IconSertifikat />} label="Sertifikat" isLocked onPress={openDaftarModal} />
-            <View style={[styles.menuItem, { opacity: 0 }]} />
+            <MenuIcon icon={<IconVerifikasi />} label="Verifikasi" onPress={() => navigation.navigate('VerifikasiSertifikat')} isLocked={false} />
           </View>
         )}
+
         {/* ── Materi Terbaru (Registered Only) ── */}
         {isRegistered && (
           <View style={styles.materiRegisteredSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Materi terbaru</Text>
+              <AppText style={styles.sectionTitle}>Materi terbaru</AppText>
               {materis.length > 1 && (
                 <View style={styles.dotRow}>
                   {materis.map((_, i) => (
@@ -823,7 +853,7 @@ export default function HomeScreen({ navigation, route }) {
 
             {materis.length === 0 && !isLoading ? (
               <View style={{ padding: 20, alignItems: 'center' }}>
-                <Text style={{ color: '#6B7280', fontSize: 13 }}>Belum ada materi terbaru.</Text>
+                <AppText style={{ color: '#6B7280', fontSize: 13 }}>Belum ada materi terbaru.</AppText>
               </View>
             ) : (
               <FlatList
@@ -862,7 +892,7 @@ export default function HomeScreen({ navigation, route }) {
         {!isRegistered && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Rekomendasi Mata kuliah</Text>
+              <AppText style={styles.sectionTitle}>Rekomendasi Mata kuliah</AppText>
               {/* Dot indicators */}
               <View style={styles.dotRow}>
                 {courses.map((_, i) => (
@@ -927,9 +957,9 @@ export default function HomeScreen({ navigation, route }) {
                 <TouchableOpacity style={styles.modalCloseBtn} onPress={closeDaftarModal} activeOpacity={0.8}>
                   <CloseIcon />
                 </TouchableOpacity>
-                <Text style={styles.modalMessage}>
+                <AppText style={styles.modalMessage}>
                   Silahkan daftar untuk{'\n'}mengakses fitur
-                </Text>
+                </AppText>
                 <TouchableOpacity
                   style={styles.modalDaftarButton}
                   activeOpacity={0.8}
@@ -938,7 +968,7 @@ export default function HomeScreen({ navigation, route }) {
                     navigation.navigate('Register');
                   }}
                 >
-                  <Text style={styles.modalDaftarText}>Daftar</Text>
+                  <AppText style={styles.modalDaftarText}>Daftar</AppText>
                 </TouchableOpacity>
               </TouchableOpacity>
             </TouchableOpacity>
@@ -955,7 +985,7 @@ export default function HomeScreen({ navigation, route }) {
             activeOpacity={0.9}
             onPress={() => setAdzanExpanded(false)}
           >
-            <Text style={styles.adzanText}>{'>'} Adzan berikutnya : {nextAdzan.name} ({nextAdzan.time})</Text>
+            <AppText style={styles.adzanText}>{'>'} Adzan berikutnya : {nextAdzan.name} ({nextAdzan.time})</AppText>
           </TouchableOpacity>
         ) : null}
 
@@ -1004,16 +1034,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     right: 2,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: PRIMARY,
   },
-  bellBadgeText: { color: '#fff', fontSize: 8, fontWeight: 'bold' },
+  bellBadgeText: { color: '#fff', fontSize: 9, fontWeight: 'bold' },
 
   // ── Search Section ──
   searchSection: {
@@ -1043,7 +1073,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 5,
   },
-  searchInput: { flex: 1, fontSize: 13, color: '#6B7280', height: 40 },
+  searchInput: { flex: 1, fontSize: 14, color: '#6B7280', height: 40 },
   searchBtn: {
     backgroundColor: PRIMARY,
     width: 38,
@@ -1061,14 +1091,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tagsRowCenter: { flexDirection: 'row', justifyContent: 'center', marginTop: 8 },
-  tagsLabel: { fontSize: 13, color: '#6B7280', marginRight: 2 },
+  tagsLabel: { fontSize: 14, color: '#6B7280', marginRight: 2 },
   tag: {
     backgroundColor: '#E8EFEA',
     borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  tagText: { fontSize: 11, color: '#6B7280', fontWeight: '500' },
+  tagText: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
 
   // ── Jadwal Card ──
   jadwalCard: {
@@ -1084,7 +1114,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 24,
   },
-  jadwalCardSmall: { color: 'rgba(255,255,255,0.85)', fontSize: 12, marginBottom: 6 },
+  jadwalCardSmall: { color: 'rgba(255,255,255,0.85)', fontSize: 13, marginBottom: 6 },
   jadwalCardDate: { color: '#fff', fontSize: 18, fontWeight: '700' },
   jadwalBtn: {
     flexDirection: 'row',
@@ -1095,7 +1125,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
   },
-  jadwalBtnText: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  jadwalBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   jadwalInfo: { color: '#fff', fontSize: 13, lineHeight: 20, textAlign: 'center', marginBottom: 10 },
   jadwalCTA: {
     color: '#fff',
@@ -1125,7 +1155,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 10,
   },
-  menuLabel: { fontSize: 12, color: '#111827', textAlign: 'center', lineHeight: 16, fontWeight: '500' },
+  menuLabel: { fontSize: 13, color: '#111827', textAlign: 'center', lineHeight: 16, fontWeight: '500' },
   lockBadge: {
     position: 'absolute',
     bottom: -6,
@@ -1154,7 +1184,7 @@ const styles = StyleSheet.create({
     marginTop: 26,
     marginBottom: 16,
   },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
   dotRow: { flexDirection: 'row', gap: 5, alignItems: 'center' },
   dot: { width: 7, height: 7, borderRadius: 3.5 },
 
@@ -1207,10 +1237,25 @@ const styles = StyleSheet.create({
 
   // ── Registered User Specific Styles ──
   avatarImage: { width: 46, height: 46, borderRadius: 23, borderWidth: 2, borderColor: '#fff' },
-  greetSubText: { color: 'rgba(255,255,255,0.85)', fontSize: 13, marginBottom: 2 },
+  avatarInitialContainer: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  avatarInitialText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: PRIMARY,
+  },
+  greetSubText: { color: 'rgba(255,255,255,0.85)', fontSize: 14, marginBottom: 2 },
 
   progressCard: {
-    backgroundColor: '#35645B',
+    backgroundColor: PRIMARY,
     marginHorizontal: 18,
     marginTop: 24,
     borderRadius: 16,
@@ -1221,13 +1266,13 @@ const styles = StyleSheet.create({
   },
   progressLeft: { flex: 1, paddingRight: 16 },
   progressTitle: { color: '#fff', fontSize: 16, fontWeight: '700', marginBottom: 8, lineHeight: 22 },
-  progressDesc: { color: 'rgba(255,255,255,0.9)', fontSize: 11, lineHeight: 18, marginBottom: 14 },
+  progressDesc: { color: 'rgba(255,255,255,0.9)', fontSize: 13, lineHeight: 18, marginBottom: 14 },
   progressBarContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   progressBarBg: { flex: 1, height: 8, backgroundColor: '#FFFFFF', borderRadius: 4, marginRight: 8, overflow: 'hidden' },
   progressBarFill: { height: '100%', backgroundColor: '#F5A623', borderRadius: 4 },
-  progressPercent: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  progressPercent: { color: '#fff', fontSize: 13, fontWeight: '700' },
   progressBtn: { backgroundColor: '#fff', paddingVertical: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  progressBtnText: { color: '#4B5563', fontSize: 12, fontWeight: '700' },
+  progressBtnText: { color: '#4B5563', fontSize: 13, fontWeight: '800' },
   progressRight: { width: 110, height: 110, borderRadius: 55, backgroundColor: '#fff', overflow: 'hidden' },
   progressIllustration: { width: '100%', height: '100%' },
 

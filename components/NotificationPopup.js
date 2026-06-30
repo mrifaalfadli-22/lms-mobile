@@ -1,7 +1,8 @@
 import React from 'react';
+import AppText from './AppText';
 import {
   View,
-  Text,
+  
   Modal,
   TouchableOpacity,
   StyleSheet,
@@ -144,8 +145,8 @@ export default function NotificationPopup({
             <View style={[styles.iconWrapper, { backgroundColor: v.iconBgColor }]}>
               <Icon color={v.iconColor} size={28} />
             </View>
-            <Text style={styles.title}>{displayTitle}</Text>
-            <Text style={styles.message}>{message}</Text>
+            <AppText style={styles.title}>{displayTitle}</AppText>
+            <AppText style={styles.message}>{message}</AppText>
           </View>
 
           {/* Action button */}
@@ -155,9 +156,9 @@ export default function NotificationPopup({
             onPress={onClose}
           >
             <BtnIcon color={v.btnTextColor} size={15} />
-            <Text style={[styles.buttonText, { color: v.btnTextColor }]}>
+            <AppText style={[styles.buttonText, { color: v.btnTextColor }]}>
               {v.btnLabel}
-            </Text>
+            </AppText>
           </TouchableOpacity>
         </Animated.View>
       </View>

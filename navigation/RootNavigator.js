@@ -15,6 +15,7 @@ import DetailMataKuliahScreen from '../screens/DetailMataKuliahScreen';
 import DetailSesiScreen from '../screens/DetailSesiScreen';
 import DetailProgressBelajarScreen from '../screens/DetailProgressBelajarScreen';
 import DetailEvaluasiScreen from '../screens/DetailEvaluasiScreen';
+import VerifikasiSertifikatScreen from '../screens/VerifikasiSertifikatScreen';
 import MainTabNavigator from './MainTabNavigator';
 
 // New Settings Screens
@@ -42,6 +43,7 @@ export default function RootNavigator() {
       <Stack.Screen name="DetailSesi" component={DetailSesiScreen} />
       <Stack.Screen name="DetailProgressBelajar" component={DetailProgressBelajarScreen} />
       <Stack.Screen name="DetailEvaluasi" component={DetailEvaluasiScreen} />
+      <Stack.Screen name="VerifikasiSertifikat" component={VerifikasiSertifikatScreen} />
       
       {/* Settings Screens */}
       <Stack.Screen name="Password" component={PasswordScreen} />

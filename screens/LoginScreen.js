@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import AppText from '../components/AppText';
 import {
   View,
-  Text,
+
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -19,8 +20,8 @@ import NotificationPopup from '../components/NotificationPopup';
 
 const { width, height } = Dimensions.get('window');
 
-const PRIMARY = '#1E7B6B';
-const LINK_COLOR = '#1E7B6B';
+const PRIMARY = '#116E63';
+const LINK_COLOR = '#116E63';
 
 // ── Google "G" logo ────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
@@ -94,7 +95,7 @@ export default function LoginScreen({ navigation }) {
       // Ganti dengan IP lokal Anda jika menggunakan physical device (contoh: http://192.168.1.100:8000/api/login)
       // Gunakan 10.0.2.2 untuk Android Emulator.
       const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8000/api/login' : 'http://localhost:8000/api/login';
-      
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
@@ -112,11 +113,11 @@ export default function LoginScreen({ navigation }) {
       if (response.status === 200 && jsonResponse.status === 'success') {
         // Jika login berhasil
         const token = jsonResponse.data.token;
-        
-        navigation.replace('Main', { 
-          isRegistered: true, 
+
+        navigation.replace('Main', {
+          isRegistered: true,
           user: jsonResponse.data.user,
-          token: token 
+          token: token
         });
       } else {
         // Tampilkan error (kredensial salah, akun dinonaktifkan, dll)
@@ -159,10 +160,10 @@ export default function LoginScreen({ navigation }) {
           </View>
 
           {/* ── Headline ── */}
-          <Text style={styles.headline}>Yuk, Daftar di U-Cademy{'\n'}GRATIS!</Text>
-          <Text style={styles.subheadline}>
+          <AppText style={styles.headline}>Yuk, Daftar di U-Cademy{'\n'}GRATIS!</AppText>
+          <AppText style={styles.subheadline}>
             Akses ratusan materi kuliah dan beragam fitur{'\n'}menarik lainnya sekarang !
-          </Text>
+          </AppText>
 
           {/* ── Form ── */}
           <View style={styles.form}>
@@ -201,8 +202,8 @@ export default function LoginScreen({ navigation }) {
             </View>
 
             {/* Lupa Password */}
-            <TouchableOpacity style={styles.forgotBtn} onPress={() => {}}>
-              <Text style={styles.forgotText}>Lupa Password</Text>
+            <TouchableOpacity style={styles.forgotBtn} onPress={() => { }}>
+              <AppText style={styles.forgotText}>Lupa Password</AppText>
             </TouchableOpacity>
 
             {/* Masuk */}
@@ -215,7 +216,7 @@ export default function LoginScreen({ navigation }) {
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.primaryBtnText}>Masuk</Text>
+                <AppText style={styles.primaryBtnText}>Masuk</AppText>
               )}
             </TouchableOpacity>
 
@@ -225,31 +226,31 @@ export default function LoginScreen({ navigation }) {
               activeOpacity={0.8}
               onPress={() => navigation.replace('Main')}
             >
-              <Text style={styles.secondaryBtnText}>Login as Guest</Text>
+              <AppText style={styles.secondaryBtnText}>Login as Guest</AppText>
             </TouchableOpacity>
 
             {/* Divider */}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>Atau masuk dengan</Text>
+              <AppText style={styles.dividerText}>Atau masuk dengan</AppText>
               <View style={styles.dividerLine} />
             </View>
 
             {/* Google SSO */}
-            <TouchableOpacity style={styles.googleBtn} activeOpacity={0.8} onPress={() => {}}>
+            <TouchableOpacity style={styles.googleBtn} activeOpacity={0.8} onPress={() => { }}>
               <View style={styles.googleIconBox}>
                 <GoogleIcon />
               </View>
-              <Text style={styles.googleBtnText}>Masuk dengan Google</Text>
+              <AppText style={styles.googleBtnText}>Masuk dengan Google</AppText>
             </TouchableOpacity>
 
           </View>
 
           {/* Sign-up link */}
           <View style={styles.signupRow}>
-            <Text style={styles.signupText}>Tidak punya akun? </Text>
+            <AppText style={styles.signupText}>Tidak punya akun? </AppText>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.signupLink}>Buat sekarang</Text>
+              <AppText style={styles.signupLink}>Buat sekarang</AppText>
             </TouchableOpacity>
           </View>
 
@@ -284,8 +285,8 @@ const styles = StyleSheet.create({
   illustrationContainer: {
     alignItems: 'flex-start',
     paddingLeft: 12,
-    marginTop: 30,
-    marginBottom: 16,
+    marginTop: 20,
+    marginBottom: 20,
   },
   illustrationImage: {
     width: width * 0.58,
@@ -300,14 +301,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 24,
     lineHeight: 32,
     letterSpacing: -0.3,
-    marginBottom: 6,
+    marginBottom: 10,
   },
   subheadline: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#6B7280',
     marginHorizontal: 24,
     lineHeight: 20,
-    marginBottom: 16,
+    marginBottom: 32,
   },
 
   // ── Form ──
@@ -321,7 +322,7 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderRadius: 8,
     backgroundColor: '#FFFFFF',
-    marginBottom: 14,
+    marginBottom: 20,
     paddingHorizontal: 14,
     height: 48,
     justifyContent: 'center',
@@ -343,12 +344,12 @@ const styles = StyleSheet.create({
   // Lupa Password
   forgotBtn: {
     alignSelf: 'flex-end',
-    marginBottom: 18,
-    marginTop: -4,
+    marginBottom: 28,
+    marginTop: -8,
   },
   forgotText: {
     color: LINK_COLOR,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
   },
 
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 20,
     elevation: 3,
     shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 4 },
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   secondaryBtnText: {
     color: '#374151',
@@ -394,7 +395,7 @@ const styles = StyleSheet.create({
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   dividerLine: {
     flex: 1,
@@ -402,8 +403,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E7EB',
   },
   dividerText: {
-    marginHorizontal: 10,
-    fontSize: 12,
+    marginHorizontal: 12,
+    fontSize: 14,
     color: '#9CA3AF',
   },
 
@@ -449,11 +450,11 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   signupText: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#6B7280',
   },
   signupLink: {
-    fontSize: 13,
+    fontSize: 14,
     color: LINK_COLOR,
     fontWeight: '700',
   },

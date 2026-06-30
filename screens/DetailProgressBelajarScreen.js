@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import AppText from '../components/AppText';
 import {
   View,
-  Text,
+
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -52,91 +53,86 @@ export default function DetailProgressBelajarScreen({ route }) {
       style={styles.container}
       resizeMode="cover"
     >
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.safeArea}>
         <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-        
+
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerClickArea} onPress={() => navigation.goBack()}>
             <View style={styles.backBtn}>
               <BackIcon />
             </View>
-            <Text style={styles.headerTitle}>Progress belajar kamu</Text>
+            <AppText style={styles.headerTitle}>Progress belajar kamu</AppText>
           </TouchableOpacity>
         </View>
         <View style={styles.headerLine} />
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          
+
           {/* Top Summary Stats */}
           <View style={styles.statsCard}>
             <View style={styles.statColumn}>
-              <Text style={styles.statLabel}>Absensi</Text>
-              <Text style={styles.statValue}>8 / 10</Text>
+              <AppText style={styles.statLabel}>Absensi</AppText>
+              <AppText style={styles.statValue}>8 / 10</AppText>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statColumn}>
-              <Text style={styles.statLabel}>Tugas & Kuis selesai</Text>
-              <Text style={styles.statValue}>10 / 10</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statColumn}>
-              <Text style={styles.statLabel}>Ujian</Text>
-              <Text style={styles.statValue}>2 / 2</Text>
+              <AppText style={styles.statLabel}>Tugas & Kuis selesai</AppText>
+              <AppText style={styles.statValue}>10 / 10</AppText>
             </View>
           </View>
 
           {/* Section: Nilai Tugas */}
-          <Text style={styles.sectionTitle}>Nilai tugas kamu</Text>
+          <AppText style={styles.sectionTitle}>Nilai tugas kamu</AppText>
           <View style={styles.card}>
-            <TouchableOpacity 
-              style={styles.cardHeader} 
-              activeOpacity={0.7} 
+            <TouchableOpacity
+              style={styles.cardHeader}
+              activeOpacity={0.7}
               onPress={() => setIsTugasExpanded(!isTugasExpanded)}
             >
-              <Text style={styles.courseTitle}>{course.title}</Text>
+              <AppText style={styles.courseTitle}>{course.title}</AppText>
               {isTugasExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
             </TouchableOpacity>
-            
+
             {isTugasExpanded && (
               <View style={styles.cardBody}>
-                <Text style={styles.tugasTitle}>Tugas 1</Text>
-                <Text style={styles.tugasDesc}>
+                <AppText style={styles.tugasTitle}>Tugas 1</AppText>
+                <AppText style={styles.tugasDesc}>
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam volutpat semper dui et lobortis.
-                </Text>
-                
+                </AppText>
+
                 <View style={styles.gradeBox}>
-                  <Text style={styles.gradeLabel}>Nilai kamu</Text>
-                  <Text style={styles.gradeValue}>80</Text>
+                  <AppText style={styles.gradeLabel}>Nilai kamu</AppText>
+                  <AppText style={styles.gradeValue}>80</AppText>
                 </View>
               </View>
             )}
           </View>
 
           {/* Section: Sertifikat Kamu */}
-          <Text style={styles.sectionTitle}>Sertifikat kamu</Text>
+          <AppText style={styles.sectionTitle}>Sertifikat kamu</AppText>
           <View style={styles.sertifikatCard}>
-            <Image 
-              source={require('../assets/sertifikat.png')} 
-              style={styles.sertifikatImage} 
-              resizeMode="cover" 
+            <Image
+              source={require('../assets/sertifikat.png')}
+              style={styles.sertifikatImage}
+              resizeMode="cover"
             />
-            
+
             <View style={styles.sertifikatInfo}>
-              <Text style={styles.sertifikatTitle}>Kalkulus 1</Text>
+              <AppText style={styles.sertifikatTitle}>Kalkulus 1</AppText>
               <View style={styles.sertifikatDateRow}>
-                <Text style={styles.sertifikatDateLabel}>Tanggal terbit</Text>
-                <Text style={styles.sertifikatDateValue}>10 Mei 2026</Text>
+                <AppText style={styles.sertifikatDateLabel}>Tanggal terbit</AppText>
+                <AppText style={styles.sertifikatDateValue}>10 Mei 2026</AppText>
               </View>
             </View>
-            
+
             <TouchableOpacity style={styles.downloadBtn} activeOpacity={0.8}>
-              <Text style={styles.downloadBtnText}>Download</Text>
+              <AppText style={styles.downloadBtnText}>Download</AppText>
             </TouchableOpacity>
           </View>
 
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </ImageBackground>
   );
 }
@@ -152,9 +148,10 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 12,
+    paddingTop: 54,
     paddingHorizontal: 20,
     paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
   },
   headerClickArea: {
     flexDirection: 'row',
@@ -181,7 +178,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   statsCard: {
-    backgroundColor: '#2E7D70',
+    backgroundColor: '#116E63',
     borderRadius: 12,
     flexDirection: 'row',
     paddingVertical: 16,
@@ -189,7 +186,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
     elevation: 4,
-    shadowColor: '#2E7D70',
+    shadowColor: '#116E63',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -206,7 +203,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     color: '#E2E8F0',
-    fontSize: 10,
+    fontSize: 12,
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -238,7 +235,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   courseTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     color: '#111827',
     flex: 1,
@@ -259,19 +256,19 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
   },
   tugasTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: '#111827',
     marginBottom: 8,
   },
   tugasDesc: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#4B5563',
     lineHeight: 20,
     marginBottom: 16,
   },
   gradeBox: {
-    backgroundColor: '#2E7D70',
+    backgroundColor: '#116E63',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -280,7 +277,7 @@ const styles = StyleSheet.create({
   },
   gradeLabel: {
     color: '#E2E8F0',
-    fontSize: 10,
+    fontSize: 13,
     marginBottom: 2,
   },
   gradeValue: {
@@ -317,7 +314,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sertifikatDateLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#6B7280',
   },
   sertifikatDateValue: {

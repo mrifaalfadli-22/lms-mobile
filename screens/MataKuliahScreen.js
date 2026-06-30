@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import AppText from '../components/AppText';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar, FlatList, ImageBackground, Platform, ActivityIndicator, Modal } from 'react-native';
+import { View,  StyleSheet, TouchableOpacity, Image, StatusBar, FlatList, ImageBackground, Platform, ActivityIndicator, Modal } from 'react-native';
 import Svg, { Polyline, Path, Circle } from 'react-native-svg';
 import { BlurView } from 'expo-blur';
 
@@ -106,11 +107,11 @@ export default function MataKuliahScreen({ navigation, route }) {
         style={styles.emptyImage}
         resizeMode="contain"
       />
-      <Text style={styles.emptyText}>
+      <AppText style={styles.emptyText}>
         Kamu belum registrasi, yuk daftar untuk{'\n'}menggunakan fitur menarik{'\n'}lainnya
-      </Text>
+      </AppText>
       <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.registerLink}>Daftar</Text>
+        <AppText style={styles.registerLink}>Daftar</AppText>
       </TouchableOpacity>
     </View>
   );
@@ -121,20 +122,20 @@ export default function MataKuliahScreen({ navigation, route }) {
       <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={() => navigation.navigate('DetailMataKuliah', { course: item, isRegistered, user, token, isDiambil })}>
       <Image source={{ uri: item?.image || 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80' }} style={styles.cardImage} />
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle} numberOfLines={2}>{item?.title || 'Judul Tidak Tersedia'}</Text>
+        <AppText style={styles.cardTitle} numberOfLines={2}>{item?.title || 'Judul Tidak Tersedia'}</AppText>
         <View style={styles.cardRow}>
           <UsersIcon />
-          <Text style={styles.cardInfo} numberOfLines={1}>{item?.type || 'Tipe Tidak Tersedia'}</Text>
+          <AppText style={styles.cardInfo} numberOfLines={1}>{item?.type || 'Tipe Tidak Tersedia'}</AppText>
         </View>
         <View style={styles.cardRow}>
           <ClockIcon />
-          <Text style={styles.cardInfo}>{item?.time || 'Waktu Tidak Tersedia'}</Text>
+          <AppText style={styles.cardInfo}>{item?.time || 'Waktu Tidak Tersedia'}</AppText>
         </View>
         <View style={styles.dosenRow}>
           <Image source={{ uri: item?.avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80' }} style={styles.dosenAvatar} />
           <View>
-            <Text style={styles.dosenName} numberOfLines={1}>{item?.dosen || 'Dosen Tidak Tersedia'}</Text>
-            <Text style={styles.dosenRole}>{item?.role || 'Dosen pengampu'}</Text>
+            <AppText style={styles.dosenName} numberOfLines={1}>{item?.dosen || 'Dosen Tidak Tersedia'}</AppText>
+            <AppText style={styles.dosenRole}>{item?.role || 'Dosen pengampu'}</AppText>
           </View>
         </View>
       </View>
@@ -149,14 +150,14 @@ export default function MataKuliahScreen({ navigation, route }) {
         onPress={() => setActiveTab('diambil')}
         activeOpacity={0.8}
       >
-        <Text style={[styles.tabText, activeTab === 'diambil' && styles.tabTextActive]}>Diambil</Text>
+        <AppText style={[styles.tabText, activeTab === 'diambil' && styles.tabTextActive]}>Diambil</AppText>
       </TouchableOpacity>
       <TouchableOpacity 
         style={[styles.tabButton, activeTab === 'tersedia' && styles.tabButtonActive]}
         onPress={() => setActiveTab('tersedia')}
         activeOpacity={0.8}
       >
-        <Text style={[styles.tabText, activeTab === 'tersedia' && styles.tabTextActive]}>Tersedia</Text>
+        <AppText style={[styles.tabText, activeTab === 'tersedia' && styles.tabTextActive]}>Tersedia</AppText>
       </TouchableOpacity>
     </View>
   );
@@ -175,7 +176,7 @@ export default function MataKuliahScreen({ navigation, route }) {
           onPress={() => setModalPeriodeVisible(false)}
         >
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Pilih Periode</Text>
+          <AppText style={styles.modalTitle}>Pilih Periode</AppText>
           {PERIODES.map((periode, index) => (
             <TouchableOpacity 
               key={index} 
@@ -188,12 +189,12 @@ export default function MataKuliahScreen({ navigation, route }) {
                 setModalPeriodeVisible(false);
               }}
             >
-              <Text style={[
+              <AppText style={[
                 styles.periodeOptionText,
                 selectedPeriode === periode && styles.periodeOptionTextActive
               ]}>
                 {periode}
-              </Text>
+              </AppText>
             </TouchableOpacity>
           ))}
         </View>
@@ -219,13 +220,13 @@ export default function MataKuliahScreen({ navigation, route }) {
 
       {/* ── Periode Selector ── */}
       <View style={styles.periodeRow}>
-        <Text style={styles.periodeLabel}>Periode :</Text>
+        <AppText style={styles.periodeLabel}>Periode :</AppText>
         <TouchableOpacity 
           style={styles.periodeSelector} 
           activeOpacity={0.7}
           onPress={() => setModalPeriodeVisible(true)}
         >
-          <Text style={styles.periodeText}>{selectedPeriode}</Text>
+          <AppText style={styles.periodeText}>{selectedPeriode}</AppText>
           <ChevronsUpDown />
         </TouchableOpacity>
       </View>
@@ -246,9 +247,9 @@ export default function MataKuliahScreen({ navigation, route }) {
         />
       ) : (
         <View style={{ flex: 1, alignItems: 'center', paddingTop: 40 }}>
-          <Text style={{ color: '#6B7280', fontSize: 14 }}>
+          <AppText style={{ color: '#6B7280', fontSize: 14 }}>
             Tidak ada kelas {activeTab === 'diambil' ? 'yang diambil' : 'yang tersedia'}.
-          </Text>
+          </AppText>
         </View>
       )}
     </View>
@@ -262,7 +263,7 @@ export default function MataKuliahScreen({ navigation, route }) {
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft />
-          <Text style={styles.headerTitle}>Mata Kuliah</Text>
+          <AppText style={styles.headerTitle}>Mata Kuliah</AppText>
         </TouchableOpacity>
       </View>
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import AppText from '../components/AppText';
+import { View,  StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -24,7 +25,7 @@ const faqs = [
   },
   {
     question: 'Bagaimana cara mengumpulkan tugas?',
-    answer: 'Buka mata kuliah yang bersangkutan, lalu masuk ke tab "Tugas dan Kuis". Pilih tugas yang ingin dikerjakan, dan unggah file tugas Anda sebelum batas waktu yang ditentukan berakhir.'
+    answer: 'Buka mata kuliah yang bersangkutan, lalu masuk ke tab "Tugas dan Kuis". Pilih tugas yang ingin dikerjakan, lalu klik tombol "Lihat Tugas" dan Anda akan langsung diarahkan ke sistem CBT Ucademy untuk proses pengerjaan dan pengumpulan tugas.'
   },
   {
     question: 'Kenapa saya tidak bisa mengubah NPM?',
@@ -36,36 +37,36 @@ export default function BantuanScreen() {
   const navigation = useNavigation();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft />
-          <Text style={styles.headerTitle}>Bantuan (FAQ)</Text>
+          <AppText style={styles.headerTitle}>Bantuan (FAQ)</AppText>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.description}>
+        <AppText style={styles.description}>
           Berikut adalah beberapa pertanyaan yang sering ditanyakan seputar penggunaan aplikasi Ucademy.
-        </Text>
+        </AppText>
 
         <View style={styles.faqList}>
           {faqs.map((faq, index) => (
             <View key={index} style={styles.faqCard}>
-              <Text style={styles.questionText}>{faq.question}</Text>
-              <Text style={styles.answerText}>{faq.answer}</Text>
+              <AppText style={styles.questionText}>{faq.question}</AppText>
+              <AppText style={styles.answerText}>{faq.answer}</AppText>
             </View>
           ))}
         </View>
 
         <View style={styles.contactContainer}>
-          <Text style={styles.contactTitle}>Masih butuh bantuan?</Text>
-          <Text style={styles.contactDesc}>
+          <AppText style={styles.contactTitle}>Masih butuh bantuan?</AppText>
+          <AppText style={styles.contactDesc}>
             Hubungi dukungan teknis kami melalui email di support@ucademy.id atau kunjungi pusat layanan mahasiswa.
-          </Text>
+          </AppText>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -78,7 +79,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 54,
+    paddingBottom: 16,
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',

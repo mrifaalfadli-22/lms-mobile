@@ -10,7 +10,7 @@ import ProfilScreen from '../screens/ProfilScreen';
 
 const Tab = createBottomTabNavigator();
 const PRIMARY = '#116E63';
-const ACTIVE_BG = '#258A7A'; // Lighter teal for active state
+const ACTIVE_BG = '#238A7E'; // Teal color for active state effect
 
 // ── Tab Icons ─────────────────────────────────────────────────────────────────
 
@@ -70,6 +70,7 @@ export default function MainTabNavigator({ route }) {
           borderRadius: 999, // Perfect pill shape natively!
           marginHorizontal: 8,
           marginVertical: 6,
+          overflow: 'hidden',
         },
         tabBarLabelStyle: styles.tabLabel,
         tabBarIcon: ({ color }) => {

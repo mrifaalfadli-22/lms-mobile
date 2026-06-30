@@ -1,12 +1,14 @@
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
+import React, { useState } from 'react';
+import AppText from '../components/AppText';
+import {
+  View,
+
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
   StatusBar,
-  Image
+  Image,
+  Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -36,11 +38,11 @@ const DropdownIcon = () => (
 const LinearProgress = ({ label, current, total, progress, color = '#116E63' }) => (
   <View style={styles.linearProgressContainer}>
     <View style={styles.linearProgressHeader}>
-      <Text style={styles.linearProgressLabel}>{label}</Text>
+      <AppText style={styles.linearProgressLabel}>{label}</AppText>
       {total ? (
-        <Text style={styles.linearProgressText}>{current} / {total}</Text>
+        <AppText style={styles.linearProgressText}>{current} / {total}</AppText>
       ) : (
-        <Text style={styles.linearProgressText}>{progress}%</Text>
+        <AppText style={styles.linearProgressText}>{progress}%</AppText>
       )}
     </View>
     <View style={styles.linearProgressBarBg}>
@@ -53,15 +55,14 @@ const ProgressCard = ({ item, onPress }) => (
   <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={onPress}>
     <Image source={{ uri: item.image }} style={styles.cardImage} resizeMode="cover" />
     <View style={styles.cardContent}>
-      <Text style={styles.titleText}>{item.title}</Text>
+      <AppText style={styles.titleText}>{item.title}</AppText>
       <View style={styles.subtitleRow}>
         <UsersIcon />
-        <Text style={styles.subtitleText}>{item.classInfo} - {item.major}</Text>
+        <AppText style={styles.subtitleText}>{item.classInfo} - {item.major}</AppText>
       </View>
       <View style={styles.progressColumn}>
         <LinearProgress label="Absensi" current="5" total="8" progress={62.5} color="#1D4ED8" />
         <LinearProgress label="Tugas" current="5" total="8" progress={62.5} color="#1D4ED8" />
-        <LinearProgress label="Ujian" progress={50} color="#1D4ED8" />
       </View>
     </View>
   </TouchableOpacity>
@@ -69,6 +70,15 @@ const ProgressCard = ({ item, onPress }) => (
 
 export default function ProgressBelajarScreen() {
   const navigation = useNavigation();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedPeriode, setSelectedPeriode] = useState('2024 Ganjil');
+
+  const periodes = ['2024 Ganjil', '2024 Genap', '2023 Ganjil', '2023 Genap'];
+
+  const handleSelectPeriode = (periode) => {
+    setSelectedPeriode(periode);
+    setModalVisible(false);
+  };
 
   const progressData = [
     {
@@ -109,38 +119,56 @@ export default function ProgressBelajarScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerClickArea} onPress={() => navigation.goBack()}>
           <View style={styles.backBtn}>
             <BackIcon />
           </View>
-          <Text style={styles.headerTitle}>Progress belajar</Text>
+          <AppText style={styles.headerTitle}>Progress belajar</AppText>
         </TouchableOpacity>
       </View>
       <View style={styles.headerLine} />
 
       <View style={styles.container}>
         <View style={styles.filterRow}>
-          <Text style={styles.filterLabel}>Periode : </Text>
-          <TouchableOpacity style={styles.dropdownBtn}>
-            <Text style={styles.dropdownText}>2024 Ganjil</Text>
+          <AppText style={styles.filterLabel}>Periode : </AppText>
+          <TouchableOpacity style={styles.dropdownBtn} onPress={() => setModalVisible(true)}>
+            <AppText style={styles.dropdownText}>{selectedPeriode}</AppText>
             <DropdownIcon />
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {progressData.map(data => (
-            <ProgressCard 
-              key={data.id} 
-              item={data} 
-              onPress={() => navigation.navigate('DetailProgressBelajar', { item: data })} 
+            <ProgressCard
+              key={data.id}
+              item={data}
+              onPress={() => navigation.navigate('DetailProgressBelajar', { item: data })}
             />
           ))}
         </ScrollView>
       </View>
-    </SafeAreaView>
+
+      <Modal visible={modalVisible} transparent={true} animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVisible(false)}>
+          <View style={styles.modalContent}>
+            <AppText style={styles.modalTitle}>Pilih Periode</AppText>
+            {periodes.map((p, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.periodeOption, selectedPeriode === p && styles.periodeOptionSelected, index === periodes.length - 1 && { borderBottomWidth: 0 }]}
+                onPress={() => handleSelectPeriode(p)}
+              >
+                <AppText style={[styles.periodeOptionText, selectedPeriode === p && styles.periodeOptionTextSelected]}>{p}</AppText>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+    </View>
   );
 }
 
@@ -152,7 +180,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 16,
+    paddingTop: 54,
     paddingHorizontal: 20,
     paddingBottom: 16,
     backgroundColor: '#F9FAFB',
@@ -229,7 +257,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   titleText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: '#374151',
     marginBottom: 4,
@@ -240,8 +268,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   subtitleText: {
-    fontSize: 9,
-    color: '#9CA3AF',
+    fontSize: 13,
+    color: '#858585',
     marginLeft: 6,
   },
   progressColumn: {
@@ -257,13 +285,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   linearProgressLabel: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '600',
     color: '#374151',
   },
   linearProgressText: {
-    fontSize: 10,
-    color: '#6B7280',
+    fontSize: 13,
+    color: '#858585',
   },
   linearProgressBarBg: {
     height: 6,
@@ -274,5 +302,49 @@ const styles = StyleSheet.create({
   linearProgressBarFill: {
     height: '100%',
     borderRadius: 3,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    width: '100%',
+    padding: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  periodeOption: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  periodeOptionSelected: {
+    backgroundColor: '#F0FDF4',
+    borderBottomColor: 'transparent',
+    borderRadius: 8,
+  },
+  periodeOptionText: {
+    fontSize: 15,
+    color: '#4B5563',
+  },
+  periodeOptionTextSelected: {
+    color: '#116E63',
+    fontWeight: '700',
   }
 });

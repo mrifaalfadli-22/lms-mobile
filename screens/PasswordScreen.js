@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, Modal, Alert } from 'react-native';
+import AppText from '../components/AppText';
+import { View, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, Modal, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -13,15 +14,33 @@ const ChevronLeft = () => (
   </Svg>
 );
 
+const EyeIcon = ({ size = 20, color = '#6B7280' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <Path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
+  </Svg>
+);
+
+const EyeOffIcon = ({ size = 20, color = '#6B7280' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+    <Path d="M1 1l22 22" />
+  </Svg>
+);
+
 export default function PasswordScreen() {
   const navigation = useNavigation();
-  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [showPassword, setShowPassword] = useState(false);
+  const dummyCurrentPassword = 'mypassword123';
+
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
 
   const handleSimpanClick = () => {
-    if (!oldPassword || !newPassword || !confirmPassword) {
+    if (!newPassword || !confirmPassword) {
       Alert.alert('Gagal', 'Semua kolom password harus diisi.');
       return;
     }
@@ -29,47 +48,56 @@ export default function PasswordScreen() {
       Alert.alert('Gagal', 'Konfirmasi password baru tidak cocok.');
       return;
     }
-    setConfirmModalVisible(true);
+    // Close edit modal, open confirm modal
+    setEditModalVisible(false);
+    setTimeout(() => {
+      setConfirmModalVisible(true);
+    }, 300); // slight delay for smooth transition
   };
 
   const handleSimpanFinal = () => {
     setConfirmModalVisible(false);
-    Alert.alert('Sukses', 'Password berhasil diubah!');
-    navigation.goBack();
+    setTimeout(() => {
+      Alert.alert('Sukses', 'Password berhasil diubah!');
+      navigation.goBack();
+    }, 300);
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft />
-          <Text style={styles.headerTitle}>Ubah Password</Text>
+          <AppText style={styles.headerTitle}>Password</AppText>
         </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.description}>
-            Silakan masukkan password saat ini dan password baru Anda untuk melakukan perubahan.
-          </Text>
-
           <View style={styles.formContainer}>
-            <Text style={styles.label}>Password Saat Ini</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                value={oldPassword}
-                onChangeText={setOldPassword}
-                secureTextEntry
-                placeholder="Masukkan password saat ini"
-                placeholderTextColor="#9CA3AF"
-              />
-            </View>
+            <AppText style={styles.label}>Password Saat Ini</AppText>
+            <TouchableOpacity style={styles.inputEditableWrapper} activeOpacity={0.7} onPress={() => setShowPassword(!showPassword)}>
+              <AppText style={styles.inputEditableText}>{showPassword ? dummyCurrentPassword : '••••••••'}</AppText>
+              {showPassword ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
+            </TouchableOpacity>
 
-            <Text style={styles.label}>Password Baru</Text>
-            <View style={styles.inputWrapper}>
+            <TouchableOpacity style={styles.saveBtn} activeOpacity={0.8} onPress={() => setEditModalVisible(true)}>
+              <AppText style={styles.saveBtnText}>Ubah Password</AppText>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* ── MODAL UBAH PASSWORD ── */}
+      <Modal visible={editModalVisible} transparent={true} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <AppText style={styles.modalTitle}>Ubah Password</AppText>
+
+            <AppText style={styles.modalLabel}>Password Baru</AppText>
+            <View style={styles.modalInputWrapper}>
               <TextInput
-                style={styles.input}
+                style={styles.modalInput}
                 value={newPassword}
                 onChangeText={setNewPassword}
                 secureTextEntry
@@ -78,10 +106,10 @@ export default function PasswordScreen() {
               />
             </View>
 
-            <Text style={styles.label}>Konfirmasi Password Baru</Text>
-            <View style={styles.inputWrapper}>
+            <AppText style={styles.modalLabel}>Konfirmasi Password Baru</AppText>
+            <View style={styles.modalInputWrapper}>
               <TextInput
-                style={styles.input}
+                style={styles.modalInput}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
@@ -90,169 +118,81 @@ export default function PasswordScreen() {
               />
             </View>
 
-            <TouchableOpacity style={styles.saveBtn} activeOpacity={0.8} onPress={handleSimpanClick}>
-              <Text style={styles.saveBtnText}>Simpan Password</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      {/* ── MODAL KONFIRMASI ── */}
-      <Modal visible={confirmModalVisible} transparent={true} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Konfirmasi</Text>
-            <Text style={styles.modalDesc}>Yakin nggak nih mau ubah password?</Text>
             <View style={styles.modalBtnRow}>
-              <TouchableOpacity style={styles.modalBtnOutline} onPress={() => setConfirmModalVisible(false)}>
-                <Text style={styles.modalBtnOutlineText}>Batal</Text>
+              <TouchableOpacity style={styles.modalBtnOutline} onPress={() => setEditModalVisible(false)}>
+                <AppText style={styles.modalBtnOutlineText}>Batal</AppText>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalBtnPrimary} onPress={handleSimpanFinal}>
-                <Text style={styles.modalBtnPrimaryText}>Ya, Simpan</Text>
+              <TouchableOpacity style={styles.modalBtnPrimary} onPress={handleSimpanClick}>
+                <AppText style={styles.modalBtnPrimaryText}>Simpan</AppText>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+
+      {/* ── MODAL KONFIRMASI ── */}
+      <Modal visible={confirmModalVisible} transparent={true} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <AppText style={styles.modalTitle}>Konfirmasi</AppText>
+            <AppText style={styles.modalDesc}>Yakin nggak nih mau ubah password kamu?</AppText>
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity style={styles.modalBtnOutline} onPress={() => setConfirmModalVisible(false)}>
+                <AppText style={styles.modalBtnOutlineText}>Batal</AppText>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalBtnPrimary} onPress={handleSimpanFinal}>
+                <AppText style={styles.modalBtnPrimaryText}>Ya, Simpan</AppText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: BG,
-  },
-  header: {
+  safeArea: { flex: 1, backgroundColor: BG },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 54, paddingBottom: 16, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  backBtn: { flexDirection: 'row', alignItems: 'center' },
+  headerTitle: { fontSize: 16, fontWeight: '600', color: '#111827', marginLeft: 8 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
+  formContainer: { flex: 1 },
+  label: { fontSize: 14, color: '#4A4A4A', fontWeight: '600', marginBottom: 8 },
+  inputEditableWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginLeft: 8,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 40,
-  },
-  description: {
-    fontSize: 14,
-    color: '#4B5563',
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  formContainer: {
-    flex: 1,
-  },
-  label: {
-    fontSize: 13,
-    color: '#374151',
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  inputWrapper: {
+    justifyContent: 'space-between',
+    borderRadius: 8,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    height: 48,
+    borderColor: '#E5E7EB',
+    marginBottom: 24,
     paddingHorizontal: 16,
-    justifyContent: 'center',
-    marginBottom: 20,
+    height: 48,
   },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: '#111827',
-  },
+  inputEditableText: { fontSize: 16, color: '#374151', flex: 1, letterSpacing: 2 },
   saveBtn: {
     backgroundColor: PRIMARY,
-    borderRadius: 8,
-    height: 48,
+    borderRadius: 99,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    alignSelf: 'flex-center',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 12,
+    marginTop: 4
   },
-  saveBtnText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  modalBox: {
-    width: '100%',
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 24,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  modalDesc: {
-    fontSize: 14,
-    color: '#4B5563',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  modalBtnRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalBtnOutline: {
-    flex: 1,
-    height: 44,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalBtnOutlineText: {
-    color: '#4B5563',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  modalBtnPrimary: {
-    flex: 1,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: PRIMARY,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalBtnPrimaryText: {
-    color: '#FFF',
-    fontWeight: '600',
-    fontSize: 14,
-  },
+  saveBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
+  modalBox: { width: '100%', backgroundColor: '#FFF', borderRadius: 16, padding: 24, elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 20, textAlign: 'center' },
+  modalDesc: { fontSize: 14, color: '#4B5563', textAlign: 'center', marginBottom: 24, lineHeight: 20 },
+  modalLabel: { fontSize: 14, color: '#374151', fontWeight: '600', marginBottom: 8 },
+  modalInputWrapper: { borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 16, paddingHorizontal: 12, height: 48, justifyContent: 'center' },
+  modalInput: { fontSize: 14, color: '#374151', height: '100%', padding: 0 },
+  modalBtnRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  modalBtnOutline: { flex: 1, height: 44, borderRadius: 8, borderWidth: 1, borderColor: '#D1D5DB', alignItems: 'center', justifyContent: 'center' },
+  modalBtnOutlineText: { color: '#4B5563', fontWeight: '600', fontSize: 14 },
+  modalBtnPrimary: { flex: 1, height: 44, borderRadius: 8, backgroundColor: PRIMARY, alignItems: 'center', justifyContent: 'center' },
+  modalBtnPrimaryText: { color: '#FFF', fontWeight: '600', fontSize: 14 },
 });

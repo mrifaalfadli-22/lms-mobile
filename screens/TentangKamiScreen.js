@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import AppText from '../components/AppText';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -13,48 +14,53 @@ const ChevronLeft = () => (
   </Svg>
 );
 
+const UcademyLogo = ({ size = 100 }) => (
+  <Svg width={size} height={size} viewBox="0 0 50 49" fill="none">
+    <Path d="M4.97611 15.7346L24.5408 27.3902C25.1715 27.7659 25.9574 27.7659 26.5881 27.3902L42.8232 17.7182C44.5687 16.6783 43.8313 14 41.7996 14H28.0164C26.9118 14 26.0164 13.1046 26.0164 12V3.4856C26.0164 1.94124 24.3404 0.979599 23.0071 1.75892L4.99048 12.2897C3.67585 13.0581 3.66794 14.9553 4.97611 15.7346Z" fill="#116E63" />
+    <Path d="M8.26718 31.3216C7.90002 30.9626 8.1142 24.2909 8.26718 21L24.3301 29.9753C25.8391 30.8495 26.6321 30.72 28.0016 29.9753L44.0645 21V31.3216L27.5426 40.7457C26.4448 41.064 25.8394 41.105 24.789 40.7457C19.4347 37.7539 8.63433 31.6806 8.26718 31.3216Z" fill="#10B981" />
+  </Svg>
+);
+
 export default function TentangKamiScreen() {
   const navigation = useNavigation();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft />
-          <Text style={styles.headerTitle}>Tentang Kami</Text>
+          <AppText style={styles.headerTitle}>Tentang Kami</AppText>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.logoContainer}>
-          <Image 
-            source={require('../assets/icon.png')} 
-            style={styles.logo} 
-            resizeMode="contain" 
-          />
-          <Text style={styles.appName}>Ucademy</Text>
-          <Text style={styles.appVersion}>Versi 1.0.0</Text>
+          <View style={styles.logoWrapper}>
+            <UcademyLogo size={80} />
+          </View>
+          <AppText style={styles.appName}>Ucademy</AppText>
+          <AppText style={styles.appVersion}>Versi 1.0.0</AppText>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Apa itu Ucademy?</Text>
-          <Text style={styles.cardDesc}>
+          <AppText style={styles.cardTitle}>Apa itu Ucademy?</AppText>
+          <AppText style={styles.cardDesc}>
             Ucademy adalah platform Learning Management System (LMS) modern yang dirancang khusus untuk mempermudah kegiatan belajar mengajar antara mahasiswa dan dosen. Kami bertujuan untuk menciptakan pengalaman akademik yang terintegrasi, interaktif, dan mudah diakses dari mana saja.
-          </Text>
+          </AppText>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Visi Kami</Text>
-          <Text style={styles.cardDesc}>
+          <AppText style={styles.cardTitle}>Visi Kami</AppText>
+          <AppText style={styles.cardDesc}>
             Menjadi platform pendidikan digital terdepan yang mendobrak batasan ruang dan waktu, serta memberdayakan setiap individu untuk meraih potensi akademik terbaiknya.
-          </Text>
+          </AppText>
         </View>
 
-        <Text style={styles.copyright}>
+        <AppText style={styles.copyright}>
           © 2026 Ucademy. All rights reserved.
-        </Text>
+        </AppText>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -67,7 +73,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 54,
+    paddingBottom: 16,
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
@@ -89,12 +96,10 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 16,
+  logoWrapper: {
+    marginBottom: 8,
   },
   appName: {
     fontSize: 24,
@@ -108,11 +113,11 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#FFFFFF',
-    padding: 20,
+    padding: 16,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    marginBottom: 16,
+    marginBottom: 12,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -133,7 +138,7 @@ const styles = StyleSheet.create({
   copyright: {
     textAlign: 'center',
     marginTop: 24,
-    fontSize: 12,
+    fontSize: 13,
     color: '#9CA3AF',
   }
 });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, Modal } from 'react-native';
+import AppText from '../components/AppText';
+import { View, StyleSheet, TouchableOpacity, ImageBackground, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, Modal } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
@@ -154,26 +155,27 @@ export default function ProfilScreen() {
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
             <ChevronLeft />
-            <Text style={styles.headerTitle}>Profil Saya</Text>
+            <AppText style={styles.headerTitle}>Profil Saya</AppText>
           </TouchableOpacity>
         </View>
 
         <ImageBackground source={require('../assets/bg-pattern.png')} style={styles.bgPattern} imageStyle={{ opacity: 0.2 }}>
           <View style={styles.guestContainer}>
-            <View style={styles.avatarPlaceholder}>
-              <UserIcon size={56} color={PRIMARY} />
-            </View>
-            <Text style={styles.guestTitle}>Halo, Sobat!</Text>
-            <Text style={styles.guestDesc}>
+            <Image
+              source={require('../assets/guest-avatar-green.png')}
+              style={[styles.avatarPlaceholder, { backgroundColor: '#FFF' }]}
+            />
+            <AppText style={styles.guestTitle}>Halo, Sobat!</AppText>
+            <AppText style={styles.guestDesc}>
               Kamu belum mendaftar nih. Yuk daftar atau masuk sekarang untuk bisa menyimpan progress belajar, mengakses jadwal kuliah, dan mengumpulkan tugas!
-            </Text>
+            </AppText>
 
             <TouchableOpacity
               style={styles.loginBtn}
               activeOpacity={0.8}
               onPress={() => navigation.navigate('Register')}
             >
-              <Text style={styles.loginBtnText}>Daftar / Masuk</Text>
+              <AppText style={styles.loginBtnText}>Daftar / Masuk</AppText>
             </TouchableOpacity>
           </View>
         </ImageBackground>
@@ -187,7 +189,7 @@ export default function ProfilScreen() {
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft />
-          <Text style={styles.headerTitle}>Profil Saya</Text>
+          <AppText style={styles.headerTitle}>Profil Saya</AppText>
         </TouchableOpacity>
       </View>
 
@@ -197,13 +199,13 @@ export default function ProfilScreen() {
           style={[styles.tabButton, activeTab === 'profil' && styles.tabButtonActive]}
           onPress={() => setActiveTab('profil')}
         >
-          <Text style={[styles.tabText, activeTab === 'profil' && styles.tabTextActive]}>Profil</Text>
+          <AppText style={[styles.tabText, activeTab === 'profil' && styles.tabTextActive]}>Profil</AppText>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabButton, activeTab === 'settings' && styles.tabButtonActive]}
           onPress={() => setActiveTab('settings')}
         >
-          <Text style={[styles.tabText, activeTab === 'settings' && styles.tabTextActive]}>Pengaturan</Text>
+          <AppText style={[styles.tabText, activeTab === 'settings' && styles.tabTextActive]}>Pengaturan</AppText>
         </TouchableOpacity>
       </View>
 
@@ -211,11 +213,11 @@ export default function ProfilScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {activeTab === 'settings' ? (
             <View style={styles.settingsContainer}>
-              
+
               <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7} onPress={() => navigation.navigate('Password')}>
                 <View style={styles.settingsItemLeft}>
                   <LockIcon />
-                  <Text style={styles.settingsItemText}>Password</Text>
+                  <AppText style={styles.settingsItemText}>Password</AppText>
                 </View>
                 <ChevronRightIcon />
               </TouchableOpacity>
@@ -223,7 +225,7 @@ export default function ProfilScreen() {
               <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7} onPress={() => navigation.navigate('Notifikasi')}>
                 <View style={styles.settingsItemLeft}>
                   <BellIcon />
-                  <Text style={styles.settingsItemText}>Notifikasi</Text>
+                  <AppText style={styles.settingsItemText}>Notifikasi</AppText>
                 </View>
                 <ChevronRightIcon />
               </TouchableOpacity>
@@ -231,7 +233,7 @@ export default function ProfilScreen() {
               <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7} onPress={() => navigation.navigate('Bantuan')}>
                 <View style={styles.settingsItemLeft}>
                   <HelpIcon />
-                  <Text style={styles.settingsItemText}>Bantuan</Text>
+                  <AppText style={styles.settingsItemText}>Bantuan</AppText>
                 </View>
                 <ChevronRightIcon />
               </TouchableOpacity>
@@ -239,7 +241,7 @@ export default function ProfilScreen() {
               <TouchableOpacity style={[styles.settingsItem, styles.settingsItemLast]} activeOpacity={0.7} onPress={() => navigation.navigate('TentangKami')}>
                 <View style={styles.settingsItemLeft}>
                   <InfoIcon />
-                  <Text style={styles.settingsItemText}>Tentang kami</Text>
+                  <AppText style={styles.settingsItemText}>Tentang kami</AppText>
                 </View>
                 <ChevronRightIcon />
               </TouchableOpacity>
@@ -254,7 +256,14 @@ export default function ProfilScreen() {
                     <Image source={{ uri: form.foto_profil }} style={styles.avatarImage} />
                   ) : (
                     <View style={styles.avatarInitialContainer}>
-                      <Text style={styles.avatarInitial}>{form.nama.charAt(0).toUpperCase()}</Text>
+                      <AppText style={styles.avatarInitial}>
+                        {(() => {
+                          const name = form.nama || 'Mahasiswa';
+                          const words = name.trim().split(/\s+/);
+                          if (words.length > 1) return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+                          return name.substring(0, 2).toUpperCase();
+                        })()}
+                      </AppText>
                     </View>
                   )}
                   <TouchableOpacity style={styles.editAvatarBtn} activeOpacity={0.8} onPress={pickImage}>
@@ -262,24 +271,24 @@ export default function ProfilScreen() {
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
-                  <Text style={styles.ubahFotoText}>Ubah Foto</Text>
+                  <AppText style={styles.ubahFotoText}>Ubah Foto</AppText>
                 </TouchableOpacity>
               </View>
 
               {/* Form Data */}
-              <Text style={styles.label}>Nama Lengkap</Text>
+              <AppText style={styles.label}>Nama Lengkap</AppText>
               <TouchableOpacity style={styles.inputEditableWrapper} activeOpacity={0.7} onPress={() => openEditModal('nama')}>
-                <Text style={styles.inputEditableText}>{form.nama}</Text>
+                <AppText style={styles.inputEditableText}>{form.nama}</AppText>
                 <PencilIcon size={16} color={PRIMARY} />
               </TouchableOpacity>
 
-              <Text style={styles.label}>Email</Text>
+              <AppText style={styles.label}>Email</AppText>
               <TouchableOpacity style={styles.inputEditableWrapper} activeOpacity={0.7} onPress={() => openEditModal('email')}>
-                <Text style={styles.inputEditableText}>{form.email}</Text>
+                <AppText style={styles.inputEditableText}>{form.email}</AppText>
                 <PencilIcon size={16} color={PRIMARY} />
               </TouchableOpacity>
 
-              <Text style={styles.label}>NPM</Text>
+              <AppText style={styles.label}>NPM</AppText>
               <View style={[styles.inputWrapper, styles.inputDisabled]}>
                 <TextInput
                   style={[styles.input, styles.inputTextDisabled]}
@@ -288,7 +297,7 @@ export default function ProfilScreen() {
                 />
               </View>
 
-              <Text style={styles.label}>Tahun Angkatan</Text>
+              <AppText style={styles.label}>Tahun Angkatan</AppText>
               <View style={[styles.inputWrapper, styles.inputDisabled]}>
                 <TextInput
                   style={[styles.input, styles.inputTextDisabled]}
@@ -297,7 +306,7 @@ export default function ProfilScreen() {
                 />
               </View>
 
-              <Text style={styles.label}>Fakultas</Text>
+              <AppText style={styles.label}>Fakultas</AppText>
               <View style={[styles.inputWrapper, styles.inputDisabled]}>
                 <TextInput
                   style={[styles.input, styles.inputTextDisabled]}
@@ -306,7 +315,7 @@ export default function ProfilScreen() {
                 />
               </View>
 
-              <Text style={styles.label}>Program Studi</Text>
+              <AppText style={styles.label}>Program Studi</AppText>
               <View style={[styles.inputWrapper, styles.inputDisabled]}>
                 <TextInput
                   style={[styles.input, styles.inputTextDisabled]}
@@ -318,7 +327,7 @@ export default function ProfilScreen() {
               <View style={styles.logoutContainer}>
                 <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8} onPress={handleLogoutClick}>
                   <LogOutIcon size={16} color="#DC2626" />
-                  <Text style={styles.logoutBtnText}>Keluar dari Akun</Text>
+                  <AppText style={styles.logoutBtnText}>Keluar dari Akun</AppText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -330,7 +339,7 @@ export default function ProfilScreen() {
       <Modal visible={editModalVisible} transparent={true} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Ubah {editingField === 'nama' ? 'Nama' : 'Email'}</Text>
+            <AppText style={styles.modalTitle}>Ubah {editingField === 'nama' ? 'Nama' : 'Email'}</AppText>
             <View style={styles.modalInputWrapper}>
               <TextInput
                 style={styles.modalInput}
@@ -342,10 +351,10 @@ export default function ProfilScreen() {
             </View>
             <View style={styles.modalBtnRow}>
               <TouchableOpacity style={styles.modalBtnOutline} onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.modalBtnOutlineText}>Batal</Text>
+                <AppText style={styles.modalBtnOutlineText}>Batal</AppText>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalBtnPrimary} onPress={handleSimpanAwal}>
-                <Text style={styles.modalBtnPrimaryText}>Simpan</Text>
+                <AppText style={styles.modalBtnPrimaryText}>Simpan</AppText>
               </TouchableOpacity>
             </View>
           </View>
@@ -356,14 +365,14 @@ export default function ProfilScreen() {
       <Modal visible={confirmModalVisible} transparent={true} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Konfirmasi</Text>
-            <Text style={styles.modalDesc}>Yakin nggak nih mau disimpan perubahannya?</Text>
+            <AppText style={styles.modalTitle}>Konfirmasi</AppText>
+            <AppText style={styles.modalDesc}>Yakin nggak nih mau disimpan perubahannya?</AppText>
             <View style={styles.modalBtnRow}>
               <TouchableOpacity style={styles.modalBtnOutline} onPress={() => setConfirmModalVisible(false)}>
-                <Text style={styles.modalBtnOutlineText}>Batal</Text>
+                <AppText style={styles.modalBtnOutlineText}>Batal</AppText>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalBtnPrimary} onPress={handleSimpanFinal}>
-                <Text style={styles.modalBtnPrimaryText}>Ya, Simpan</Text>
+                <AppText style={styles.modalBtnPrimaryText}>Ya, Simpan</AppText>
               </TouchableOpacity>
             </View>
           </View>
@@ -374,14 +383,14 @@ export default function ProfilScreen() {
       <Modal visible={logoutModalVisible} transparent={true} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Konfirmasi Keluar</Text>
-            <Text style={styles.modalDesc}>Yakin nggak nih mau keluar dari akun kamu?</Text>
+            <AppText style={styles.modalTitle}>Konfirmasi Keluar</AppText>
+            <AppText style={styles.modalDesc}>Yakin nggak nih mau keluar dari akun kamu?</AppText>
             <View style={styles.modalBtnRow}>
               <TouchableOpacity style={styles.modalBtnOutline} onPress={() => setLogoutModalVisible(false)}>
-                <Text style={styles.modalBtnOutlineText}>Batal</Text>
+                <AppText style={styles.modalBtnOutlineText}>Batal</AppText>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtnPrimary, { backgroundColor: '#EF4444' }]} onPress={handleLogoutConfirm}>
-                <Text style={styles.modalBtnPrimaryText}>Ya, Keluar</Text>
+                <AppText style={styles.modalBtnPrimaryText}>Ya, Keluar</AppText>
               </TouchableOpacity>
             </View>
           </View>
@@ -510,17 +519,8 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   settingsContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginTop: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    paddingHorizontal: 20,
+    marginTop: 24,
   },
   settingsItem: {
     flexDirection: 'row',
@@ -528,11 +528,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
   },
   settingsItemLast: {
-    borderBottomWidth: 0,
+    marginBottom: 24,
   },
   settingsItemLeft: {
     flexDirection: 'row',
@@ -600,9 +608,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   label: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#4A4A4A',
-    marginBottom: 4,
+    marginBottom: 8,
     fontWeight: '600',
   },
   inputWrapper: {
@@ -701,7 +709,7 @@ const styles = StyleSheet.create({
   },
   modalInputWrapper: {
     borderRadius: 8,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFF',
     borderWidth: 1,
     borderColor: '#E5E7EB',
     marginBottom: 24,

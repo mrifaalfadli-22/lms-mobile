@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import AppText from '../components/AppText';
 import { 
-  View, Text, StyleSheet, TextInput, TouchableOpacity, 
+  View,  StyleSheet, TextInput, TouchableOpacity, 
   FlatList, KeyboardAvoidingView, Platform, ImageBackground, Image, Modal, Alert 
 } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -231,9 +232,9 @@ export default function ForumDiskusiScreen({ route }) {
 
     const avatarView = (
       <View style={[styles.avatar, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#116E63' }]}>
-        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+        <AppText style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
           {getInitials(item.pengirim?.nama_lengkap)}
-        </Text>
+        </AppText>
       </View>
     );
 
@@ -242,7 +243,7 @@ export default function ForumDiskusiScreen({ route }) {
         <View style={styles.messageContentWrapper}>
           <View style={[styles.messageBubble, styles.messageBubbleMe]}>
             <View style={styles.bubbleHeader}>
-              <Text style={styles.senderName}>{item.pengirim?.nama_lengkap || 'Anonim'}</Text>
+              <AppText style={styles.senderName}>{item.pengirim?.nama_lengkap || 'Anonim'}</AppText>
               <TouchableOpacity onPress={() => openOptions(item)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <DotsIcon />
               </TouchableOpacity>
@@ -250,21 +251,21 @@ export default function ForumDiskusiScreen({ route }) {
             
             {item.parent_pesan && (
               <View style={styles.replyBubble}>
-                <Text style={styles.replySender}>{item.parent_pesan.pengirim?.nama_lengkap || 'Anonim'}</Text>
-                <Text style={styles.replyText} numberOfLines={1}>{item.parent_pesan.isi_pesan}</Text>
+                <AppText style={styles.replySender}>{item.parent_pesan.pengirim?.nama_lengkap || 'Anonim'}</AppText>
+                <AppText style={styles.replyText} numberOfLines={1}>{item.parent_pesan.isi_pesan}</AppText>
               </View>
             )}
 
-            <Text style={styles.messageText}>{item.isi_pesan}</Text>
+            <AppText style={styles.messageText}>{item.isi_pesan}</AppText>
             
             <View style={styles.messageMeta}>
-              {item.is_edited && <Text style={styles.editedText}>Diedit</Text>}
-              <Text style={styles.messageTime}>{timeAgo(item.waktu_kirim)}</Text>
+              {item.is_edited && <AppText style={styles.editedText}>Diedit</AppText>}
+              <AppText style={styles.messageTime}>{timeAgo(item.waktu_kirim)}</AppText>
             </View>
           </View>
           
           <TouchableOpacity style={styles.balasBtn} onPress={() => { setSelectedMessage(item); handleReply(); }}>
-            <Text style={styles.balasText}>Balas</Text>
+            <AppText style={styles.balasText}>Balas</AppText>
           </TouchableOpacity>
         </View>
         <View style={{ marginLeft: 12 }}>{avatarView}</View>
@@ -275,7 +276,7 @@ export default function ForumDiskusiScreen({ route }) {
         <View style={styles.messageContentWrapper}>
           <View style={[styles.messageBubble, styles.messageBubbleOther]}>
             <View style={styles.bubbleHeader}>
-              <Text style={styles.senderName}>{item.pengirim?.nama_lengkap || 'Anonim'}</Text>
+              <AppText style={styles.senderName}>{item.pengirim?.nama_lengkap || 'Anonim'}</AppText>
               <TouchableOpacity onPress={() => openOptions(item)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <DotsIcon />
               </TouchableOpacity>
@@ -283,21 +284,21 @@ export default function ForumDiskusiScreen({ route }) {
             
             {item.parent_pesan && (
               <View style={styles.replyBubble}>
-                <Text style={styles.replySender}>{item.parent_pesan.pengirim?.nama_lengkap || 'Anonim'}</Text>
-                <Text style={styles.replyText} numberOfLines={1}>{item.parent_pesan.isi_pesan}</Text>
+                <AppText style={styles.replySender}>{item.parent_pesan.pengirim?.nama_lengkap || 'Anonim'}</AppText>
+                <AppText style={styles.replyText} numberOfLines={1}>{item.parent_pesan.isi_pesan}</AppText>
               </View>
             )}
 
-            <Text style={styles.messageText}>{item.isi_pesan}</Text>
+            <AppText style={styles.messageText}>{item.isi_pesan}</AppText>
             
             <View style={styles.messageMeta}>
-              {item.is_edited && <Text style={styles.editedText}>Diedit</Text>}
-              <Text style={styles.messageTime}>{timeAgo(item.waktu_kirim)}</Text>
+              {item.is_edited && <AppText style={styles.editedText}>Diedit</AppText>}
+              <AppText style={styles.messageTime}>{timeAgo(item.waktu_kirim)}</AppText>
             </View>
           </View>
           
           <TouchableOpacity style={styles.balasBtn} onPress={() => { setSelectedMessage(item); handleReply(); }}>
-            <Text style={styles.balasText}>Balas</Text>
+            <AppText style={styles.balasText}>Balas</AppText>
           </TouchableOpacity>
         </View>
       </View>
@@ -312,7 +313,7 @@ export default function ForumDiskusiScreen({ route }) {
           <View style={styles.backBtn}>
             <BackIcon />
           </View>
-          <Text style={styles.headerTitle}>Diskusi</Text>
+          <AppText style={styles.headerTitle}>Diskusi</AppText>
         </TouchableOpacity>
       </View>
 
@@ -336,12 +337,12 @@ export default function ForumDiskusiScreen({ route }) {
             <View style={styles.actionPreview}>
               <View style={styles.actionPreviewBar} />
               <View style={styles.actionPreviewContent}>
-                <Text style={styles.actionPreviewTitle}>
+                <AppText style={styles.actionPreviewTitle}>
                   {editMsgId ? 'Edit Pesan' : `Membalas ${replyTo.pengirim?.nama_lengkap || 'Anonim'}`}
-                </Text>
-                <Text style={styles.actionPreviewText} numberOfLines={1}>
+                </AppText>
+                <AppText style={styles.actionPreviewText} numberOfLines={1}>
                   {editMsgId ? messages.find(m => m.id_pesan === editMsgId)?.isi_pesan : replyTo.isi_pesan}
-                </Text>
+                </AppText>
               </View>
               <TouchableOpacity style={styles.closeActionBtn} onPress={() => { setReplyTo(null); setEditMsgId(null); setInputText(''); }}>
                 <CloseIcon />
@@ -376,7 +377,7 @@ export default function ForumDiskusiScreen({ route }) {
           <View style={styles.modalContent}>
             <TouchableOpacity style={styles.modalOption} onPress={handleReply}>
               <ReplyIcon />
-              <Text style={styles.modalOptionText}>Balas</Text>
+              <AppText style={styles.modalOptionText}>Balas</AppText>
             </TouchableOpacity>
             
             {selectedMessage && currentUser && selectedMessage.id_pengirim === currentUser.id_user && (
@@ -384,12 +385,12 @@ export default function ForumDiskusiScreen({ route }) {
                 <View style={styles.modalDivider} />
                 <TouchableOpacity style={styles.modalOption} onPress={handleEdit}>
                   <EditIcon />
-                  <Text style={styles.modalOptionText}>Edit</Text>
+                  <AppText style={styles.modalOptionText}>Edit</AppText>
                 </TouchableOpacity>
                 <View style={styles.modalDivider} />
                 <TouchableOpacity style={styles.modalOption} onPress={handleDelete}>
                   <DeleteIcon />
-                  <Text style={[styles.modalOptionText, { color: '#EF4444' }]}>Hapus</Text>
+                  <AppText style={[styles.modalOptionText, { color: '#EF4444' }]}>Hapus</AppText>
                 </TouchableOpacity>
               </>
             )}

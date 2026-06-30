@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ImageBackground, Image, Platform, Linking, Modal } from 'react-native';
+import AppText from '../components/AppText';
+import { View,  StyleSheet, ScrollView, TouchableOpacity, ImageBackground, Image, Platform, Linking, Modal } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Rect, Polyline, Circle } from 'react-native-svg';
@@ -196,7 +197,7 @@ export default function DetailSesiScreen({ route }) {
           <View style={styles.backBtn}>
             <BackIcon />
           </View>
-          <Text style={styles.headerTitle}>Detail sesi</Text>
+          <AppText style={styles.headerTitle}>Detail sesi</AppText>
         </TouchableOpacity>
       </View>
       <View style={styles.headerLine} />
@@ -206,51 +207,51 @@ export default function DetailSesiScreen({ route }) {
         {/* Info Card */}
         <View style={styles.card}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <Text style={[styles.courseTitle, { marginBottom: 0, flex: 1, marginRight: 8 }]}>{courseTitle}</Text>
+            <AppText style={[styles.courseTitle, { marginBottom: 0, flex: 1, marginRight: 8 }]}>{courseTitle}</AppText>
             {meeting?.method && (
               <View style={[styles.methodBadge, meeting.method.toLowerCase() === 'synchronous' ? styles.badgeSync : styles.badgeAsync]}>
-                <Text style={[styles.methodBadgeText, meeting.method.toLowerCase() === 'synchronous' ? styles.badgeTextSync : styles.badgeTextAsync]}>
+                <AppText style={[styles.methodBadgeText, meeting.method.toLowerCase() === 'synchronous' ? styles.badgeTextSync : styles.badgeTextAsync]}>
                   {meeting.method.toLowerCase() === 'synchronous' ? 'Synchronous' : 'Asynchronous'}
-                </Text>
+                </AppText>
               </View>
             )}
           </View>
           <View style={styles.infoRow}>
             <CalendarIcon />
-            <Text style={styles.infoText}>{timeInfo}</Text>
+            <AppText style={styles.infoText}>{timeInfo}</AppText>
           </View>
           <View style={styles.infoRow}>
             <DocumentIcon />
-            <Text style={styles.infoText}>{meetingTitle}</Text>
+            <AppText style={styles.infoText}>{meetingTitle}</AppText>
           </View>
         </View>
 
         {/* Topik sesi Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Topik sesi</Text>
-          <Text style={styles.cardContentText}>{topic}</Text>
+          <AppText style={styles.cardTitle}>Topik sesi</AppText>
+          <AppText style={styles.cardContentText}>{topic}</AppText>
         </View>
 
         {/* Conference Card */}
         {meeting?.method?.toLowerCase() !== 'asynchronous' && (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Link Gmeet/Zoom</Text>
+            <AppText style={styles.cardTitle}>Link Gmeet/Zoom</AppText>
             {meeting?.link_kelas_daring ? (
-              <Text style={styles.linkText}>{meeting.link_kelas_daring}</Text>
+              <AppText style={styles.linkText}>{meeting.link_kelas_daring}</AppText>
             ) : (
-              <Text style={styles.cardContentText}>Belum ada link conference yang dibagikan.</Text>
+              <AppText style={styles.cardContentText}>Belum ada link conference yang dibagikan.</AppText>
             )}
           </View>
         )}
 
         {/* Materi Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Materi</Text>
-          <Text style={styles.cardContentText}>
+          <AppText style={styles.cardTitle}>Materi</AppText>
+          <AppText style={styles.cardContentText}>
             {meeting?.rawMateri && meeting.rawMateri !== '-'
               ? meeting.rawMateri
               : 'Silakan pelajari materi berikut sebelum memulai sesi perkuliahan.'}
-          </Text>
+          </AppText>
 
           {/* Support embedded video if the string is a youtube link */}
           {meeting?.rawMateri && meeting.rawMateri.includes('youtube.com/watch?v=') && (
@@ -277,14 +278,14 @@ export default function DetailSesiScreen({ route }) {
           {sessionMaterials.map((m, idx) => (
             <View key={`materi-info-${idx}`} style={{ marginTop: 12 }}>
               {m.judul_materi && (
-                <Text style={{ fontSize: 14, fontFamily: 'Outfit-SemiBold', color: '#1F2937', marginBottom: 4 }}>
+                <AppText style={{ fontSize: 14, fontFamily: 'Outfit-SemiBold', color: '#1F2937', marginBottom: 4 }}>
                   {m.judul_materi}
-                </Text>
+                </AppText>
               )}
               {m.deskripsi && (
-                <Text style={{ fontSize: 13, fontFamily: 'Inter-Regular', color: '#4B5563', marginBottom: 8, lineHeight: 20 }}>
+                <AppText style={{ fontSize: 13, fontFamily: 'Inter-Regular', color: '#4B5563', marginBottom: 8, lineHeight: 20 }}>
                   {m.deskripsi}
-                </Text>
+                </AppText>
               )}
             </View>
           ))}
@@ -319,8 +320,8 @@ export default function DetailSesiScreen({ route }) {
                 <View key={index} style={styles.fileItemRow}>
                   <Image source={iconSource} style={styles.fileIcon} resizeMode="contain" />
                   <View style={styles.fileTextContainer}>
-                    <Text style={styles.fileNameText} numberOfLines={1}>{fileName}</Text>
-                    <Text style={styles.fileSizeText}>{ext.toUpperCase()}</Text>
+                    <AppText style={styles.fileNameText} numberOfLines={1}>{fileName}</AppText>
+                    <AppText style={styles.fileSizeText}>{ext.toUpperCase()}</AppText>
                   </View>
                   <TouchableOpacity 
                     style={styles.downloadIconBtn}
@@ -329,7 +330,7 @@ export default function DetailSesiScreen({ route }) {
                       Linking.openURL(`${baseUrl}/api/public/download?path=${file}&title=${encodeURIComponent(meetingTitle)}`);
                     }}
                   >
-                    <Text style={styles.downloadLink}>Unduh</Text>
+                    <AppText style={styles.downloadLink}>Unduh</AppText>
                   </TouchableOpacity>
                 </View>
               );
@@ -342,9 +343,9 @@ export default function DetailSesiScreen({ route }) {
               {presensiStatus === 'hadir' ? (
                 <View style={styles.attendanceContainer}>
                   <CheckboxFilled />
-                  <Text style={[styles.attendanceText, { color: '#116E63', fontWeight: '600' }]}>
+                  <AppText style={[styles.attendanceText, { color: '#116E63', fontWeight: '600' }]}>
                     ✓ Anda telah menandai kehadiran
-                  </Text>
+                  </AppText>
                 </View>
               ) : (
                 <TouchableOpacity
@@ -374,9 +375,9 @@ export default function DetailSesiScreen({ route }) {
                   }}
                 >
                   <CheckboxEmpty />
-                  <Text style={styles.attendanceText}>
+                  <AppText style={styles.attendanceText}>
                     {isMarkingPresensi ? 'Menyimpan...' : 'Tandai saya telah membaca materi ini'}
-                  </Text>
+                  </AppText>
                 </TouchableOpacity>
               )}
             </>
@@ -387,27 +388,27 @@ export default function DetailSesiScreen({ route }) {
                 {presensiStatus === 'hadir' ? (
                   <>
                     <CheckboxFilled />
-                    <Text style={[styles.attendanceText, { color: '#116E63', fontWeight: '600' }]}>Hadir</Text>
+                    <AppText style={[styles.attendanceText, { color: '#116E63', fontWeight: '600' }]}>Hadir</AppText>
                   </>
                 ) : presensiStatus === 'izin' ? (
                   <>
                     <CheckboxEmpty />
-                    <Text style={[styles.attendanceText, { color: '#F59E0B', fontWeight: '600' }]}>Izin</Text>
+                    <AppText style={[styles.attendanceText, { color: '#F59E0B', fontWeight: '600' }]}>Izin</AppText>
                   </>
                 ) : presensiStatus === 'sakit' ? (
                   <>
                     <CheckboxEmpty />
-                    <Text style={[styles.attendanceText, { color: '#3B82F6', fontWeight: '600' }]}>Sakit</Text>
+                    <AppText style={[styles.attendanceText, { color: '#3B82F6', fontWeight: '600' }]}>Sakit</AppText>
                   </>
                 ) : presensiStatus === 'alpha' ? (
                   <>
                     <CheckboxEmpty />
-                    <Text style={[styles.attendanceText, { color: '#EF4444', fontWeight: '600' }]}>Alpha</Text>
+                    <AppText style={[styles.attendanceText, { color: '#EF4444', fontWeight: '600' }]}>Alpha</AppText>
                   </>
                 ) : (
                   <>
                     <CheckboxEmpty />
-                    <Text style={[styles.attendanceText, { color: '#9CA3AF' }]}>Belum diabsen oleh dosen</Text>
+                    <AppText style={[styles.attendanceText, { color: '#9CA3AF' }]}>Belum diabsen oleh dosen</AppText>
                   </>
                 )}
               </View>
@@ -417,9 +418,9 @@ export default function DetailSesiScreen({ route }) {
 
         {/* Tugas dan kuis Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Tugas dan kuis</Text>
+          <AppText style={styles.cardTitle}>Tugas dan kuis</AppText>
           {tugasList.length === 0 ? (
-            <Text style={styles.cardContentText}>Belum ada tugas yang dibagikan.</Text>
+            <AppText style={styles.cardContentText}>Belum ada tugas yang dibagikan.</AppText>
           ) : (
             tugasList.map((tugas, index) => {
               const statusText = "Belum dikumpulkan"; // default status
@@ -431,13 +432,13 @@ export default function DetailSesiScreen({ route }) {
                       <ClipboardIcon />
                     </View>
                     <View style={styles.taskHeaderTextContainer}>
-                      <Text style={styles.taskTitle}>{tugas.judul_tugas}</Text>
-                      <Text style={styles.taskDeadline}>Tenggat: {formatTugasDate(tugas.batas_waktu)}</Text>
+                      <AppText style={styles.taskTitle}>{tugas.judul_tugas}</AppText>
+                      <AppText style={styles.taskDeadline}>Tenggat: {formatTugasDate(tugas.batas_waktu)}</AppText>
                     </View>
                   </View>
                   <View style={styles.taskActionRow}>
                     <View style={styles.statusBadgeUnfinished}>
-                      <Text style={styles.statusBadgeTextUnfinished}>{statusText}</Text>
+                      <AppText style={styles.statusBadgeTextUnfinished}>{statusText}</AppText>
                     </View>
                     <TouchableOpacity 
                       style={styles.uploadBtn}
@@ -446,7 +447,7 @@ export default function DetailSesiScreen({ route }) {
                         setIsTugasModalVisible(true);
                       }}
                     >
-                      <Text style={styles.uploadBtnText}>Lihat Detail</Text>
+                      <AppText style={styles.uploadBtnText}>Lihat Detail</AppText>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -464,7 +465,7 @@ export default function DetailSesiScreen({ route }) {
             onPress={() => setIsForumExpanded(!isForumExpanded)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.cardTitle, { marginBottom: 0 }]}>Forum diskusi</Text>
+            <AppText style={[styles.cardTitle, { marginBottom: 0 }]}>Forum diskusi</AppText>
             {isForumExpanded ? <ChevronUp /> : <ChevronDown />}
           </TouchableOpacity>
 
@@ -473,7 +474,7 @@ export default function DetailSesiScreen({ route }) {
             <>
               <View style={[styles.chatContainer, { marginTop: 16 }]}>
                 {forumList.length === 0 ? (
-                  <Text style={styles.cardContentText}>Belum ada diskusi di forum ini.</Text>
+                  <AppText style={styles.cardContentText}>Belum ada diskusi di forum ini.</AppText>
                 ) : (
                   forumList.slice(-2).map((msg, index) => {
                     const getInitials = (name) => {
@@ -498,18 +499,18 @@ export default function DetailSesiScreen({ route }) {
                     const isMe = currentUser && currentUser.id_user === msg.id_pengirim;
                     const avatarView = (
                       <View style={[styles.avatar, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#116E63' }]}>
-                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                        <AppText style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
                           {getInitials(msg.pengirim?.nama_lengkap)}
-                        </Text>
+                        </AppText>
                       </View>
                     );
 
                     return isMe ? (
                       <View key={index} style={styles.chatRowRight}>
                         <View style={[styles.chatBubbleRight, { backgroundColor: '#D1FAE5' }]}>
-                          <Text style={styles.chatName}>{msg.pengirim?.nama_lengkap || 'Anonim'}</Text>
-                          <Text style={styles.chatText}>{msg.isi_pesan}</Text>
-                          <Text style={styles.chatTime}>{timeAgo(msg.waktu_kirim)}</Text>
+                          <AppText style={styles.chatName}>{msg.pengirim?.nama_lengkap || 'Anonim'}</AppText>
+                          <AppText style={styles.chatText}>{msg.isi_pesan}</AppText>
+                          <AppText style={styles.chatTime}>{timeAgo(msg.waktu_kirim)}</AppText>
                         </View>
                         {avatarView}
                       </View>
@@ -517,9 +518,9 @@ export default function DetailSesiScreen({ route }) {
                       <View key={index} style={styles.chatRowLeft}>
                         {avatarView}
                         <View style={styles.chatBubbleLeft}>
-                          <Text style={styles.chatName}>{msg.pengirim?.nama_lengkap || 'Anonim'}</Text>
-                          <Text style={styles.chatText}>{msg.isi_pesan}</Text>
-                          <Text style={styles.chatTime}>{timeAgo(msg.waktu_kirim)}</Text>
+                          <AppText style={styles.chatName}>{msg.pengirim?.nama_lengkap || 'Anonim'}</AppText>
+                          <AppText style={styles.chatText}>{msg.isi_pesan}</AppText>
+                          <AppText style={styles.chatTime}>{timeAgo(msg.waktu_kirim)}</AppText>
                         </View>
                       </View>
                     );
@@ -528,7 +529,7 @@ export default function DetailSesiScreen({ route }) {
               </View>
 
               <TouchableOpacity style={styles.forumLinkBtn} onPress={() => navigation.navigate('ForumDiskusi', { meeting, userToken, topic })}>
-                <Text style={styles.forumLinkText}>Lihat forum diskusi</Text>
+                <AppText style={styles.forumLinkText}>Lihat forum diskusi</AppText>
               </TouchableOpacity>
             </>
           )}
@@ -547,37 +548,37 @@ export default function DetailSesiScreen({ route }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Detail Tugas</Text>
+              <AppText style={styles.modalTitle}>Detail Tugas</AppText>
               <TouchableOpacity onPress={() => setIsTugasModalVisible(false)} style={styles.closeModalBtn}>
-                <Text style={{ fontSize: 16, color: '#6B7280', fontWeight: 'bold' }}>X</Text>
+                <AppText style={{ fontSize: 16, color: '#6B7280', fontWeight: 'bold' }}>X</AppText>
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody}>
               {selectedTugas && (
                 <>
-                  <Text style={styles.modalTaskTitle}>{selectedTugas.judul_tugas}</Text>
-                  <Text style={styles.modalTaskDesc}>{selectedTugas.deskripsi_tugas || "Tidak ada deskripsi untuk tugas ini."}</Text>
+                  <AppText style={styles.modalTaskTitle}>{selectedTugas.judul_tugas}</AppText>
+                  <AppText style={styles.modalTaskDesc}>{selectedTugas.deskripsi_tugas || "Tidak ada deskripsi untuk tugas ini."}</AppText>
                   
                   <View style={styles.modalInfoRow}>
-                    <Text style={styles.modalInfoLabel}>Tenggat Waktu:</Text>
-                    <Text style={styles.modalInfoValueRed}>{formatTugasDate(selectedTugas.batas_waktu)}</Text>
+                    <AppText style={styles.modalInfoLabel}>Tenggat Waktu:</AppText>
+                    <AppText style={styles.modalInfoValueRed}>{formatTugasDate(selectedTugas.batas_waktu)}</AppText>
                   </View>
                   
                   {selectedTugas.link_cbt && (
                     <View style={styles.modalInfoRow}>
-                      <Text style={styles.modalInfoLabel}>Link CBT:</Text>
+                      <AppText style={styles.modalInfoLabel}>Link CBT:</AppText>
                       <TouchableOpacity onPress={() => Linking.openURL(selectedTugas.link_cbt)}>
-                        <Text style={styles.modalInfoValueBlue}>{selectedTugas.link_cbt}</Text>
+                        <AppText style={styles.modalInfoValueBlue}>{selectedTugas.link_cbt}</AppText>
                       </TouchableOpacity>
                     </View>
                   )}
 
                   {selectedTugas.token_cbt && (
                     <View style={styles.modalInfoRow}>
-                      <Text style={styles.modalInfoLabel}>Token CBT:</Text>
+                      <AppText style={styles.modalInfoLabel}>Token CBT:</AppText>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <View style={{ backgroundColor: '#F3F4F6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, marginRight: 8 }}>
-                          <Text style={styles.modalInfoValueBold}>{selectedTugas.token_cbt}</Text>
+                          <AppText style={styles.modalInfoValueBold}>{selectedTugas.token_cbt}</AppText>
                         </View>
                         <TouchableOpacity 
                           onPress={async () => {
@@ -592,9 +593,9 @@ export default function DetailSesiScreen({ route }) {
                   )}
 
                   <View style={styles.modalInfoRow}>
-                    <Text style={styles.modalInfoLabel}>Status:</Text>
+                    <AppText style={styles.modalInfoLabel}>Status:</AppText>
                     <View style={styles.statusBadgeUnfinished}>
-                      <Text style={styles.statusBadgeTextUnfinished}>Belum dikumpulkan</Text>
+                      <AppText style={styles.statusBadgeTextUnfinished}>Belum dikumpulkan</AppText>
                     </View>
                   </View>
                 </>

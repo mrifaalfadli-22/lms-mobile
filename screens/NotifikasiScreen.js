@@ -1,10 +1,11 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
+import AppText from '../components/AppText';
+import {
+  View,
+
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
   StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -39,12 +40,12 @@ const NotificationItem = ({ item }) => (
       {item.type === 'tugas' ? <TugasIcon /> : <MateriIcon />}
     </View>
     <View style={styles.notifContent}>
-      <Text style={styles.notifTitle}>
-        <Text style={styles.boldText}>{item.titlePrefix}</Text>
+      <AppText style={styles.notifTitle}>
+        <AppText style={styles.boldText}>{item.titlePrefix}</AppText>
         {item.titleSuffix}
-      </Text>
-      <Text style={styles.notifSubtitle}>{item.subtitle}</Text>
-      <Text style={styles.notifDate}>{item.date}</Text>
+      </AppText>
+      <AppText style={styles.notifSubtitle}>{item.subtitle}</AppText>
+      <AppText style={styles.notifDate}>{item.date}</AppText>
     </View>
   </View>
 );
@@ -80,14 +81,14 @@ export default function NotifikasiScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerClickArea} onPress={() => navigation.goBack()}>
           <View style={styles.backBtn}>
             <BackIcon />
           </View>
-          <Text style={styles.headerTitle}>Notifikasi</Text>
+          <AppText style={styles.headerTitle}>Notifikasi</AppText>
         </TouchableOpacity>
       </View>
       <View style={styles.headerLine} />
@@ -99,7 +100,7 @@ export default function NotifikasiScreen() {
           ))}
         </ScrollView>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 16,
+    paddingTop: 54,
     paddingHorizontal: 20,
     paddingBottom: 16,
     backgroundColor: '#F9FAFB',
@@ -160,7 +161,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   notifTitle: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#374151',
     lineHeight: 18,
     marginBottom: 4,
@@ -170,12 +171,12 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   notifSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#4B5563',
     marginBottom: 8,
   },
   notifDate: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#9CA3AF',
   }
 });

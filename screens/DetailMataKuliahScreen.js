@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import AppText from '../components/AppText';
 import {
   View,
-  Text,
+
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -21,7 +22,7 @@ import YoutubePlayer from 'react-native-youtube-iframe';
 
 const { width, height } = Dimensions.get('window');
 
-const PRIMARY = '#258A7A'; // Updated green to match the rest of the app
+const PRIMARY = '#116E63'; // Updated green to match the rest of the app
 const BG_COLOR = '#F9FAFB';
 
 const ChevronLeft = () => (
@@ -83,35 +84,35 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           };
-          
+
           if (isRegistered && userToken) {
-            API_URL = Platform.OS === 'android' 
-              ? `http://10.0.2.2:8000/api/sesi-pertemuan/jadwal/${course.id}` 
+            API_URL = Platform.OS === 'android'
+              ? `http://10.0.2.2:8000/api/sesi-pertemuan/jadwal/${course.id}`
               : `http://localhost:8000/api/sesi-pertemuan/jadwal/${course.id}`;
             headers['Authorization'] = `Bearer ${userToken}`;
           } else {
-            API_URL = Platform.OS === 'android' 
-              ? `http://10.0.2.2:8000/api/public/sesi-pertemuan/jadwal/${course.id}` 
+            API_URL = Platform.OS === 'android'
+              ? `http://10.0.2.2:8000/api/public/sesi-pertemuan/jadwal/${course.id}`
               : `http://localhost:8000/api/public/sesi-pertemuan/jadwal/${course.id}`;
           }
-            
+
           const response = await fetch(API_URL, {
             method: 'GET',
             headers: headers
           });
-          
+
           const json = await response.json();
           if (json.status === 'success') {
             const fetchedMeetings = json.data.map(sesi => {
               const dateObj = new Date(sesi.tanggal_pelaksanaan);
               const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
               const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-              
+
               const dayName = days[dateObj.getDay()];
               const dateNum = dateObj.getDate();
               const monthName = months[dateObj.getMonth()];
               const year = dateObj.getFullYear();
-              
+
               const jamMulai = sesi.jam_mulai ? sesi.jam_mulai.substring(0, 5) : '';
               const jamBerakhir = sesi.jam_berakhir ? sesi.jam_berakhir.substring(0, 5) : '';
               const timeString = `${dayName}, ${dateNum} ${monthName} ${year}   ${jamMulai} - ${jamBerakhir}`;
@@ -136,7 +137,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
           setIsLoadingMeetings(false);
         }
       };
-      
+
       const fetchMaterials = async () => {
         setIsLoadingMaterials(true);
         try {
@@ -173,7 +174,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
             const fetchedAssignments = json.data.map(tugas => {
               const meetingTitle = tugas.sesi_pertemuan?.judul_sesi || `Pertemuan ${tugas.sesi_pertemuan?.pertemuan_ke || '-'}`;
               const topic = tugas.sesi_pertemuan?.materi || '-';
-              
+
               // Format time
               let timeStr = '-';
               if (tugas.batas_waktu) {
@@ -228,7 +229,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
       }).start();
       return;
     }
-    
+
     setSelectedMeeting(meeting);
     setModalVisible(true);
     Animated.timing(fadeAnim, {
@@ -254,13 +255,13 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
       Alert.alert('Gagal', 'Silakan masukkan token terlebih dahulu.');
       return;
     }
-    
+
     setIsEnrolling(true);
     try {
-      const API_URL = Platform.OS === 'android' 
-        ? 'http://10.0.2.2:8000/api/peserta-kelas/enroll' 
+      const API_URL = Platform.OS === 'android'
+        ? 'http://10.0.2.2:8000/api/peserta-kelas/enroll'
         : 'http://localhost:8000/api/peserta-kelas/enroll';
-        
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
@@ -270,7 +271,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
         },
         body: JSON.stringify({ token_enrollment: enrollToken })
       });
-      
+
       const json = await response.json();
       if (json.success) {
         Alert.alert('Sukses', 'Anda berhasil bergabung ke kelas ini.');
@@ -293,32 +294,32 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
 
 
   return (
-    <ImageBackground 
-      source={require('../assets/bg-pattern.png')} 
+    <ImageBackground
+      source={require('../assets/bg-pattern.png')}
       style={styles.container}
       resizeMode="cover"
     >
       <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
-      
+
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
+        <TouchableOpacity
+          style={styles.backButton}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
           <ChevronLeft />
-          <Text style={styles.headerTitle}>Detail mata kuliah</Text>
+          <AppText style={styles.headerTitle}>Detail mata kuliah</AppText>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* HERO IMAGE SECTION */}
         <View style={styles.heroContainer}>
-          <Image 
-            source={require('../assets/dosen.png')} 
-            style={styles.heroImage} 
-            resizeMode="cover" 
+          <Image
+            source={require('../assets/dosen.png')}
+            style={styles.heroImage}
+            resizeMode="cover"
           />
           {/* Gradient Overlay using expo-linear-gradient */}
           <LinearGradient
@@ -326,8 +327,8 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
             style={styles.gradientOverlay}
           />
           <View style={styles.heroTextContainer}>
-            <Text style={styles.heroTitle}>{courseName}</Text>
-            <Text style={styles.heroSubtitle}>{lecturer}</Text>
+            <AppText style={styles.heroTitle}>{courseName}</AppText>
+            <AppText style={styles.heroSubtitle}>{lecturer}</AppText>
           </View>
         </View>
 
@@ -336,16 +337,16 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
 
         {/* MAIN CONTENT CONTAINER */}
         <View style={styles.contentContainer}>
-          <Text style={styles.contentTitle}>{courseName}</Text>
-          <Text style={styles.contentLecturer}>{lecturer}</Text>
-          
-          <Text style={styles.descriptionText}>
+          <AppText style={styles.contentTitle}>{courseName}</AppText>
+          <AppText style={styles.contentLecturer}>{lecturer}</AppText>
+
+          <AppText style={styles.descriptionText}>
             {course?.deskripsi || 'Tidak ada deskripsi tersedia.'}
-          </Text>
+          </AppText>
 
           {!hasJoined ? (
-            <TouchableOpacity 
-              style={styles.daftarButton} 
+            <TouchableOpacity
+              style={styles.daftarButton}
               activeOpacity={0.8}
               onPress={() => {
                 if (isRegistered) {
@@ -355,18 +356,18 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                 }
               }}
             >
-              <Text style={styles.daftarButtonText}>{isRegistered ? 'Gabung' : 'Daftar'}</Text>
+              <AppText style={styles.daftarButtonText}>{isRegistered ? 'Gabung' : 'Daftar'}</AppText>
             </TouchableOpacity>
           ) : (
             <View style={styles.tabContainer}>
               <TouchableOpacity style={[styles.tabButton, activeTab === 'pertemuan' && styles.activeTabButton]} onPress={() => setActiveTab('pertemuan')}>
-                <Text style={[styles.tabText, activeTab === 'pertemuan' && styles.activeTabText]}>Pertemuan</Text>
+                <AppText style={[styles.tabText, activeTab === 'pertemuan' && styles.activeTabText]}>Pertemuan</AppText>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.tabButton, activeTab === 'tugas' && styles.activeTabButton]} onPress={() => setActiveTab('tugas')}>
-                <Text style={[styles.tabText, activeTab === 'tugas' && styles.activeTabText]}>Tugas dan kuis</Text>
+                <AppText style={[styles.tabText, activeTab === 'tugas' && styles.activeTabText]}>Tugas dan kuis</AppText>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.tabButton, activeTab === 'materi' && styles.activeTabButton]} onPress={() => setActiveTab('materi')}>
-                <Text style={[styles.tabText, activeTab === 'materi' && styles.activeTabText]}>Materi dibagikan</Text>
+                <AppText style={[styles.tabText, activeTab === 'materi' && styles.activeTabText]}>Materi dibagikan</AppText>
               </TouchableOpacity>
             </View>
           )}
@@ -375,11 +376,11 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
           {(!hasJoined || activeTab === 'pertemuan') && (
             <View style={styles.meetingList}>
               {isLoadingMeetings ? (
-                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Memuat pertemuan...</Text>
+                <AppText style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Memuat pertemuan...</AppText>
               ) : meetings.length > 0 ? (
                 meetings.map((item) => (
-                  <TouchableOpacity 
-                    key={item.id} 
+                  <TouchableOpacity
+                    key={item.id}
                     style={styles.meetingCard}
                     activeOpacity={0.7}
                     onPress={() => {
@@ -398,23 +399,23 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                     />
                     <View style={styles.meetingCardLine} />
                     <View style={styles.meetingCardContent}>
-                      <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4}}>
-                        <Text style={[styles.meetingTitle, { flex: 1, marginBottom: 0, marginRight: 8 }]}>{item.title}</Text>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                        <AppText style={[styles.meetingTitle, { flex: 1, marginBottom: 0, marginRight: 8 }]}>{item.title}</AppText>
                         {!!item.method ? (
                           <View style={[styles.methodBadge, item.method.toLowerCase() === 'synchronous' ? styles.badgeSync : styles.badgeAsync]}>
-                            <Text style={[styles.methodBadgeText, item.method.toLowerCase() === 'synchronous' ? styles.badgeTextSync : styles.badgeTextAsync]}>
+                            <AppText style={[styles.methodBadgeText, item.method.toLowerCase() === 'synchronous' ? styles.badgeTextSync : styles.badgeTextAsync]}>
                               {item.method.toLowerCase() === 'synchronous' ? 'Synchronous' : 'Asynchronous'}
-                            </Text>
+                            </AppText>
                           </View>
                         ) : null}
                       </View>
-                      <Text style={styles.meetingTopic}>{item.topic}</Text>
-                      <Text style={styles.meetingLecturer}>{lecturer}</Text>
+                      <AppText style={styles.meetingTopic}>{item.topic}</AppText>
+                      <AppText style={styles.meetingLecturer}>{lecturer}</AppText>
                     </View>
                   </TouchableOpacity>
                 ))
               ) : (
-                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Belum ada sesi pertemuan yang dibuat.</Text>
+                <AppText style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Belum ada sesi pertemuan yang dibuat.</AppText>
               )}
             </View>
           )}
@@ -422,7 +423,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
           {hasJoined && activeTab === 'tugas' && (
             <View style={styles.assignmentList}>
               {isLoadingAssignments ? (
-                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Memuat tugas...</Text>
+                <AppText style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Memuat tugas...</AppText>
               ) : assignments.length > 0 ? (
                 assignments.map(item => (
                   <View key={item.id} style={styles.materialCard}>
@@ -435,9 +436,9 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                       />
                       <View style={styles.meetingCardLine} />
                       <View style={styles.meetingCardContent}>
-                        <Text style={styles.meetingTitle}>{item.meetingTitle}</Text>
-                        <Text style={styles.meetingTopic}>{item.topic}</Text>
-                        <Text style={styles.meetingLecturer}>{item.lecturer}</Text>
+                        <AppText style={styles.meetingTitle}>{item.meetingTitle}</AppText>
+                        <AppText style={styles.meetingTopic}>{item.topic}</AppText>
+                        <AppText style={styles.meetingLecturer}>{item.lecturer}</AppText>
                       </View>
                     </View>
 
@@ -445,14 +446,14 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                       <View style={styles.assignmentHeaderInfo}>
                         <Image source={{ uri: course?.avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80' }} style={styles.assignmentAvatar} />
                         <View>
-                          <Text style={styles.assignmentLecturer}>{item.lecturer} <Text style={styles.assignmentAction}>{item.action}</Text></Text>
-                          <Text style={styles.assignmentTime}>{item.time}</Text>
+                          <AppText style={styles.assignmentLecturer}>{item.lecturer} <AppText style={styles.assignmentAction}>{item.action}</AppText></AppText>
+                          <AppText style={styles.assignmentTime}>{item.time}</AppText>
                         </View>
                       </View>
-                      <Text style={styles.assignmentTitle}>{item.title}</Text>
-                      <Text style={styles.assignmentDesc}>{item.desc}</Text>
-                      <TouchableOpacity 
-                        style={styles.lihatTugasBtn} 
+                      <AppText style={styles.assignmentTitle}>{item.title}</AppText>
+                      <AppText style={styles.assignmentDesc}>{item.desc}</AppText>
+                      <TouchableOpacity
+                        style={styles.lihatTugasBtn}
                         activeOpacity={0.8}
                         onPress={() => {
                           const meeting = meetings.find(m => m.id === item.id_sesi);
@@ -461,13 +462,13 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                           }
                         }}
                       >
-                        <Text style={styles.lihatTugasText}>Lihat tugas</Text>
+                        <AppText style={styles.lihatTugasText}>Lihat tugas</AppText>
                       </TouchableOpacity>
                     </View>
                   </View>
                 ))
               ) : (
-                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Belum ada tugas yang dibagikan.</Text>
+                <AppText style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Belum ada tugas yang dibagikan.</AppText>
               )}
             </View>
           )}
@@ -475,7 +476,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
           {hasJoined && activeTab === 'materi' && (
             <View style={styles.assignmentList}>
               {isLoadingMaterials ? (
-                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Memuat materi...</Text>
+                <AppText style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Memuat materi...</AppText>
               ) : materials.length > 0 ? (
                 materials.map((item, index) => (
                   <View key={item.id || index} style={styles.materialCard}>
@@ -488,52 +489,52 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                       />
                       <View style={styles.meetingCardLine} />
                       <View style={styles.meetingCardContent}>
-                        <Text style={styles.meetingTitle}>{item.pertemuan}</Text>
-                        <Text style={styles.meetingTopic}>{item.judul}</Text>
-                        <Text style={styles.meetingLecturer}>{lecturer}</Text>
+                        <AppText style={styles.meetingTitle}>{item.pertemuan}</AppText>
+                        <AppText style={styles.meetingTopic}>{item.judul}</AppText>
+                        <AppText style={styles.meetingLecturer}>{lecturer}</AppText>
                       </View>
                     </View>
 
                     <View style={styles.materialCardBody}>
-                      <Text style={styles.materialInstruction}>{item.deskripsi || 'Pelajari materi berikut ini'}</Text>
-                      
+                      <AppText style={styles.materialInstruction}>{item.deskripsi || 'Pelajari materi berikut ini'}</AppText>
+
                       {!!(item.file_materi && item.file_materi.length > 0) ? (
                         <View style={styles.fileListContainer}>
                           {item.file_materi.map((file, idx) => {
-                             const ext = file.split('.').pop().toLowerCase();
-                             const isPdf = ext === 'pdf';
-                             const isDocx = ext === 'docx' || ext === 'doc';
-                             const isXls = ext === 'xls' || ext === 'xlsx';
-                             const isPpt = ext === 'ppt' || ext === 'pptx';
-                             const fileName = file.split('/').pop().replace(/^[a-f0-9\-]+_/, '');
-                             
-                             let iconSource = require('../assets/other.png');
-                             if (isPdf) iconSource = require('../assets/pdf.png');
-                             else if (isDocx) iconSource = require('../assets/doc.png');
-                             else if (isXls) iconSource = require('../assets/xls.png');
-                             else if (isPpt) iconSource = require('../assets/ppt.png');
+                            const ext = file.split('.').pop().toLowerCase();
+                            const isPdf = ext === 'pdf';
+                            const isDocx = ext === 'docx' || ext === 'doc';
+                            const isXls = ext === 'xls' || ext === 'xlsx';
+                            const isPpt = ext === 'ppt' || ext === 'pptx';
+                            const fileName = file.split('/').pop().replace(/^[a-f0-9\-]+_/, '');
 
-                             return (
-                               <View key={idx} style={styles.fileItemRow}>
-                                 <Image 
-                                   source={iconSource} 
-                                   style={styles.fileIcon} 
-                                   resizeMode="contain"
-                                 />
-                                 <View style={{ flex: 1, marginRight: 8 }}>
-                                   <Text style={styles.fileNameText} numberOfLines={1}>{fileName}</Text>
-                                 </View>
-                                 <TouchableOpacity 
-                                   style={{ paddingHorizontal: 8, paddingVertical: 4 }}
-                                   onPress={() => {
-                                     const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
-                                     Linking.openURL(`${baseUrl}/api/public/download?path=${file}&title=${encodeURIComponent(item.title)}`);
-                                   }}
-                                 >
-                                   <Text style={{ fontSize: 12, fontWeight: '600', color: '#116E63' }}>Unduh</Text>
-                                 </TouchableOpacity>
-                               </View>
-                             );
+                            let iconSource = require('../assets/other.png');
+                            if (isPdf) iconSource = require('../assets/pdf.png');
+                            else if (isDocx) iconSource = require('../assets/doc.png');
+                            else if (isXls) iconSource = require('../assets/xls.png');
+                            else if (isPpt) iconSource = require('../assets/ppt.png');
+
+                            return (
+                              <View key={idx} style={styles.fileItemRow}>
+                                <Image
+                                  source={iconSource}
+                                  style={styles.fileIcon}
+                                  resizeMode="contain"
+                                />
+                                <View style={{ flex: 1, marginRight: 8 }}>
+                                  <AppText style={styles.fileNameText} numberOfLines={1}>{fileName}</AppText>
+                                </View>
+                                <TouchableOpacity
+                                  style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+                                  onPress={() => {
+                                    const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+                                    Linking.openURL(`${baseUrl}/api/public/download?path=${file}&title=${encodeURIComponent(item.title)}`);
+                                  }}
+                                >
+                                  <AppText style={{ fontSize: 12, fontWeight: '600', color: '#116E63' }}>Unduh</AppText>
+                                </TouchableOpacity>
+                              </View>
+                            );
                           })}
                         </View>
                       ) : null}
@@ -551,28 +552,28 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                   </View>
                 ))
               ) : (
-                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Belum ada materi dibagikan</Text>
+                <AppText style={{ textAlign: 'center', color: '#9CA3AF', marginVertical: 20 }}>Belum ada materi dibagikan</AppText>
               )}
             </View>
           )}
-          
-        {/* Bottom spacing */}
+
+          {/* Bottom spacing */}
           <View style={{ height: 24 }} />
         </View>
       </ScrollView>
 
       {/* MEETING MODAL POPUP (CUSTOM ANIMATED FOR SMOOTH BLUR) */}
       {modalVisible && (
-        <Animated.View 
+        <Animated.View
           style={[
-            StyleSheet.absoluteFill, 
+            StyleSheet.absoluteFill,
             { opacity: fadeAnim }
           ]}
         >
           <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
-            <TouchableOpacity 
-              style={styles.modalOverlay} 
-              activeOpacity={1} 
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
               onPress={closeMeetingModal}
             >
               <TouchableOpacity activeOpacity={1} style={isRegistered ? styles.modalTokenContent : styles.modalContentSmall}>
@@ -581,24 +582,24 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                     <TouchableOpacity style={styles.modalCloseBtn} onPress={closeMeetingModal} activeOpacity={0.8}>
                       <CloseIcon />
                     </TouchableOpacity>
-                    <Text style={styles.modalTokenMessage}>Masukkan token untuk melanjutkan</Text>
-                    <TextInput 
-                      style={styles.modalInput} 
+                    <AppText style={styles.modalTokenMessage}>Masukkan token untuk melanjutkan</AppText>
+                    <TextInput
+                      style={styles.modalInput}
                       value={enrollToken}
                       onChangeText={setEnrollToken}
                       placeholder="Masukkan Token..."
                       placeholderTextColor="#9CA3AF"
                       autoCapitalize="characters"
                     />
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={[styles.modalDaftarButton, isEnrolling && { opacity: 0.7 }]}
                       activeOpacity={0.8}
                       onPress={handleEnroll}
                       disabled={isEnrolling}
                     >
-                      <Text style={styles.modalDaftarText}>
+                      <AppText style={styles.modalDaftarText}>
                         {isEnrolling ? 'Memproses...' : 'Bergabung'}
-                      </Text>
+                      </AppText>
                     </TouchableOpacity>
                   </>
                 ) : (
@@ -606,10 +607,10 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                     <TouchableOpacity style={styles.modalCloseBtn} onPress={closeMeetingModal} activeOpacity={0.8}>
                       <CloseIcon />
                     </TouchableOpacity>
-                    <Text style={styles.modalMessage}>
+                    <AppText style={styles.modalMessage}>
                       Silahkan daftar untuk{'\n'}mengakses fitur
-                    </Text>
-                    <TouchableOpacity 
+                    </AppText>
+                    <TouchableOpacity
                       style={styles.modalDaftarButton}
                       activeOpacity={0.8}
                       onPress={() => {
@@ -617,7 +618,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                         navigation.navigate('Register');
                       }}
                     >
-                      <Text style={styles.modalDaftarText}>Daftar</Text>
+                      <AppText style={styles.modalDaftarText}>Daftar</AppText>
                     </TouchableOpacity>
                   </>
                 )}
@@ -690,7 +691,7 @@ const styles = StyleSheet.create({
   },
   patternSpacer: {
     height: 35, // Spacer to expose the background pattern before the content card starts
-    backgroundColor: 'transparent', 
+    backgroundColor: 'transparent',
   },
   contentContainer: {
     paddingHorizontal: 24,
@@ -709,7 +710,7 @@ const styles = StyleSheet.create({
   },
   contentLecturer: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#909090',
     marginBottom: 16,
   },
   descriptionText: {
