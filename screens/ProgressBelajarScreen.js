@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppText from '../components/AppText';
 import {
   View,
-
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   StatusBar,
   Image,
-  Modal
+  Modal,
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { API_BASE_URL } from '../config/api';
 
 const BackIcon = () => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -61,62 +63,74 @@ const ProgressCard = ({ item, onPress }) => (
         <AppText style={styles.subtitleText}>{item.classInfo} - {item.major}</AppText>
       </View>
       <View style={styles.progressColumn}>
-        <LinearProgress label="Absensi" current="5" total="8" progress={62.5} color="#1D4ED8" />
-        <LinearProgress label="Tugas" current="5" total="8" progress={62.5} color="#1D4ED8" />
+        <LinearProgress 
+          label="Absensi" 
+          current={item.absensi_current || 0} 
+          total={item.absensi_total || 0} 
+          progress={item.absensi_total ? Math.round(((item.absensi_current || 0)/(item.absensi_total || 1)) * 100) : 0} 
+          color="#1D4ED8" 
+        />
+        <LinearProgress 
+          label="Tugas" 
+          current={item.tugas_current || 0} 
+          total={item.tugas_total || 0} 
+          progress={item.tugas_total ? Math.round(((item.tugas_current || 0)/(item.tugas_total || 1)) * 100) : 0} 
+          color="#1D4ED8" 
+        />
       </View>
     </View>
   </TouchableOpacity>
 );
 
-export default function ProgressBelajarScreen() {
+export default function ProgressBelajarScreen({ route }) {
   const navigation = useNavigation();
+  const token = route?.params?.token || null;
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedPeriode, setSelectedPeriode] = useState('2024 Ganjil');
+  const [selectedPeriode, setSelectedPeriode] = useState(new Date().getFullYear().toString());
 
-  const periodes = ['2024 Ganjil', '2024 Genap', '2023 Ganjil', '2023 Genap'];
+  const [progressData, setProgressData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [periodes, setPeriodes] = useState([new Date().getFullYear().toString()]);
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      setIsLoading(true);
+      try {
+        const baseUrl = Platform.OS === 'android' ? API_BASE_URL : 'http://localhost:8000';
+        const response = await fetch(`${baseUrl}/api/mahasiswa/progress-belajar`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const json = await response.json();
+        if (json.status === 'success') {
+          setProgressData(json.data || []);
+          const uniquePeriodes = [...new Set((json.data || []).map(item => item.periode))].filter(Boolean);
+          if (uniquePeriodes.length > 0) {
+            setPeriodes(uniquePeriodes);
+            if (!uniquePeriodes.includes(selectedPeriode)) {
+                setSelectedPeriode(uniquePeriodes[0]);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Fetch Progress Error: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (token) {
+      fetchProgress();
+    }
+  }, [token]);
 
   const handleSelectPeriode = (periode) => {
     setSelectedPeriode(periode);
     setModalVisible(false);
   };
 
-  const progressData = [
-    {
-      id: '1',
-      title: 'Pemprograman Web + Praktikum',
-      classInfo: 'Kar A',
-      major: 'Teknik Informatika',
-      image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80'
-    },
-    {
-      id: '2',
-      title: 'Pemprograman Web + Praktikum',
-      classInfo: 'Kar A',
-      major: 'Teknik Informatika',
-      image: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=600&q=80'
-    },
-    {
-      id: '3',
-      title: 'Pemprograman Web + Praktikum',
-      classInfo: 'Kar A',
-      major: 'Teknik Informatika',
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80'
-    },
-    {
-      id: '4',
-      title: 'Pemprograman Web + Praktikum',
-      classInfo: 'Kar A',
-      major: 'Teknik Informatika',
-      image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&q=80'
-    },
-    {
-      id: '5',
-      title: 'Pemprograman Web + Praktikum',
-      classInfo: 'Kar A',
-      major: 'Teknik Informatika',
-      image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80'
-    }
-  ];
+  const filteredData = progressData.filter(d => d.periode === selectedPeriode);
 
   return (
     <View style={styles.safeArea}>
@@ -141,13 +155,19 @@ export default function ProgressBelajarScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {progressData.map(data => (
-            <ProgressCard
-              key={data.id}
-              item={data}
-              onPress={() => navigation.navigate('DetailProgressBelajar', { item: data })}
-            />
-          ))}
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#116E63" style={{ marginTop: 40 }} />
+          ) : filteredData.length === 0 ? (
+            <AppText style={{ textAlign: 'center', marginTop: 40, color: '#9CA3AF' }}>Tidak ada data progress belajar pada periode ini.</AppText>
+          ) : (
+            filteredData.map(data => (
+              <ProgressCard
+                key={data.id}
+                item={data}
+                onPress={() => navigation.navigate('DetailProgressBelajar', { item: data, token })}
+              />
+            ))
+          )}
         </ScrollView>
       </View>
 
