@@ -9,7 +9,8 @@ import {
   Image,
   Modal,
   Platform,
-  ActivityIndicator
+  ActivityIndicator,
+  TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -85,6 +86,7 @@ const ProgressCard = ({ item, onPress }) => (
 export default function ProgressBelajarScreen({ route }) {
   const navigation = useNavigation();
   const token = route?.params?.token || null;
+  const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPeriode, setSelectedPeriode] = useState(new Date().getFullYear().toString());
 
@@ -130,7 +132,12 @@ export default function ProgressBelajarScreen({ route }) {
     setModalVisible(false);
   };
 
-  const filteredData = progressData.filter(d => d.periode === selectedPeriode);
+  const filteredData = progressData.filter(d => {
+    const matchPeriode = d.periode === selectedPeriode;
+    const searchLower = searchQuery.toLowerCase();
+    const matchSearch = d.title?.toLowerCase().includes(searchLower) || d.dosen?.toLowerCase().includes(searchLower);
+    return matchPeriode && matchSearch;
+  });
 
   return (
     <View style={styles.safeArea}>
@@ -146,6 +153,16 @@ export default function ProgressBelajarScreen({ route }) {
       <View style={styles.headerLine} />
 
       <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Cari mata kuliah atau dosen..."
+            placeholderTextColor="#9CA3AF"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
         <View style={styles.filterRow}>
           <AppText style={styles.filterLabel}>Periode : </AppText>
           <TouchableOpacity style={styles.dropdownBtn} onPress={() => setModalVisible(true)}>
@@ -226,13 +243,28 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FAFAFA',
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  searchInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#111827',
   },
   filterRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   filterLabel: {
     fontSize: 14,

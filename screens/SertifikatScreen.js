@@ -11,7 +11,8 @@ import {
   Platform,
   ActivityIndicator,
   ImageBackground,
-  Text
+  Text,
+  TextInput
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
@@ -141,6 +142,7 @@ const CertificateCard = ({ item, selectedCourse, onDownload }) => {
 export default function SertifikatScreen({ route }) {
   const navigation = useNavigation();
   const token = route?.params?.token || null;
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [courseCertificates, setCourseCertificates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -377,6 +379,11 @@ export default function SertifikatScreen({ route }) {
     }
   };
 
+  const filteredCourses = courseCertificates.filter(c => {
+    const searchLower = searchQuery.toLowerCase();
+    return c.courseName?.toLowerCase().includes(searchLower) || c.dosen?.toLowerCase().includes(searchLower);
+  });
+
   return (
     <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
@@ -407,6 +414,15 @@ export default function SertifikatScreen({ route }) {
           {!selectedCourse ? (
             /* COURSE LIST VIEW */
             <>
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Cari mata kuliah atau dosen..."
+                  placeholderTextColor="#9CA3AF"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
               <View style={styles.sectionHeader}>
                 <AppText style={styles.sectionTitle}>Sertifikat dari mata kuliah yang di selesaikan</AppText>
               </View>
@@ -414,10 +430,10 @@ export default function SertifikatScreen({ route }) {
                 <ActivityIndicator size="large" color="#116E63" style={{ marginTop: 40 }} />
               ) : (
                 <>
-                  {courseCertificates.length === 0 && (
+                  {filteredCourses.length === 0 && (
                     <AppText style={styles.emptyText}>Mata kuliah tidak ditemukan.</AppText>
                   )}
-                  {courseCertificates.map((course) => (
+                  {filteredCourses.map((course) => (
                     <CourseCard
                       key={course.id}
                       course={course}
@@ -506,7 +522,20 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  searchContainer: {
+    paddingTop: 20,
+  },
+  searchInput: {
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#111827',
   },
   sectionHeader: {
     paddingVertical: 20,
