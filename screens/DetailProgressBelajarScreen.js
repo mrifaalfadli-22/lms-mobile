@@ -115,15 +115,32 @@ export default function DetailProgressBelajarScreen({ route }) {
 
       const layoutData = sertif.template?.layout_data || [];
 
+      let avgNilai = 0;
+      let predikat = 'E';
+      if (sertif.daftar_nilai && sertif.daftar_nilai.length > 0) {
+        const total = sertif.daftar_nilai.reduce((acc, curr) => acc + parseFloat(curr.nilai || 0), 0);
+        avgNilai = total / sertif.daftar_nilai.length;
+        if (avgNilai >= 85) predikat = "A";
+        else if (avgNilai >= 80) predikat = "A-";
+        else if (avgNilai >= 75) predikat = "B+";
+        else if (avgNilai >= 70) predikat = "B";
+        else if (avgNilai >= 65) predikat = "B-";
+        else if (avgNilai >= 60) predikat = "C+";
+        else if (avgNilai >= 55) predikat = "C";
+        else if (avgNilai >= 40) predikat = "D";
+      }
+      const avgStrVal = avgNilai % 1 === 0 ? avgNilai : avgNilai.toFixed(1);
+
       const getVarText = (id) => {
         switch (id) {
           case 'nama_peserta': return sertif.peserta?.mahasiswa?.nama_lengkap || '-';
           case 'npm': return sertif.peserta?.mahasiswa?.nomor_induk || '-';
           case 'nomor_sertifikat': return sertif.nomor_sertifikat || '-';
           case 'mata_kuliah_kelas': return `${course.title || ''} ${course.classInfo ? '- ' + course.classInfo : ''}`.trim() || '-';
+          case 'nama_dosen': return course.lecturer || course.dosen || '-';
           case 'tanggal_terbit': return sertif.tanggal_terbit ? new Date(sertif.tanggal_terbit).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
           case 'status_kelulusan': return 'LULUS';
-          case 'nilai_tugas': return '';
+          case 'nilai_tugas': return `Nilai: ${avgStrVal} (${predikat})`;
           default: return '';
         }
       };
@@ -154,8 +171,82 @@ export default function DetailProgressBelajarScreen({ route }) {
           });
         }
 
-        layoutData.forEach((el) => {
-          if (el.isHidden) return;
+        // Wait for all elements to be drawn, since QR code needs await
+        for (const el of layoutData) {
+          if (el.isHidden) continue;
+
+          if (el.id === 'qr_code') {
+            await new Promise((resolve) => {
+              const qr = new window.Image();
+              qr.crossOrigin = "anonymous";
+              qr.onload = () => {
+                ctx.drawImage(qr, el.x, el.y, el.width, el.height);
+                resolve();
+              };
+              qr.onerror = resolve;
+              qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=${el.width}x${el.height}&data=${sertif.nomor_sertifikat}`;
+            });
+            continue;
+          }
+
+          if (el.id === 'daftar_nilai') {
+            ctx.save();
+            ctx.fillStyle = el.color || "#000";
+            ctx.font = `bold ${el.fontSize}px '${el.fontFamily || 'Arial'}', sans-serif`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.fillText("Pertemuan", el.x, el.y);
+            ctx.fillText("Tugas", el.x + 180, el.y);
+            ctx.fillText("Nilai", el.x + el.width - 40, el.y);
+            
+            ctx.beginPath();
+            ctx.moveTo(el.x, el.y + el.fontSize + 4);
+            ctx.lineTo(el.x + el.width, el.y + el.fontSize + 4);
+            ctx.strokeStyle = el.color || "#000";
+            ctx.stroke();
+
+            ctx.font = `normal ${el.fontSize}px '${el.fontFamily || 'Arial'}', sans-serif`;
+            let currentY = el.y + el.fontSize + 12;
+            const mockData = sertif.daftar_nilai || [];
+            
+            if (mockData.length > 0) {
+              const total = mockData.reduce((sum, val) => sum + parseFloat(val.nilai || 0), 0);
+              const avg = total / mockData.length;
+              let pred = "E";
+              if (avg >= 85) pred = "A";
+              else if (avg >= 80) pred = "A-";
+              else if (avg >= 75) pred = "B+";
+              else if (avg >= 70) pred = "B";
+              else if (avg >= 65) pred = "B-";
+              else if (avg >= 60) pred = "C+";
+              else if (avg >= 55) pred = "C";
+              else if (avg >= 40) pred = "D";
+              const avgStr = avg % 1 === 0 ? avg : avg.toFixed(1);
+
+              mockData.forEach(row => {
+                ctx.fillText(`Pertemuan Ke-${row.pertemuan}`, el.x, currentY);
+                ctx.fillText(row.tugas, el.x + 180, currentY);
+                ctx.fillText(row.nilai, el.x + el.width - 40, currentY);
+                currentY += el.fontSize + 10;
+              });
+
+              ctx.beginPath();
+              ctx.moveTo(el.x, currentY);
+              ctx.lineTo(el.x + el.width, currentY);
+              ctx.stroke();
+
+              currentY += 4;
+              ctx.font = `bold ${el.fontSize}px '${el.fontFamily || 'Arial'}', sans-serif`;
+              ctx.fillText("Rata-rata Nilai Akhir", el.x + 100, currentY);
+              ctx.fillText(`${avgStr} (${pred})`, el.x + el.width - 40, currentY);
+
+            } else {
+              ctx.fillText("Tidak ada nilai tugas", el.x, currentY);
+            }
+            ctx.restore();
+            continue;
+          }
+
           ctx.save();
           const text = getVarText(el.id);
           const fontWeight = el.fontWeight === 'semibold' ? '600' : (el.fontWeight || 'normal');
@@ -192,7 +283,7 @@ export default function DetailProgressBelajarScreen({ route }) {
             ctx.fillText(line, cx, startY + i * lineH);
           });
           ctx.restore();
-        });
+        }
 
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
         const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -210,7 +301,7 @@ export default function DetailProgressBelajarScreen({ route }) {
         pdf.save(namaFile);
         return;
       }
-
+      
       const html = `
         <html>
           <head>
@@ -243,9 +334,47 @@ export default function DetailProgressBelajarScreen({ route }) {
           <body>
             <div class="container">
               ${layoutData.map(item => {
-        if (item.isHidden) return '';
-        const fontWeight = item.fontWeight === 'semibold' ? 600 : (item.fontWeight || 'normal');
-        return `
+                if (item.isHidden) return '';
+                if (item.id === 'qr_code') {
+                  return `
+                    <div class="text-element" style="left: ${item.x}px; top: ${item.y}px; width: ${item.width}px; height: ${item.height}px;">
+                      <img src="https://api.qrserver.com/v1/create-qr-code/?size=${item.width}x${item.height}&data=${sertif.nomor_sertifikat}" style="width: 100%; height: 100%;" />
+                    </div>
+                  `;
+                }
+                if (item.id === 'daftar_nilai') {
+                  return `
+                    <div class="text-element" style="left: ${item.x}px; top: ${item.y}px; width: ${item.width}px; height: ${item.height}px; align-items: flex-start; overflow: visible;">
+                      <table style="width: 100%; border-collapse: collapse; font-size: ${item.fontSize}px; color: ${item.color || '#000'}; font-family: '${item.fontFamily || 'Arial'}', sans-serif;">
+                        <thead>
+                          <tr style="border-bottom: 2px solid ${item.color || '#000'};">
+                            <th style="padding: 4px; text-align: left;">Pertemuan</th>
+                            <th style="padding: 4px; text-align: left;">Tugas</th>
+                            <th style="padding: 4px; text-align: center;">Nilai</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${sertif.daftar_nilai && sertif.daftar_nilai.length > 0 ? sertif.daftar_nilai.map(n => `
+                            <tr style="border-bottom: 1px solid #ccc;">
+                              <td style="padding: 4px;">Pertemuan Ke-${n.pertemuan}</td>
+                              <td style="padding: 4px;">${n.tugas}</td>
+                              <td style="padding: 4px; text-align: center;">${n.nilai}</td>
+                            </tr>
+                          `).join('') : `<tr><td colspan="3" style="text-align:center; padding: 4px;">Tidak ada nilai tugas</td></tr>`}
+                        </tbody>
+                        ${sertif.daftar_nilai && sertif.daftar_nilai.length > 0 ? `
+                        <tfoot>
+                          <tr style="border-top: 2px solid ${item.color || '#000'}; font-weight: bold;">
+                            <td colspan="2" style="padding: 4px; text-align: right;">Rata-rata Nilai Akhir</td>
+                            <td style="padding: 4px; text-align: center;">${avgStrVal} (${predikat})</td>
+                          </tr>
+                        </tfoot>` : ''}
+                      </table>
+                    </div>
+                  `;
+                }
+                const fontWeight = item.fontWeight === 'semibold' ? 600 : (item.fontWeight || 'normal');
+                return `
                   <div class="text-element" style="left: ${item.x}px; top: ${item.y}px; width: ${item.width}px; height: ${item.height}px;">
                     <span class="text-content" style="text-align: ${item.textAlign || 'center'}; font-size: ${item.fontSize}px; color: ${item.color || '#000'}; font-weight: ${fontWeight}; font-family: '${item.fontFamily || 'Arial'}', sans-serif;">
                       ${getVarText(item.id)}
@@ -372,15 +501,32 @@ export default function DetailProgressBelajarScreen({ route }) {
 
                 const layoutData = sertif.template?.layout_data || [];
 
+                let avgNilai = 0;
+                let predikat = 'E';
+                if (sertif.daftar_nilai && sertif.daftar_nilai.length > 0) {
+                  const total = sertif.daftar_nilai.reduce((acc, curr) => acc + parseFloat(curr.nilai || 0), 0);
+                  avgNilai = total / sertif.daftar_nilai.length;
+                  if (avgNilai >= 85) predikat = "A";
+                  else if (avgNilai >= 80) predikat = "A-";
+                  else if (avgNilai >= 75) predikat = "B+";
+                  else if (avgNilai >= 70) predikat = "B";
+                  else if (avgNilai >= 65) predikat = "B-";
+                  else if (avgNilai >= 60) predikat = "C+";
+                  else if (avgNilai >= 55) predikat = "C";
+                  else if (avgNilai >= 40) predikat = "D";
+                }
+                const avgStrVal = avgNilai % 1 === 0 ? avgNilai : avgNilai.toFixed(1);
+
                 const getVarText = (id) => {
                   switch (id) {
                     case 'nama_peserta': return sertif.peserta?.mahasiswa?.nama_lengkap || '-';
                     case 'npm': return sertif.peserta?.mahasiswa?.nomor_induk || '-';
                     case 'nomor_sertifikat': return sertif.nomor_sertifikat || '-';
                     case 'mata_kuliah_kelas': return `${course.title || ''} ${course.classInfo ? '- ' + course.classInfo : ''}`.trim() || '-';
+                    case 'nama_dosen': return course.lecturer || course.dosen || '-';
                     case 'tanggal_terbit': return sertif.tanggal_terbit ? new Date(sertif.tanggal_terbit).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
                     case 'status_kelulusan': return 'LULUS';
-                    case 'nilai_tugas': return '';
+                    case 'nilai_tugas': return `Nilai: ${avgStrVal} (${predikat})`;
                     default: return '';
                   }
                 };
@@ -394,6 +540,74 @@ export default function DetailProgressBelajarScreen({ route }) {
                     >
                       {layoutData.map((item, idx) => {
                         if (item.isHidden) return null;
+                        
+                        if (item.id === 'qr_code') {
+                           return (
+                             <Image 
+                               key={idx}
+                               source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${sertif.nomor_sertifikat}` }}
+                               style={{
+                                 position: 'absolute',
+                                 left: item.x * scale,
+                                 top: item.y * scale,
+                                 width: item.width * scale,
+                                 height: item.height * scale,
+                               }}
+                             />
+                           );
+                        }
+
+                        if (item.id === 'daftar_nilai') {
+                           return (
+                             <View key={idx} style={{
+                               position: 'absolute',
+                               left: item.x * scale,
+                               top: item.y * scale,
+                               width: item.width * scale,
+                               height: item.height * scale,
+                             }}>
+                                <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: item.color || '#000', paddingBottom: 2 }}>
+                                  <Text style={{ flex: 1.5, fontSize: item.fontSize * scale, fontWeight: 'bold', color: item.color || '#000' }}>Pertemuan</Text>
+                                  <Text style={{ flex: 2, fontSize: item.fontSize * scale, fontWeight: 'bold', color: item.color || '#000' }}>Tugas</Text>
+                                  <Text style={{ flex: 1, fontSize: item.fontSize * scale, fontWeight: 'bold', color: item.color || '#000', textAlign: 'center' }}>Nilai</Text>
+                                </View>
+                                {sertif.daftar_nilai && sertif.daftar_nilai.length > 0 ? (
+                                  <>
+                                    {sertif.daftar_nilai.map((n, i) => (
+                                      <View key={i} style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#ccc', paddingVertical: 2 }}>
+                                        <Text style={{ flex: 1.5, fontSize: item.fontSize * scale, color: item.color || '#000' }}>Pertemuan Ke-{n.pertemuan}</Text>
+                                        <Text style={{ flex: 2, fontSize: item.fontSize * scale, color: item.color || '#000' }}>{n.tugas}</Text>
+                                        <Text style={{ flex: 1, fontSize: item.fontSize * scale, color: item.color || '#000', textAlign: 'center' }}>{n.nilai}</Text>
+                                      </View>
+                                    ))}
+                                    {(() => {
+                                      const total = sertif.daftar_nilai.reduce((acc, curr) => acc + parseFloat(curr.nilai || 0), 0);
+                                      const avg = total / sertif.daftar_nilai.length;
+                                      let pred = "E";
+                                      if (avg >= 85) pred = "A";
+                                      else if (avg >= 80) pred = "A-";
+                                      else if (avg >= 75) pred = "B+";
+                                      else if (avg >= 70) pred = "B";
+                                      else if (avg >= 65) pred = "B-";
+                                      else if (avg >= 60) pred = "C+";
+                                      else if (avg >= 55) pred = "C";
+                                      else if (avg >= 40) pred = "D";
+                                      const avgStr = avg % 1 === 0 ? avg : avg.toFixed(1);
+                                      return (
+                                        <View style={{ flexDirection: 'row', borderTopWidth: 2, borderColor: item.color || '#000', paddingTop: 4, marginTop: 2 }}>
+                                          <Text style={{ flex: 3.5, fontSize: item.fontSize * scale, fontWeight: 'bold', color: item.color || '#000', textAlign: 'right', paddingRight: 8 }}>Rata-rata Nilai Akhir</Text>
+                                          <Text style={{ flex: 1, fontSize: item.fontSize * scale, fontWeight: 'bold', color: item.color || '#000', textAlign: 'center' }}>{avgStr} ({pred})</Text>
+                                        </View>
+                                      );
+                                    })()}
+                                  </>
+                                ) : (
+                                  <Text style={{ fontSize: item.fontSize * scale, color: item.color || '#000', marginTop: 4 }}>Tidak ada nilai tugas</Text>
+                                )}
+                             </View>
+                           );
+                        }
+
                         return (
                           <Text
                             key={idx}

@@ -76,15 +76,32 @@ const CertificateCard = ({ item, selectedCourse, onDownload }) => {
 
   const mhs = selectedCourse?.mahasiswaName || 'Download';
 
+  let avgNilai = 0;
+  let predikat = 'E';
+  if (item.rawSertif?.daftar_nilai && item.rawSertif.daftar_nilai.length > 0) {
+    const total = item.rawSertif.daftar_nilai.reduce((acc, curr) => acc + parseFloat(curr.nilai || 0), 0);
+    avgNilai = total / item.rawSertif.daftar_nilai.length;
+    if (avgNilai >= 85) predikat = "A";
+    else if (avgNilai >= 80) predikat = "A-";
+    else if (avgNilai >= 75) predikat = "B+";
+    else if (avgNilai >= 70) predikat = "B";
+    else if (avgNilai >= 65) predikat = "B-";
+    else if (avgNilai >= 60) predikat = "C+";
+    else if (avgNilai >= 55) predikat = "C";
+    else if (avgNilai >= 40) predikat = "D";
+  }
+  const avgStrVal = avgNilai % 1 === 0 ? avgNilai : avgNilai.toFixed(1);
+
   const getVarText = (id) => {
     switch (id) {
       case 'nama_peserta': return mhs;
-      case 'npm': return item.rawSertif?.peserta?.mahasiswa?.nomor_induk || '-';
+      case 'npm': return selectedCourse?.npm || item.rawSertif?.peserta?.mahasiswa?.nomor_induk || '-';
       case 'nomor_sertifikat': return item.rawSertif?.nomor_sertifikat || '-';
       case 'mata_kuliah_kelas': return selectedCourse?.courseName || '-';
+      case 'nama_dosen': return selectedCourse?.dosen || '-';
       case 'tanggal_terbit': return item.date;
       case 'status_kelulusan': return 'LULUS';
-      case 'nilai_tugas': return '';
+      case 'nilai_tugas': return `Nilai: ${avgStrVal} (${predikat})`;
       default: return '';
     }
   };
@@ -98,6 +115,74 @@ const CertificateCard = ({ item, selectedCourse, onDownload }) => {
       >
         {layoutData.map((el, idx) => {
           if (el.isHidden) return null;
+          
+          if (el.id === 'qr_code') {
+             return (
+               <Image 
+                 key={idx}
+                 source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${item.rawSertif?.nomor_sertifikat}` }}
+                 style={{
+                   position: 'absolute',
+                   left: el.x * scale,
+                   top: el.y * scale,
+                   width: el.width * scale,
+                   height: el.height * scale,
+                 }}
+               />
+             );
+          }
+
+          if (el.id === 'daftar_nilai') {
+             return (
+               <View key={idx} style={{
+                 position: 'absolute',
+                 left: el.x * scale,
+                 top: el.y * scale,
+                 width: el.width * scale,
+                 height: el.height * scale,
+               }}>
+                  <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: el.color || '#000', paddingBottom: 2 }}>
+                    <Text style={{ flex: 1.5, fontSize: el.fontSize * scale, fontWeight: 'bold', color: el.color || '#000' }}>Pertemuan</Text>
+                    <Text style={{ flex: 2, fontSize: el.fontSize * scale, fontWeight: 'bold', color: el.color || '#000' }}>Tugas</Text>
+                    <Text style={{ flex: 1, fontSize: el.fontSize * scale, fontWeight: 'bold', color: el.color || '#000', textAlign: 'center' }}>Nilai</Text>
+                  </View>
+                  {item.rawSertif?.daftar_nilai && item.rawSertif.daftar_nilai.length > 0 ? (
+                    <>
+                      {item.rawSertif.daftar_nilai.map((n, i) => (
+                        <View key={i} style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#ccc', paddingVertical: 2 }}>
+                                        <Text style={{ flex: 1.5, fontSize: el.fontSize * scale, color: el.color || '#000' }}>Pertemuan Ke-{n.pertemuan}</Text>
+                                        <Text style={{ flex: 2, fontSize: el.fontSize * scale, color: el.color || '#000' }}>{n.tugas}</Text>
+                                        <Text style={{ flex: 1, fontSize: el.fontSize * scale, color: el.color || '#000', textAlign: 'center' }}>{n.nilai}</Text>
+                                      </View>
+                                    ))}
+                                    {(() => {
+                                      const total = item.rawSertif.daftar_nilai.reduce((acc, curr) => acc + parseFloat(curr.nilai || 0), 0);
+                                      const avg = total / item.rawSertif.daftar_nilai.length;
+                                      let pred = "E";
+                                      if (avg >= 85) pred = "A";
+                                      else if (avg >= 80) pred = "A-";
+                                      else if (avg >= 75) pred = "B+";
+                                      else if (avg >= 70) pred = "B";
+                                      else if (avg >= 65) pred = "B-";
+                                      else if (avg >= 60) pred = "C+";
+                                      else if (avg >= 55) pred = "C";
+                                      else if (avg >= 40) pred = "D";
+                                      const avgStr = avg % 1 === 0 ? avg : avg.toFixed(1);
+                                      return (
+                                        <View style={{ flexDirection: 'row', borderTopWidth: 2, borderColor: el.color || '#000', paddingTop: 4, marginTop: 2 }}>
+                                          <Text style={{ flex: 3.5, fontSize: el.fontSize * scale, fontWeight: 'bold', color: el.color || '#000', textAlign: 'right', paddingRight: 8 }}>Rata-rata Nilai Akhir</Text>
+                                          <Text style={{ flex: 1, fontSize: el.fontSize * scale, fontWeight: 'bold', color: el.color || '#000', textAlign: 'center' }}>{avgStr} ({pred})</Text>
+                                        </View>
+                                      );
+                                    })()}
+                                  </>
+                                ) : (
+                                  <Text style={{ fontSize: el.fontSize * scale, color: el.color || '#000', marginTop: 4 }}>Tidak ada nilai tugas</Text>
+                                )}
+                             </View>
+             );
+          }
+
           return (
             <Text
               key={idx}
@@ -186,6 +271,7 @@ export default function SertifikatScreen({ route }) {
             dosen: p.jadwal?.dosen?.nama_lengkap || '-',
             nidn: p.jadwal?.dosen?.nomor_induk || '-',
             mahasiswaName: p.mahasiswa?.nama_lengkap || 'Tanpa Nama',
+            npm: p.mahasiswa?.nomor_induk || '-',
             certificates: (p.sertifikat || []).map(s => {
               const getTipeLabel = (tipe) => {
                   if (tipe === 'kelulusan') return 'Kelulusan';
@@ -235,15 +321,32 @@ export default function SertifikatScreen({ route }) {
       const getVarText = (id) => {
         switch (id) {
           case 'nama_peserta': return mhs;
-          case 'npm': return selectedCourse?.rawSertif?.peserta?.mahasiswa?.nomor_induk || '-'; // We might not have NPM, fallback to -
+          case 'npm': return selectedCourse?.npm || item.rawSertif?.peserta?.mahasiswa?.nomor_induk || '-';
           case 'nomor_sertifikat': return sertif.nomor_sertifikat || '-';
           case 'mata_kuliah_kelas': return selectedCourse?.courseName || '-';
+          case 'nama_dosen': return selectedCourse?.dosen || '-';
           case 'tanggal_terbit': return certItem.date;
           case 'status_kelulusan': return 'LULUS';
-          case 'nilai_tugas': return '';
+          case 'nilai_tugas': return `Nilai: ${avgStr} (${predikat})`;
           default: return '';
         }
       };
+
+      let avgNilai = 0;
+      let predikat = 'E';
+      if (sertif.daftar_nilai && sertif.daftar_nilai.length > 0) {
+        const total = sertif.daftar_nilai.reduce((acc, curr) => acc + parseFloat(curr.nilai || 0), 0);
+        avgNilai = total / sertif.daftar_nilai.length;
+        if (avgNilai >= 85) predikat = "A";
+        else if (avgNilai >= 80) predikat = "A-";
+        else if (avgNilai >= 75) predikat = "B+";
+        else if (avgNilai >= 70) predikat = "B";
+        else if (avgNilai >= 65) predikat = "B-";
+        else if (avgNilai >= 60) predikat = "C+";
+        else if (avgNilai >= 55) predikat = "C";
+        else if (avgNilai >= 40) predikat = "D";
+      }
+      const avgStr = avgNilai % 1 === 0 ? avgNilai : avgNilai.toFixed(1);
 
       if (Platform.OS === 'web') {
         const canvas = document.createElement('canvas');
@@ -266,8 +369,82 @@ export default function SertifikatScreen({ route }) {
           });
         }
 
-        layoutData.forEach((el) => {
-          if (el.isHidden) return;
+        // Wait for all elements to be drawn, since QR code needs await
+        for (const el of layoutData) {
+          if (el.isHidden) continue;
+
+          if (el.id === 'qr_code') {
+            await new Promise((resolve) => {
+              const qr = new window.Image();
+              qr.crossOrigin = "anonymous";
+              qr.onload = () => {
+                ctx.drawImage(qr, el.x, el.y, el.width, el.height);
+                resolve();
+              };
+              qr.onerror = resolve;
+              qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=${el.width}x${el.height}&data=${sertif.nomor_sertifikat}`;
+            });
+            continue;
+          }
+
+          if (el.id === 'daftar_nilai') {
+            ctx.save();
+            ctx.fillStyle = el.color || "#000";
+            ctx.font = `bold ${el.fontSize}px '${el.fontFamily || 'Arial'}', sans-serif`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.fillText("Pertemuan", el.x, el.y);
+            ctx.fillText("Tugas", el.x + 180, el.y);
+            ctx.fillText("Nilai", el.x + el.width - 40, el.y);
+            
+            ctx.beginPath();
+            ctx.moveTo(el.x, el.y + el.fontSize + 4);
+            ctx.lineTo(el.x + el.width, el.y + el.fontSize + 4);
+            ctx.strokeStyle = el.color || "#000";
+            ctx.stroke();
+
+            ctx.font = `normal ${el.fontSize}px '${el.fontFamily || 'Arial'}', sans-serif`;
+            let currentY = el.y + el.fontSize + 12;
+            const mockData = sertif.daftar_nilai || [];
+            
+            if (mockData.length > 0) {
+              const total = mockData.reduce((sum, val) => sum + parseFloat(val.nilai || 0), 0);
+              const avg = total / mockData.length;
+              let pred = "E";
+              if (avg >= 85) pred = "A";
+              else if (avg >= 80) pred = "A-";
+              else if (avg >= 75) pred = "B+";
+              else if (avg >= 70) pred = "B";
+              else if (avg >= 65) pred = "B-";
+              else if (avg >= 60) pred = "C+";
+              else if (avg >= 55) pred = "C";
+              else if (avg >= 40) pred = "D";
+              const avgStrObj = avg % 1 === 0 ? avg : avg.toFixed(1);
+
+              mockData.forEach(row => {
+                ctx.fillText(`Pertemuan Ke-${row.pertemuan}`, el.x, currentY);
+                ctx.fillText(row.tugas, el.x + 180, currentY);
+                ctx.fillText(row.nilai, el.x + el.width - 40, currentY);
+                currentY += el.fontSize + 10;
+              });
+
+              ctx.beginPath();
+              ctx.moveTo(el.x, currentY);
+              ctx.lineTo(el.x + el.width, currentY);
+              ctx.stroke();
+
+              currentY += 4;
+              ctx.font = `bold ${el.fontSize}px '${el.fontFamily || 'Arial'}', sans-serif`;
+              ctx.fillText("Rata-rata Nilai Akhir", el.x + 100, currentY);
+              ctx.fillText(`${avgStrObj} (${pred})`, el.x + el.width - 40, currentY);
+
+            } else {
+              ctx.fillText("Tidak ada nilai tugas", el.x, currentY);
+            }
+            ctx.restore();
+            continue;
+          }
+
           ctx.save();
           const text = getVarText(el.id);
           const fontWeight = el.fontWeight === 'semibold' ? '600' : (el.fontWeight || 'normal');
@@ -303,7 +480,7 @@ export default function SertifikatScreen({ route }) {
             ctx.fillText(line, cx, startY + i * lineH);
           });
           ctx.restore();
-        });
+        }
 
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
         const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -343,8 +520,46 @@ export default function SertifikatScreen({ route }) {
           </head>
           <body>
             <div class="container">
-              ${layoutData.map(el => {
+              ${layoutData.map((el) => {
                 if (el.isHidden) return '';
+                if (el.id === 'qr_code') {
+                  return `
+                    <div class="text-element" style="left: ${el.x}px; top: ${el.y}px; width: ${el.width}px; height: ${el.height}px;">
+                      <img src="https://api.qrserver.com/v1/create-qr-code/?size=${el.width}x${el.height}&data=${sertif.nomor_sertifikat}" style="width: 100%; height: 100%;" />
+                    </div>
+                  `;
+                }
+                if (el.id === 'daftar_nilai') {
+                  return `
+                    <div class="text-element" style="left: ${el.x}px; top: ${el.y}px; width: ${el.width}px; height: ${el.height}px; align-items: flex-start; overflow: visible;">
+                      <table style="width: 100%; border-collapse: collapse; font-size: ${el.fontSize}px; color: ${el.color || '#000'}; font-family: '${el.fontFamily || 'Arial'}', sans-serif;">
+                        <thead>
+                          <tr style="border-bottom: 2px solid ${el.color || '#000'};">
+                            <th style="padding: 4px; text-align: left;">Pertemuan</th>
+                            <th style="padding: 4px; text-align: left;">Tugas</th>
+                            <th style="padding: 4px; text-align: center;">Nilai</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${sertif.daftar_nilai && sertif.daftar_nilai.length > 0 ? sertif.daftar_nilai.map(n => `
+                            <tr style="border-bottom: 1px solid #ccc;">
+                              <td style="padding: 4px;">Pertemuan Ke-${n.pertemuan}</td>
+                              <td style="padding: 4px;">${n.tugas}</td>
+                              <td style="padding: 4px; text-align: center;">${n.nilai}</td>
+                            </tr>
+                          `).join('') : `<tr><td colspan="3" style="text-align:center; padding: 4px;">Tidak ada nilai tugas</td></tr>`}
+                        </tbody>
+                        ${sertif.daftar_nilai && sertif.daftar_nilai.length > 0 ? `
+                        <tfoot>
+                          <tr style="border-top: 2px solid ${el.color || '#000'}; font-weight: bold;">
+                            <td colspan="2" style="padding: 4px; text-align: right;">Rata-rata Nilai Akhir</td>
+                            <td style="padding: 4px; text-align: center;">${avgStr} (${predikat})</td>
+                          </tr>
+                        </tfoot>` : ''}
+                      </table>
+                    </div>
+                  `;
+                }
                 const fontWeight = el.fontWeight === 'semibold' ? '600' : (el.fontWeight || 'normal');
                 return `
                   <div class="text-element" style="left: ${el.x}px; top: ${el.y}px; width: ${el.width}px; height: ${el.height}px;">
