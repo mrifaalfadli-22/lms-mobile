@@ -137,7 +137,9 @@ export default function MateriScreen({ route }) {
         const json = await response.json();
         if (json.status === 'success') {
           // If registered, show 'diambil'. Else show 'tersedia'.
-          setCourses(isRegistered ? (json.data.diambil || []) : (json.data.tersedia || []));
+          const rawCourses = isRegistered ? (json.data.diambil || []) : (json.data.tersedia || []);
+          const coursesWithMaterials = rawCourses.filter(c => c.has_materi);
+          setCourses(coursesWithMaterials);
         }
       } catch (error) {
         console.error("Fetch Courses Error: ", error);

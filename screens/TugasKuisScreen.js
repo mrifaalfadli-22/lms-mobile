@@ -123,7 +123,9 @@ export default function TugasKuisScreen({ route }) {
         const response = await fetch(API_URL, { headers });
         const json = await response.json();
         if (json.status === 'success') {
-          setCourses(isRegistered ? (json.data.diambil || []) : (json.data.tersedia || []));
+          const rawCourses = isRegistered ? (json.data.diambil || []) : (json.data.tersedia || []);
+          const coursesWithTasks = rawCourses.filter(c => c.has_tugas);
+          setCourses(coursesWithTasks);
         }
       } catch (error) {
         console.error("Fetch Courses Error: ", error);
