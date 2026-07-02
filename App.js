@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootNavigator from './navigation/RootNavigator';
 import {
@@ -29,9 +30,20 @@ export default function App() {
     );
   }
 
+  const prefix = Linking.createURL('/');
+  
+  const linking = {
+    prefixes: [prefix, 'lms://', 'exp://127.0.0.1:8081/--/'],
+    config: {
+      screens: {
+        ResetPassword: 'reset-password',
+      },
+    },
+  };
+
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
+      <NavigationContainer linking={linking}>
         <RootNavigator />
       </NavigationContainer>
     </SafeAreaProvider>

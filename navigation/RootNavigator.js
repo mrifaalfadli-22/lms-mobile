@@ -3,6 +3,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import LupaPasswordScreen from '../screens/LupaPasswordScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import ForumDiskusiScreen from '../screens/ForumDiskusiScreen';
 import TugasKuisScreen from '../screens/TugasKuisScreen';
 import MateriScreen from '../screens/MateriScreen';
@@ -31,6 +33,8 @@ export default function RootNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="LupaPassword" component={LupaPasswordScreen} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="Main" component={MainTabNavigator} />
       <Stack.Screen name="ForumDiskusi" component={ForumDiskusiScreen} />
       <Stack.Screen name="TugasKuis" component={TugasKuisScreen} />

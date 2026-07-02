@@ -203,7 +203,7 @@ export default function LoginScreen({ navigation }) {
             </View>
 
             {/* Lupa Password */}
-            <TouchableOpacity style={styles.forgotBtn} onPress={() => { }}>
+            <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('LupaPassword')}>
               <AppText style={styles.forgotText}>Lupa Password</AppText>
             </TouchableOpacity>
 

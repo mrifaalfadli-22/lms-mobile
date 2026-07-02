@@ -3,6 +3,7 @@
     "name": "lms-frontend-mobile",
     "slug": "lms-frontend-mobile",
     "version": "1.0.0",
+    "scheme": "lms",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
