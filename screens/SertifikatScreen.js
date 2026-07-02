@@ -12,13 +12,15 @@ import {
   ActivityIndicator,
   ImageBackground,
   Text,
-  TextInput
+  TextInput,
+  Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 // import { jsPDF } from 'jspdf';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
 import api, { API_BASE_URL } from '../config/api';
 
 const { width } = Dimensions.get('window');
@@ -316,7 +318,8 @@ export default function SertifikatScreen({ route }) {
       const tipeLabel = getTipeLabel(sertif.tipe_sertifikat);
       const mk = selectedCourse?.mkOnly || '';
       const mhs = selectedCourse?.mahasiswaName || 'Download';
-      const namaFile = `Sertifikat ${tipeLabel} - ${mk} - ${mhs}.pdf`;
+      const namaFileBase = `Sertifikat ${tipeLabel} - ${mk} - ${mhs}`;
+      const namaFile = `${namaFileBase}.pdf`;
 
       const getVarText = (id) => {
         switch (id) {
@@ -348,147 +351,7 @@ export default function SertifikatScreen({ route }) {
       }
       const avgStr = avgNilai % 1 === 0 ? avgNilai : avgNilai.toFixed(1);
 
-      if (Platform.OS === 'web') {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1122;
-        canvas.height = 794;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        if (bgUrl) {
-          await new Promise((resolve, reject) => {
-            const img = new window.Image();
-            img.crossOrigin = 'Anonymous';
-            img.onload = () => {
-              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-              resolve();
-            };
-            img.onerror = () => reject(new Error('Gagal memuat background'));
-            img.src = bgUrl;
-          });
-        }
-
-        // Wait for all elements to be drawn, since QR code needs await
-        for (const el of layoutData) {
-          if (el.isHidden) continue;
-
-          if (el.id === 'qr_code') {
-            await new Promise((resolve) => {
-              const qr = new window.Image();
-              qr.crossOrigin = "anonymous";
-              qr.onload = () => {
-                ctx.drawImage(qr, el.x, el.y, el.width, el.height);
-                resolve();
-              };
-              qr.onerror = resolve;
-              qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=${el.width}x${el.height}&data=${sertif.nomor_sertifikat}`;
-            });
-            continue;
-          }
-
-          if (el.id === 'daftar_nilai') {
-            ctx.save();
-            ctx.fillStyle = el.color || "#000";
-            ctx.font = `bold ${el.fontSize}px '${el.fontFamily || 'Arial'}', sans-serif`;
-            ctx.textAlign = "left";
-            ctx.textBaseline = "top";
-            ctx.fillText("Pertemuan", el.x, el.y);
-            ctx.fillText("Tugas", el.x + 180, el.y);
-            ctx.fillText("Nilai", el.x + el.width - 40, el.y);
-
-            ctx.beginPath();
-            ctx.moveTo(el.x, el.y + el.fontSize + 4);
-            ctx.lineTo(el.x + el.width, el.y + el.fontSize + 4);
-            ctx.strokeStyle = el.color || "#000";
-            ctx.stroke();
-
-            ctx.font = `normal ${el.fontSize}px '${el.fontFamily || 'Arial'}', sans-serif`;
-            let currentY = el.y + el.fontSize + 12;
-            const mockData = sertif.daftar_nilai || [];
-
-            if (mockData.length > 0) {
-              const total = mockData.reduce((sum, val) => sum + parseFloat(val.nilai || 0), 0);
-              const avg = total / mockData.length;
-              let pred = "E";
-              if (avg >= 85) pred = "A";
-              else if (avg >= 80) pred = "A-";
-              else if (avg >= 75) pred = "B+";
-              else if (avg >= 70) pred = "B";
-              else if (avg >= 65) pred = "B-";
-              else if (avg >= 60) pred = "C+";
-              else if (avg >= 55) pred = "C";
-              else if (avg >= 40) pred = "D";
-              const avgStrObj = avg % 1 === 0 ? avg : avg.toFixed(1);
-
-              mockData.forEach(row => {
-                ctx.fillText(`Pertemuan Ke-${row.pertemuan}`, el.x, currentY);
-                ctx.fillText(row.tugas, el.x + 180, currentY);
-                ctx.fillText(row.nilai, el.x + el.width - 40, currentY);
-                currentY += el.fontSize + 10;
-              });
-
-              ctx.beginPath();
-              ctx.moveTo(el.x, currentY);
-              ctx.lineTo(el.x + el.width, currentY);
-              ctx.stroke();
-
-              currentY += 4;
-              ctx.font = `bold ${el.fontSize}px '${el.fontFamily || 'Arial'}', sans-serif`;
-              ctx.fillText("Rata-rata Nilai Akhir", el.x + 100, currentY);
-              ctx.fillText(`${avgStrObj} (${pred})`, el.x + el.width - 40, currentY);
-
-            } else {
-              ctx.fillText("Tidak ada nilai tugas", el.x, currentY);
-            }
-            ctx.restore();
-            continue;
-          }
-
-          ctx.save();
-          const text = getVarText(el.id);
-          const fontWeight = el.fontWeight === 'semibold' ? '600' : (el.fontWeight || 'normal');
-          const fontFamily = el.fontFamily || 'Arial';
-          ctx.font = `${fontWeight} ${el.fontSize}px '${fontFamily}', sans-serif`;
-          ctx.fillStyle = el.color || '#000000';
-          ctx.textAlign = el.textAlign || 'center';
-          ctx.textBaseline = 'middle';
-
-          let cx = el.x + el.width / 2;
-          if (el.textAlign === 'left') cx = el.x;
-          else if (el.textAlign === 'right') cx = el.x + el.width;
-          const cy = el.y + el.height / 2;
-
-          const words = text.toString().split(" ");
-          const lines = [];
-          let current = "";
-          words.forEach((word) => {
-            const test = current ? `${current} ${word}` : word;
-            if (ctx.measureText(test).width > el.width && current) {
-              lines.push(current);
-              current = word;
-            } else {
-              current = test;
-            }
-          });
-          if (current) lines.push(current);
-
-          const lineH = el.fontSize * 1.3;
-          const startY = cy - ((lines.length - 1) * lineH) / 2;
-
-          lines.forEach((line, i) => {
-            ctx.fillText(line, cx, startY + i * lineH);
-          });
-          ctx.restore();
-        }
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const { jsPDF } = await import('jspdf');
-        const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-        pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
-        pdf.save(namaFile);
-        return;
-      }
 
       const html = `
         <html>
@@ -575,9 +438,50 @@ export default function SertifikatScreen({ route }) {
         </html>
       `;
 
-      const { uri } = await Print.printToFileAsync({ html, width: 1122, height: 794, base64: false });
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri);
+      if (Platform.OS === 'web') {
+        await Print.printAsync({ html });
+      } else {
+        const { base64 } = await Print.printToFileAsync({
+          html,
+          width: 842,
+          height: 595,
+          base64: true
+        });
+
+        try {
+          if (Platform.OS === 'android') {
+            const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+            if (permissions.granted) {
+              const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
+                permissions.directoryUri,
+                namaFileBase,
+                'application/pdf'
+              );
+              await FileSystem.writeAsStringAsync(fileUri, base64, {
+                encoding: FileSystem.EncodingType.Base64
+              });
+              Alert.alert('Sukses', 'Sertifikat berhasil disimpan ke perangkat.');
+            }
+          } else {
+            const fileUri = FileSystem.documentDirectory + namaFile;
+            await FileSystem.writeAsStringAsync(fileUri, base64, {
+              encoding: FileSystem.EncodingType.Base64
+            });
+
+            if (await Sharing.isAvailableAsync()) {
+              await Sharing.shareAsync(fileUri, {
+                UTI: 'com.adobe.pdf',
+                mimeType: 'application/pdf',
+                dialogTitle: 'Unduh Sertifikat'
+              });
+            } else {
+              Alert.alert('Gagal', 'Fitur berbagi tidak tersedia di perangkat ini');
+            }
+          }
+        } catch (downloadError) {
+          console.error("Download error:", downloadError);
+          Alert.alert('Gagal', 'Gagal menyimpan sertifikat.');
+        }
       }
     } catch (err) {
       console.error(err);
