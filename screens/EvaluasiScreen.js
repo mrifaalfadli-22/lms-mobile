@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
-  TextInput
+  TextInput,
+  ActivityIndicator,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { API_BASE_URL } from '../config/api';
 
 const BackIcon = () => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -46,20 +49,56 @@ const EvaluasiCard = ({ item, onPress }) => (
 export default function EvaluasiScreen() {
   const navigation = useNavigation();
   const route = useRoute();
+  const token = route?.params?.token || null;
+  const user = route?.params?.user || null;
+  const isRegistered = route?.params?.isRegistered || false;
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [evaluasiData, setEvaluasiData] = useState([]);
 
-  const [evaluasiData, setEvaluasiData] = useState([
-    { id: '1', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
-    { id: '2', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
-    { id: '3', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
-    { id: '4', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
-    { id: '5', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
-    { id: '6', lecturer: 'Yulianto S.Kom., M.kom', course: 'Pemprograman Web + Praktikum', status: 'Belum mengisi' },
-  ]);
+  const fetchNilai = async () => {
+    try {
+      const API_URL = Platform.OS === 'android'
+        ? `${API_BASE_URL}/api/mahasiswa/nilai`
+        : `http://localhost:8000/api/mahasiswa/nilai`;
+
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const json = await response.json();
+      if (json.status === 'success') {
+        const data = json.data || [];
+        setEvaluasiData(data.map(item => ({
+          ...item,
+          status: item.needsEval ? 'Belum mengisi' : 'Selesai',
+          score: item.rataRata
+        })));
+      }
+    } catch (error) {
+      console.error("Fetch Nilai Error: ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // We can remove the route param listener because we will use a direct callback
-  }, []);
+    if (token) {
+      fetchNilai();
+    } else {
+      setLoading(false);
+    }
+  }, [token, route.params?.refresh]);
+
+  const filteredData = evaluasiData.filter(item => 
+    item.course?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.lecturer?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <View style={styles.safeArea}>
@@ -89,20 +128,32 @@ export default function EvaluasiScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {evaluasiData.map(data => (
-            <EvaluasiCard
-              key={data.id}
-              item={data}
-              onPress={() => navigation.navigate('DetailEvaluasi', {
-                item: data,
-                onComplete: (completedId, score) => {
-                  setEvaluasiData(prev => prev.map(i => i.id === completedId ? { ...i, status: 'Selesai', score } : i));
-                }
-              })}
-            />
-          ))}
-        </ScrollView>
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 40 }}>
+            <ActivityIndicator size="large" color="#116E63" />
+          </View>
+        ) : (
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {filteredData.length === 0 ? (
+              <View style={{ alignItems: 'center', marginTop: 40 }}>
+                <AppText style={{ color: '#6B7280' }}>Tidak ada data evaluasi.</AppText>
+              </View>
+            ) : (
+              filteredData.map(data => (
+                <EvaluasiCard
+                  key={data.id}
+                  item={data}
+                  onPress={() => navigation.navigate('DetailEvaluasi', {
+                    item: data,
+                    token: token,
+                    user: user,
+                    isRegistered: isRegistered
+                  })}
+                />
+              ))
+            )}
+          </ScrollView>
+        )}
       </View>
     </View>
   );

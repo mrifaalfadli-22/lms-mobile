@@ -61,7 +61,7 @@ const TableRow = ({ item, index, onEvalPress }) => {
 export default function LihatNilaiScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { token } = route.params || {};
+  const { token, user, isRegistered } = route.params || {};
 
   const [loading, setLoading] = useState(true);
   const [allNilaiData, setAllNilaiData] = useState([]);
@@ -105,7 +105,7 @@ export default function LihatNilaiScreen() {
     } else {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, route.params?.refresh]);
 
   const filteredData = selectedPeriod === 'Semua' 
     ? allNilaiData 
@@ -232,7 +232,7 @@ export default function LihatNilaiScreen() {
                   key={item.id}
                   item={item}
                   index={index}
-                  onEvalPress={() => navigation.navigate('Evaluasi')}
+                  onEvalPress={() => navigation.navigate('Evaluasi', { token, user, isRegistered })}
                 />
               ))
             )}

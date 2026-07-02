@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppText from '../components/AppText';
 import {
   View,
-
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   StatusBar,
   TextInput,
-  Modal
+  Modal,
+  Platform,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { API_BASE_URL } from '../config/api';
 
 const BackIcon = () => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -32,33 +35,78 @@ const RadioUnchecked = () => (
   </Svg>
 );
 
-const PAGE_1_QUESTIONS = [
-  { id: 'q1', text: 'Pengajar menyampaikan materi dengan jelas dan mudah dipahami.' },
-  { id: 'q2', text: 'Pengajar menguasai materi kuliah dengan sangat baik.' },
-  { id: 'q3', text: 'Pengajar memberikan contoh relevan saat menjelaskan konsep.' },
-  { id: 'q4', text: 'Pengajar merespon pertanyaan mahasiswa dengan tanggap.' },
-  { id: 'q5', text: 'Suasana kelas interaktif dan mendorong partisipasi aktif.' },
-];
-
-const PAGE_2_QUESTIONS = [
-  { id: 'q6', text: 'Metode pengajaran yang digunakan menarik dan tidak membosankan.' },
-  { id: 'q7', text: 'Tugas dan kuis yang diberikan sesuai dengan materi yang diajarkan.' },
-  { id: 'q8', text: 'Pengajar memberikan umpan balik (feedback) yang membangun.' },
-  { id: 'q9', text: 'Pengajar selalu hadir tepat waktu.' },
-];
-
 export default function DetailEvaluasiScreen({ route }) {
   const navigation = useNavigation();
   const item = route?.params?.item;
+  const token = route?.params?.token;
+  const user = route?.params?.user;
+  const isRegistered = route?.params?.isRegistered;
 
-  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [pages, setPages] = useState([]);
+  const [pageIndex, setPageIndex] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [feedback, setFeedback] = useState('');
   const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const API_URL = Platform.OS === 'android'
+          ? `${API_BASE_URL}/api/pertanyaan-evaluasi/aktif`
+          : `http://localhost:8000/api/pertanyaan-evaluasi/aktif`;
+
+        const response = await fetch(API_URL, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const json = await response.json();
+        if (json.status === 'success') {
+          const grouped = json.data || {};
+
+          // Split into pages of max 5
+          const newPages = [];
+          Object.keys(grouped).forEach(cat => {
+             const catQuestions = grouped[cat] || [];
+             for (let i = 0; i < catQuestions.length; i += 5) {
+                newPages.push({
+                   kategori: cat,
+                   questions: catQuestions.slice(i, i + 5)
+                });
+             }
+          });
+
+          setPages(newPages);
+        }
+      } catch (error) {
+        console.error("Fetch Questions Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (token) {
+        fetchQuestions();
+    } else {
+        setLoading(false);
+    }
+  }, [token]);
 
   const validatePage = () => {
-    const currentQuestions = page === 1 ? PAGE_1_QUESTIONS : PAGE_2_QUESTIONS;
-    const isAllAnswered = currentQuestions.every(q => answers[q.id] !== undefined);
+    if (pages.length === 0) return true;
+    
+    const currentQuestions = pages[pageIndex].questions;
+    const isAllAnswered = currentQuestions.every(q => {
+        if (q.tipe_pertanyaan === 'teks') {
+            return answers[q.id_pertanyaan] && answers[q.id_pertanyaan].trim() !== '';
+        }
+        return answers[q.id_pertanyaan] !== undefined;
+    });
 
     if (!isAllAnswered) {
       setErrorModalVisible(true);
@@ -71,40 +119,100 @@ export default function DetailEvaluasiScreen({ route }) {
     setAnswers(prev => ({ ...prev, [qId]: value }));
   };
 
-  const handleFinish = () => {
-    // Generate a dummy score between 80 and 100 based on answers
-    const totalSelected = Object.values(answers).reduce((acc, val) => acc + val, 0);
-    const maxScore = 45; // 9 questions * 5 max
-    const percentage = totalSelected / maxScore;
-    let finalScore = Math.floor(70 + (percentage * 30));
-    if (isNaN(finalScore)) finalScore = 95; // default if skipped
+  const handleTextChange = (qId, text) => {
+    setAnswers(prev => ({ ...prev, [qId]: text }));
+  }
 
-    // Pass data back via callback and pop screen
-    if (route.params?.onComplete) {
-      route.params.onComplete(item?.id, finalScore);
+  const handleFinish = async () => {
+    setSubmitting(true);
+    
+    // Format answers array
+    const formattedAnswers = Object.keys(answers).map(id => {
+      const value = answers[id];
+      if (typeof value === 'number') {
+         return { id_pertanyaan: id, skor: value };
+      } else {
+         return { id_pertanyaan: id, jawaban_teks: value };
+      }
+    });
+
+    try {
+      const API_URL = Platform.OS === 'android'
+        ? `${API_BASE_URL}/api/jawaban-evaluasi`
+        : `http://localhost:8000/api/jawaban-evaluasi`;
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id_jadwal: item.id,
+          jawaban: formattedAnswers
+        })
+      });
+
+      const json = await response.json();
+      if (json.status === 'success' || json.status === 201) {
+        // Reset navigation stack to [Main, LihatNilai] so that back button goes to Beranda
+        navigation.reset({
+          index: 1,
+          routes: [
+            { name: 'Main', params: { user, isRegistered, token } },
+            { name: 'LihatNilai', params: { token, user, isRegistered, refresh: Date.now() } }
+          ],
+        });
+      } else {
+        Alert.alert('Gagal', json.message || 'Terjadi kesalahan saat menyimpan evaluasi.');
+      }
+    } catch (error) {
+      console.error("Submit Evaluation Error:", error);
+      Alert.alert('Gagal', 'Terjadi kesalahan jaringan.');
+    } finally {
+      setSubmitting(false);
     }
-    navigation.goBack();
   };
 
-  const renderQuestion = (q) => (
-    <View key={q.id} style={styles.questionCard}>
-      <AppText style={styles.questionText}>{q.text}</AppText>
-      <View style={styles.ratingRow}>
-        <AppText style={styles.ratingLabelLeft}>Tidak{'\n'}puas</AppText>
-        {[1, 2, 3, 4, 5].map((val) => (
-          <TouchableOpacity
-            key={val}
-            activeOpacity={0.8}
-            onPress={() => handleSelect(q.id, val)}
-            style={styles.radioBtn}
-          >
-            {answers[q.id] === val ? <RadioChecked /> : <RadioUnchecked />}
-          </TouchableOpacity>
-        ))}
-        <AppText style={styles.ratingLabelRight}>Sangat{'\n'}Puas</AppText>
-      </View>
-    </View>
-  );
+  const renderQuestion = (q) => {
+    if (q.tipe_pertanyaan === 'teks') {
+        return (
+            <View key={q.id_pertanyaan} style={styles.questionCard}>
+              <AppText style={styles.questionText}>{q.teks_pertanyaan}</AppText>
+              <TextInput
+                style={styles.feedbackInput}
+                placeholder="Tuliskan jawaban Anda di sini..."
+                placeholderTextColor="#9CA3AF"
+                multiline
+                textAlignVertical="top"
+                value={answers[q.id_pertanyaan] || ''}
+                onChangeText={(text) => handleTextChange(q.id_pertanyaan, text)}
+              />
+            </View>
+        );
+    }
+    
+    return (
+        <View key={q.id_pertanyaan} style={styles.questionCard}>
+          <AppText style={styles.questionText}>{q.teks_pertanyaan}</AppText>
+          <View style={styles.ratingRow}>
+            <AppText style={styles.ratingLabelLeft}>Tidak{'\n'}puas</AppText>
+            {[1, 2, 3, 4, 5].map((val) => (
+              <TouchableOpacity
+                key={val}
+                activeOpacity={0.8}
+                onPress={() => handleSelect(q.id_pertanyaan, val)}
+                style={styles.radioBtn}
+              >
+                {answers[q.id_pertanyaan] === val ? <RadioChecked /> : <RadioUnchecked />}
+              </TouchableOpacity>
+            ))}
+            <AppText style={styles.ratingLabelRight}>Sangat{'\n'}Puas</AppText>
+          </View>
+        </View>
+    );
+  };
 
   return (
     <View style={styles.safeArea}>
@@ -121,78 +229,73 @@ export default function DetailEvaluasiScreen({ route }) {
       </View>
       <View style={styles.headerLine} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-        {/* Title & Progress */}
-        <View style={styles.titleContainer}>
-          <AppText style={styles.pageTitle}>Evaluasi pengajar</AppText>
-          <AppText style={styles.pageSubtitle}>Isi form di bawah untuk dapat melihat nilai</AppText>
-          <AppText style={styles.pageIndicator}>{page} dari 2</AppText>
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#116E63" />
         </View>
+      ) : pages.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <AppText style={{ color: '#6B7280' }}>Tidak ada pertanyaan evaluasi.</AppText>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* Questions List */}
-        {page === 1 ? (
-          <View style={styles.questionsContainer}>
-            {PAGE_1_QUESTIONS.map(renderQuestion)}
-          </View>
-        ) : (
-          <View style={styles.questionsContainer}>
-            {PAGE_2_QUESTIONS.map(renderQuestion)}
-
-            {/* Feedback Input */}
-            <View style={styles.questionCard}>
-              <AppText style={styles.questionText}>Kesan, pesan, atau kritik</AppText>
-              <TextInput
-                style={styles.feedbackInput}
-                placeholder="Tuliskan pendapat Anda di sini..."
-                placeholderTextColor="#9CA3AF"
-                multiline
-                textAlignVertical="top"
-                value={feedback}
-                onChangeText={setFeedback}
-              />
+            {/* Title & Progress */}
+            <View style={styles.titleContainer}>
+            <AppText style={styles.pageTitle}>{pages[pageIndex].kategori.replace(/_/g, ' ').toUpperCase()}</AppText>
+            <AppText style={styles.pageSubtitle}>Isi form di bawah untuk dapat melihat nilai</AppText>
+            <AppText style={styles.pageIndicator}>{pageIndex + 1} dari {pages.length}</AppText>
             </View>
-          </View>
-        )}
 
-        {/* Action Buttons */}
-        <View style={styles.bottomActions}>
-          <TouchableOpacity
-            style={styles.btnSecondary}
-            activeOpacity={0.7}
-            onPress={() => {
-              if (page === 1) {
-                navigation.goBack();
-              } else {
-                setPage(1);
-              }
-            }}
-          >
-            <AppText style={styles.btnSecondaryText}>
-              {page === 1 ? 'Keluar dari evaluasi' : 'Kembali'}
-            </AppText>
-          </TouchableOpacity>
+            {/* Questions List */}
+            <View style={styles.questionsContainer}>
+            {pages[pageIndex].questions.map(renderQuestion)}
+            </View>
 
-          <TouchableOpacity
-            style={styles.btnPrimary}
-            activeOpacity={0.8}
-            onPress={() => {
-              if (validatePage()) {
-                if (page === 1) {
-                  setPage(2);
+            {/* Action Buttons */}
+            <View style={styles.bottomActions}>
+            <TouchableOpacity
+                style={styles.btnSecondary}
+                activeOpacity={0.7}
+                onPress={() => {
+                if (pageIndex === 0) {
+                    navigation.goBack();
                 } else {
-                  handleFinish();
+                    setPageIndex(pageIndex - 1);
                 }
-              }
-            }}
-          >
-            <AppText style={styles.btnPrimaryText}>
-              {page === 1 ? 'Lanjutkan' : 'Selesai'}
-            </AppText>
-          </TouchableOpacity>
-        </View>
+                }}
+            >
+                <AppText style={styles.btnSecondaryText}>
+                {pageIndex === 0 ? 'Keluar' : 'Kembali'}
+                </AppText>
+            </TouchableOpacity>
 
-      </ScrollView>
+            <TouchableOpacity
+                style={styles.btnPrimary}
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (validatePage()) {
+                    if (pageIndex < pages.length - 1) {
+                      setPageIndex(pageIndex + 1);
+                    } else {
+                      handleFinish();
+                    }
+                  }
+                }}
+                disabled={submitting}
+            >
+                {submitting ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                    <AppText style={styles.btnPrimaryText}>
+                    {pageIndex < pages.length - 1 ? 'Lanjutkan' : 'Selesai'}
+                    </AppText>
+                )}
+            </TouchableOpacity>
+            </View>
+
+        </ScrollView>
+      )}
 
       {/* Error Modal */}
       <Modal visible={errorModalVisible} transparent={true} animationType="fade">
