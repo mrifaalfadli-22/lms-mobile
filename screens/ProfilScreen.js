@@ -354,7 +354,7 @@ export default function ProfilScreen() {
           {activeTab === 'settings' ? (
             <View style={styles.settingsContainer}>
 
-              <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7} onPress={() => navigation.navigate('Password')}>
+              <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7} onPress={() => navigation.navigate('Password', { token, user })}>
                 <View style={styles.settingsItemLeft}>
                   <LockIcon />
                   <AppText style={styles.settingsItemText}>Password</AppText>

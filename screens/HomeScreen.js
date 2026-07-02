@@ -810,7 +810,7 @@ export default function HomeScreen({ navigation, route }) {
               <TouchableOpacity
                 style={styles.progressBtn}
                 activeOpacity={0.8}
-                onPress={() => navigation.navigate('ProgressBelajar')}
+                onPress={() => navigation.navigate('ProgressBelajar', { isRegistered, user, token })}
               >
                 <AppText style={styles.progressBtnText}>Lihat progress</AppText>
               </TouchableOpacity>
