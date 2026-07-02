@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AppText from '../components/AppText';
-import { View, StyleSheet, TouchableOpacity, ImageBackground, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, Modal } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ImageBackground, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, Modal, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
@@ -23,7 +23,7 @@ const ChevronLeft = () => (
   </Svg>
 );
 
-const CameraIcon = ({ size = 20, color = '#FFF' }) => (
+const CameraIcon = ({ size = 20, color = '#106E63' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
     <Circle cx="12" cy="13" r="4" />
@@ -92,6 +92,7 @@ export default function ProfilScreen() {
   // States for registered user form
   const [activeTab, setActiveTab] = useState('profil');
   const [isFetchingProfile, setIsFetchingProfile] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [form, setForm] = useState({
     nama: user?.nama_lengkap || '',
     email: user?.email || '',
@@ -128,7 +129,7 @@ export default function ProfilScreen() {
           fakultas: data.fakultas || '',
           programStudi: data.prodi || '',
           tahunAngkatan: data.angkatan || '',
-          foto_profil: data.foto_profil_url || null,
+          foto_profil: data.foto_profil ? `${API_BASE_URL}/storage/foto-profil/${data.foto_profil}` : null,
         });
       }
     } catch (error) {
@@ -147,14 +148,14 @@ export default function ProfilScreen() {
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (permissionResult.granted === false) {
       Alert.alert('Izin Ditolak', 'Aplikasi membutuhkan akses ke galeri foto Anda.');
       return;
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
@@ -164,53 +165,54 @@ export default function ProfilScreen() {
       const asset = result.assets[0];
       const uri = asset.uri;
       const API_URL = `${API_BASE_URL}/api/profile/foto`;
-      
-      // Determine file extension and mime type dynamically
-      const fileExt = uri.substring(uri.lastIndexOf('.') + 1) || 'jpg';
-      const fileName = asset.fileName || `foto.${fileExt}`;
-      const mimeType = asset.mimeType || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
-      
-      const formData = new FormData();
-      formData.append('foto', {
-        uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
-        name: fileName,
-        type: mimeType
-      });
 
+      const fileName = asset.fileName || uri.split('/').pop() || 'photo.jpg';
+      const mimeType = asset.mimeType || 'image/jpeg';
+
+      setIsUploadingPhoto(true);
       try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData,
+        const result2 = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', API_URL);
+          xhr.setRequestHeader('Accept', 'application/json');
+          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+          xhr.onload = () => {
+            try {
+              const json = JSON.parse(xhr.responseText);
+              resolve({ status: xhr.status, data: json });
+            } catch (e) {
+              reject(new Error(`Server tidak merespons dengan JSON (Status: ${xhr.status})`));
+            }
+          };
+          xhr.onerror = () => reject(new Error('Gagal terhubung ke server.'));
+
+          const formData = new FormData();
+          formData.append('foto', {
+            uri: uri,
+            name: fileName,
+            type: mimeType,
+          });
+          xhr.send(formData);
         });
 
-        const textResponse = await response.text();
-        let jsonResponse;
-        try {
-          jsonResponse = JSON.parse(textResponse);
-        } catch (e) {
-          console.error("Not a JSON response:", textResponse);
-          Alert.alert('Error Server', `Server tidak merespons dengan JSON (Status: ${response.status}).`);
-          return;
-        }
-        
-        if (response.status === 200 && jsonResponse.success) {
-          setForm({ ...form, foto_profil: jsonResponse.data?.foto_profil_url || uri });
+        if (result2.status === 200 && result2.data.success) {
+          // Gunakan API_BASE_URL untuk membangun URL yang bisa diakses HP (bukan localhost dari server)
+          const newFotoUrl = `${API_BASE_URL}/storage/foto-profil/${result2.data.data?.foto_profil}`;
+          setForm({ ...form, foto_profil: newFotoUrl });
           Alert.alert('Sukses', 'Foto profil berhasil diperbarui!');
         } else {
-          console.log("Upload failed:", jsonResponse);
-          let errorMessage = jsonResponse.message || 'Gagal mengunggah foto profil';
-          if (jsonResponse.errors && jsonResponse.errors.foto) {
-             errorMessage = jsonResponse.errors.foto[0];
+          let errorMessage = result2.data.message || 'Gagal mengunggah foto profil';
+          if (result2.data.errors && result2.data.errors.foto) {
+            errorMessage = result2.data.errors.foto[0];
           }
           Alert.alert('Gagal', errorMessage);
         }
       } catch (error) {
-        console.error("Upload Foto Error: ", error);
-        Alert.alert('Error Network', error.message);
+        console.error('Upload Foto Error: ', error);
+        Alert.alert('Error', error.message);
+      } finally {
+        setIsUploadingPhoto(false);
       }
     }
   };
@@ -238,7 +240,7 @@ export default function ProfilScreen() {
 
       const backendField = fieldMapping[editingField] || editingField;
       const API_URL = `${API_BASE_URL}/api/profile`;
-      
+
       const response = await fetch(API_URL, {
         method: 'PUT',
         headers: {
@@ -406,12 +408,19 @@ export default function ProfilScreen() {
                       </AppText>
                     </View>
                   )}
-                  <TouchableOpacity style={styles.editAvatarBtn} activeOpacity={0.8} onPress={pickImage}>
+                  {/* Loading Overlay */}
+                  {isUploadingPhoto && (
+                    <View style={styles.photoLoadingOverlay}>
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    </View>
+                  )}
+                  {/* Icon Camera Edit */}
+                  <TouchableOpacity style={styles.editAvatarBtn} activeOpacity={0.8} onPress={pickImage} disabled={isUploadingPhoto}>
                     <CameraIcon size={16} />
                   </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={pickImage} activeOpacity={0.7}>
-                  <AppText style={styles.ubahFotoText}>Ubah Foto</AppText>
+                <TouchableOpacity onPress={pickImage} activeOpacity={0.7} disabled={isUploadingPhoto}>
+                  <AppText style={styles.ubahFotoText}>{isUploadingPhoto ? 'Mengunggah...' : 'Ubah Foto'}</AppText>
                 </TouchableOpacity>
               </View>
 
@@ -719,33 +728,56 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarInitial: {
-    fontSize: 36,
-    color: '#FFF',
+    fontSize: 28, // Smaller text
     fontWeight: 'bold',
+    color: PRIMARY,
   },
   editAvatarBtn: {
     position: 'absolute',
-    bottom: 0,
     right: 0,
-    backgroundColor: PRIMARY,
-    width: 32,
-    height: 32,
+    bottom: 0,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
+    width: 28, // Smaller icon container
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFF',
-    elevation: 3,
+    borderColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   ubahFotoText: {
-    marginTop: 12,
+    fontSize: 13, // Smaller text
     color: PRIMARY,
     fontWeight: '600',
+  },
+  photoLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  inputEditableWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: 16,
+    paddingHorizontal: 12,
+    height: 44,
+  },
+  inputEditableText: {
     fontSize: 14,
+    color: '#374151',
+    flex: 1,
   },
   label: {
     fontSize: 14,

@@ -477,6 +477,9 @@ export default function HomeScreen({ navigation, route }) {
   const user = route?.params?.user || null;
   const token = route?.params?.token || null;
 
+  // State user yang bisa diperbarui ketika kembali dari halaman Profil
+  const [currentUser, setCurrentUser] = useState(user);
+
   const [searchText, setSearchText] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeJadwalIndex, setActiveJadwalIndex] = useState(0);
@@ -576,6 +579,22 @@ export default function HomeScreen({ navigation, route }) {
         };
 
         fetchDashboard();
+
+        // Refresh data profil agar foto terbaru langsung tampil
+        const fetchProfile = async () => {
+          try {
+            const res = await fetch(`${API_BASE_URL}/api/profile`, {
+              headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (res.ok && json.success) {
+              setCurrentUser(json.data);
+            }
+          } catch (e) {
+            // silent fail
+          }
+        };
+        fetchProfile();
       }
     }, [isRegistered, token])
   );
@@ -688,16 +707,16 @@ export default function HomeScreen({ navigation, route }) {
           <View style={styles.headerLeft}>
             <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('Profil')}>
               {isRegistered ? (
-                user?.foto_profil ? (
+                currentUser?.foto_profil ? (
                   <Image
-                    source={{ uri: `${API_BASE_URL}/storage/${user.foto_profil}` }}
+                    source={{ uri: `${API_BASE_URL}/storage/foto-profil/${currentUser.foto_profil}` }}
                     style={styles.avatarImage}
                   />
                 ) : (
                   <View style={styles.avatarInitialContainer}>
                     <AppText style={styles.avatarInitialText}>
                       {(() => {
-                        const name = user?.nama_lengkap || 'Mahasiswa';
+                        const name = currentUser?.nama_lengkap || 'Mahasiswa';
                         const words = name.trim().split(/\s+/);
                         if (words.length > 1) return (words[0][0] + words[words.length - 1][0]).toUpperCase();
                         return name.substring(0, 2).toUpperCase();
@@ -716,7 +735,7 @@ export default function HomeScreen({ navigation, route }) {
               {isRegistered ? (
                 <>
                   <AppText style={styles.greetSubText}>Selamat datang,</AppText>
-                  <AppText style={styles.greetText}>{user?.nama_lengkap || 'Mahasiswa'}</AppText>
+                  <AppText style={styles.greetText}>{currentUser?.nama_lengkap || 'Mahasiswa'}</AppText>
                 </>
               ) : (
                 <>

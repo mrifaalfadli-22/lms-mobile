@@ -70,10 +70,6 @@ const AssignmentCard = ({ item, course, onPress }) => {
       <AppText style={styles.descText}>{item.deskripsi_tugas}</AppText>
 
       <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.btnLihat} onPress={onPress}>
-          <AppText style={styles.btnLihatText}>Lihat tugas</AppText>
-        </TouchableOpacity>
-
         {isDikerjakan ? (
           <View style={[styles.statusBadge, { backgroundColor: isDinilai ? '#E0F2F1' : '#E5E7EB' }]}>
             <AppText style={[styles.statusText, { color: isDinilai ? '#116E63' : '#4B5563' }]}>
@@ -85,6 +81,10 @@ const AssignmentCard = ({ item, course, onPress }) => {
             <AppText style={[styles.statusText, { color: '#DC2626' }]}>Belum Dikerjakan</AppText>
           </View>
         )}
+
+        <TouchableOpacity style={styles.btnLihat} onPress={onPress}>
+          <AppText style={styles.btnLihatText}>Lihat tugas</AppText>
+        </TouchableOpacity>
       </View>
     </View>
   );
