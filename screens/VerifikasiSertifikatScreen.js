@@ -17,6 +17,8 @@ import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { CameraView, useCameraPermissions, scanFromURLAsync } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { API_BASE_URL } from '../config/api';
+import { downloadCertificate } from '../utils/pdfHelper';
 
 // Ignore the CameraView warning since placing overlay as children is required to fix the layout bug on some Android devices
 LogBox.ignoreLogs([
@@ -58,28 +60,65 @@ const SearchIcon = () => (
   </Svg>
 );
 
+const DownloadIcon = ({ color = '#116E63' }) => (
+  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <Path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
 export default function VerifikasiSertifikatScreen() {
   const navigation = useNavigation();
   const [certNumber, setCertNumber] = useState('');
   const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'valid' | 'invalid'
+  const [verificationData, setVerificationData] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   // Camera state
   const [isScanning, setIsScanning] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
 
-  const handleVerify = () => {
-    if (!certNumber.trim()) return;
+  const handleVerify = async (scannedData = null) => {
+    const numberToVerify = scannedData || certNumber;
+    if (!numberToVerify.trim()) return;
 
     setStatus('loading');
+    setVerificationData(null);
 
-    // Simulate API call
-    setTimeout(() => {
-      if (certNumber.trim().toUpperCase() === 'LMS-12345' || certNumber.trim().toUpperCase() === 'QR-12345') {
+    try {
+      const baseUrl = Platform.OS === 'android' ? API_BASE_URL : 'http://localhost:8000';
+      const response = await fetch(`${baseUrl}/api/sertifikat/verify/${numberToVerify.trim()}`);
+      
+      const resData = await response.json();
+      
+      if (response.ok && resData.valid) {
         setStatus('valid');
+        setVerificationData(resData.data);
       } else {
         setStatus('invalid');
       }
-    }, 1500);
+    } catch (error) {
+      console.error('Error verifying certificate:', error);
+      setStatus('invalid');
+    }
+  };
+
+  const handleDownloadItem = async (sertif) => {
+    setDownloadingId(sertif.id_sertifikat);
+    const mk = verificationData.peserta?.jadwal?.mata_kuliah?.nama_mk || '';
+    const kelas = verificationData.peserta?.jadwal?.kelas?.nama_kelas || '';
+    
+    // Construct dummy course object based on verified data
+    const courseObj = {
+      courseName: mk ? (kelas ? `${mk} - ${kelas}` : mk) : '',
+      mkOnly: mk,
+      mahasiswaName: verificationData.peserta?.mahasiswa?.nama_lengkap || '',
+      npm: verificationData.peserta?.mahasiswa?.nomor_induk || '',
+      lecturer: verificationData.peserta?.jadwal?.dosen?.nama_lengkap || ''
+    };
+
+    await downloadCertificate(sertif, courseObj, API_BASE_URL, null);
+    
+    setDownloadingId(null);
   };
 
   const startScanning = async () => {
@@ -93,16 +132,7 @@ export default function VerifikasiSertifikatScreen() {
   const handleBarcodeScanned = ({ type, data }) => {
     setIsScanning(false);
     setCertNumber(data);
-
-    // Automatically verify after scanning
-    setStatus('loading');
-    setTimeout(() => {
-      if (data.trim().toUpperCase() === 'LMS-12345' || data.trim().toUpperCase() === 'QR-12345') {
-        setStatus('valid');
-      } else {
-        setStatus('invalid');
-      }
-    }, 1500);
+    handleVerify(data);
   };
 
   const pickImageToScan = async () => {
@@ -130,6 +160,12 @@ export default function VerifikasiSertifikatScreen() {
       console.log('Error scanning from image:', error);
       alert('Gagal memproses gambar. Pastikan gambar berisi QR Code yang jelas.');
     }
+  };
+
+  const getTipeLabel = (tipe) => {
+    if (tipe === 'kelulusan') return 'Kelulusan';
+    if (tipe === 'nilai') return 'Daftar Nilai';
+    return 'Pelatihan';
   };
 
   return (
@@ -160,7 +196,7 @@ export default function VerifikasiSertifikatScreen() {
           <View style={styles.instructionBox}>
             <AppText style={styles.instructionTitle}>Cek Keaslian Sertifikat</AppText>
             <AppText style={styles.instructionText}>
-              Masukkan nomor seri sertifikat yang tertera di bagian bawah dokumen sertifikat untuk memverifikasi keasliannya di sistem kami.
+              Masukkan nomor seri sertifikat atau scan QR code yang tertera di sertifikat untuk memverifikasi keasliannya di sistem kami.
             </AppText>
           </View>
 
@@ -170,19 +206,19 @@ export default function VerifikasiSertifikatScreen() {
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Contoh: LMS-12345"
+                placeholder="Contoh: SERT/UMUM/2026/06/0001"
                 placeholderTextColor="#9CA3AF"
                 value={certNumber}
                 onChangeText={setCertNumber}
                 autoCapitalize="characters"
                 returnKeyType="search"
-                onSubmitEditing={handleVerify}
+                onSubmitEditing={() => handleVerify()}
               />
             </View>
 
             <TouchableOpacity
               style={[styles.primaryBtn, !certNumber.trim() && styles.primaryBtnDisabled]}
-              onPress={handleVerify}
+              onPress={() => handleVerify()}
               disabled={!certNumber.trim() || status === 'loading'}
             >
               {status === 'loading' ? (
@@ -207,34 +243,63 @@ export default function VerifikasiSertifikatScreen() {
           </View>
 
           {/* Result Area */}
-          {status === 'valid' && (
-            <View style={styles.resultCardValid}>
-              <View style={styles.resultHeader}>
-                <Svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <Circle cx="12" cy="12" r="10" stroke="#10B981" strokeWidth="2" />
-                  <Path d="M8 12l3 3 5-6" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </Svg>
-                <AppText style={styles.resultStatusTextValid}>Sertifikat Valid</AppText>
+          {status === 'valid' && verificationData && (
+            <View style={styles.resultContainer}>
+              <View style={styles.resultCardValid}>
+                <View style={styles.resultHeader}>
+                  <Svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <Circle cx="12" cy="12" r="10" stroke="#10B981" strokeWidth="2" />
+                    <Path d="M8 12l3 3 5-6" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </Svg>
+                  <AppText style={styles.resultStatusTextValid}>Sertifikat Valid</AppText>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.infoRow}>
+                  <AppText style={styles.infoLabel}>Nama Peserta</AppText>
+                  <AppText style={styles.infoValue}>{verificationData.peserta?.mahasiswa?.nama_lengkap || '-'}</AppText>
+                </View>
+                <View style={styles.infoRow}>
+                  <AppText style={styles.infoLabel}>Mata Kuliah</AppText>
+                  <AppText style={styles.infoValue}>{verificationData.peserta?.jadwal?.mata_kuliah?.nama_mk || '-'}</AppText>
+                </View>
+                <View style={styles.infoRow}>
+                  <AppText style={styles.infoLabel}>Tanggal Terbit</AppText>
+                  <AppText style={styles.infoValue}>{verificationData.tanggal_terbit}</AppText>
+                </View>
+                <View style={styles.infoRow}>
+                  <AppText style={styles.infoLabel}>Nomor Seri</AppText>
+                  <AppText style={styles.infoValue}>{verificationData.nomor_sertifikat}</AppText>
+                </View>
               </View>
 
-              <View style={styles.divider} />
-
-              <View style={styles.infoRow}>
-                <AppText style={styles.infoLabel}>Nama Peserta</AppText>
-                <AppText style={styles.infoValue}>Budi Santoso</AppText>
-              </View>
-              <View style={styles.infoRow}>
-                <AppText style={styles.infoLabel}>Mata Kuliah</AppText>
-                <AppText style={styles.infoValue}>Pemrograman Web + Praktikum</AppText>
-              </View>
-              <View style={styles.infoRow}>
-                <AppText style={styles.infoLabel}>Tanggal Terbit</AppText>
-                <AppText style={styles.infoValue}>10 Mei 2026</AppText>
-              </View>
-              <View style={styles.infoRow}>
-                <AppText style={styles.infoLabel}>Nomor Seri</AppText>
-                <AppText style={styles.infoValue}>LMS-12345</AppText>
-              </View>
+              {verificationData.sertifikats && verificationData.sertifikats.length > 0 && (
+                <View style={styles.listContainer}>
+                  <AppText style={styles.listTitle}>Daftar Sertifikat Terkait</AppText>
+                  {verificationData.sertifikats.map((sertif, idx) => (
+                    <View key={sertif.id_sertifikat || idx} style={styles.sertifItem}>
+                      <View style={styles.sertifInfo}>
+                        <AppText style={styles.sertifType}>Sertifikat {getTipeLabel(sertif.tipe_sertifikat)}</AppText>
+                      </View>
+                      <TouchableOpacity 
+                        style={styles.downloadBtn}
+                        onPress={() => handleDownloadItem(sertif)}
+                        disabled={downloadingId === sertif.id_sertifikat}
+                      >
+                        {downloadingId === sertif.id_sertifikat ? (
+                          <ActivityIndicator size="small" color="#116E63" />
+                        ) : (
+                          <>
+                            <DownloadIcon />
+                            <AppText style={styles.downloadText}>Unduh</AppText>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           )}
 
@@ -249,7 +314,7 @@ export default function VerifikasiSertifikatScreen() {
               </View>
               <View style={styles.dividerInvalid} />
               <AppText style={styles.invalidMessage}>
-                Kami tidak dapat menemukan sertifikat dengan nomor seri "{certNumber}". Pastikan nomor yang Anda masukkan sudah benar.
+                Kami tidak dapat menemukan sertifikat dengan nomor seri "{certNumber}". Pastikan nomor atau kode QR yang Anda masukkan sudah benar.
               </AppText>
             </View>
           )}
@@ -423,6 +488,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginLeft: 8,
   },
+  resultContainer: {
+    gap: 20,
+  },
   resultCardValid: {
     backgroundColor: '#ECFDF5',
     borderRadius: 12,
@@ -483,7 +551,57 @@ const styles = StyleSheet.create({
     color: '#7F1D1D',
     lineHeight: 20,
   },
-
+  listContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  listTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#374151',
+    marginBottom: 12,
+  },
+  sertifItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  sertifInfo: {
+    flex: 1,
+    marginRight: 10,
+  },
+  sertifType: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  sertifSub: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  downloadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
+  },
+  downloadText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#116E63',
+    marginLeft: 6,
+  },
   // Camera Modal Styles
   cameraContainer: {
     flex: 1,
