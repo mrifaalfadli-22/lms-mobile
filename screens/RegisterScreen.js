@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import AppText from '../components/AppText';
 import {
   View,
-
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -13,10 +12,13 @@ import {
   ScrollView,
   Modal,
   FlatList,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Ellipse } from 'react-native-svg';
 import { fakultasData } from '../data/fakultasData';
+import { API_BASE_URL } from '../config/api';
 
 const { width, height } = Dimensions.get('window');
 const PRIMARY = '#116E63';
@@ -87,9 +89,54 @@ export default function RegisterScreen({ navigation }) {
     setSearchText('');
   };
 
-  const handleRegister = () => {
-    // Navigasi ke Main/Login setelah daftar
-    navigation.replace('Main', { screen: 'Home', params: { isRegistered: true } });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!form.nama || !form.npm || !form.email || !form.password || !form.fakultas || !form.programStudi || !form.tahunAngkatan) {
+      Alert.alert('Gagal', 'Harap isi semua kolom terlebih dahulu.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/register/mahasiswa`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          nama_lengkap: form.nama,
+          npm: form.npm,
+          email: form.email,
+          fakultas: form.fakultas,
+          prodi: form.programStudi,
+          angkatan: form.tahunAngkatan,
+          password: form.password,
+          password_confirmation: form.password
+        })
+      });
+
+      const json = await response.json();
+
+      if (response.status === 201 && json.success) {
+        Alert.alert('Sukses', json.message || 'Pendaftaran berhasil. Silakan login.', [
+          { text: 'OK', onPress: () => navigation.replace('Login') }
+        ]);
+      } else {
+        let errorMessage = json.message || 'Pendaftaran gagal.';
+        if (json.errors) {
+          const firstErrorKey = Object.keys(json.errors)[0];
+          errorMessage = json.errors[firstErrorKey][0];
+        }
+        Alert.alert('Gagal', errorMessage);
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Terjadi kesalahan jaringan.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -227,8 +274,13 @@ export default function RegisterScreen({ navigation }) {
               style={styles.primaryBtn}
               activeOpacity={0.85}
               onPress={handleRegister}
+              disabled={isLoading}
             >
-              <AppText style={styles.primaryBtnText}>Daftar</AppText>
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <AppText style={styles.primaryBtnText}>Daftar</AppText>
+              )}
             </TouchableOpacity>
 
             {/* Login Link */}

@@ -16,7 +16,7 @@ import {
   Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 // import { jsPDF } from 'jspdf';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -40,8 +40,19 @@ const ChevronRightIcon = () => (
 );
 
 const VerifyIcon = ({ color = "#116E63" }) => (
-  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <Path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  <Svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <Rect width="5" height="5" x="3" y="3" rx="1" />
+    <Rect width="5" height="5" x="16" y="3" rx="1" />
+    <Rect width="5" height="5" x="3" y="16" rx="1" />
+    <Path d="M21 16h-3a2 2 0 0 0-2 2v3" />
+    <Path d="M21 21v.01" />
+    <Path d="M12 7v3a2 2 0 0 1-2 2H7" />
+    <Path d="M3 12h.01" />
+    <Path d="M12 3h.01" />
+    <Path d="M12 16v.01" />
+    <Path d="M16 12h1" />
+    <Path d="M21 12v.01" />
+    <Path d="M12 21v-1" />
   </Svg>
 );
 

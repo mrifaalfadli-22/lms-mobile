@@ -19,6 +19,7 @@ import {
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -251,11 +252,15 @@ const IconSertifikat = () => (
 
 const IconVerifikasi = () => (
   <Svg width="42" height="42" viewBox="0 0 48 48">
-    <Rect x="8" y="10" width="32" height="28" rx="6" fill="#ECFDF5" />
-    <Path d="M24 16 L28 20 L34 14" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    <Circle cx="24" cy="24" r="10" stroke="#059669" strokeWidth="2" fill="none" />
-    <Path d="M24 30 L24 34" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
-    <Path d="M14 24 L18 24" stroke="#059669" strokeWidth="2" strokeLinecap="round" />
+    <Rect x="8" y="8" width="32" height="32" rx="6" fill="#ECFDF5" />
+    <Rect x="14" y="14" width="8" height="8" rx="2" stroke="#059669" strokeWidth="2.5" fill="none" />
+    <Rect x="26" y="14" width="8" height="8" rx="2" stroke="#059669" strokeWidth="2.5" fill="none" />
+    <Rect x="14" y="26" width="8" height="8" rx="2" stroke="#059669" strokeWidth="2.5" fill="none" />
+    
+    <Rect x="26" y="26" width="3" height="3" fill="#059669" />
+    <Rect x="31" y="26" width="3" height="3" fill="#059669" />
+    <Rect x="26" y="31" width="3" height="3" fill="#059669" />
+    <Rect x="31" y="31" width="3" height="3" fill="#059669" />
   </Svg>
 );
 
@@ -489,7 +494,8 @@ export default function HomeScreen({ navigation, route }) {
   const [dashboardData, setDashboardData] = useState({
     progress: { percentage: 0, completed_modules: 0 },
     jadwalHariIni: [],
-    materiTerbaru: []
+    materiTerbaru: [],
+    unread_notif: 0
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -534,42 +540,45 @@ export default function HomeScreen({ navigation, route }) {
     fetchAdzan();
   }, []);
 
-  useEffect(() => {
-    if (isRegistered && token) {
-      const fetchDashboard = async () => {
-        setIsLoading(true);
-        try {
-          const API_URL = Platform.OS === 'android'
-            ? `${API_BASE_URL}/api/mahasiswa/dashboard`
-            : `http://localhost:8000/api/mahasiswa/dashboard`;
+  useFocusEffect(
+    useCallback(() => {
+      if (isRegistered && token) {
+        const fetchDashboard = async () => {
+          setIsLoading(true);
+          try {
+            const API_URL = Platform.OS === 'android'
+              ? `${API_BASE_URL}/api/mahasiswa/dashboard`
+              : `http://localhost:8000/api/mahasiswa/dashboard`;
 
-          const response = await fetch(API_URL, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          const json = await response.json();
-          if (json.status === 'success') {
-            setDashboardData({
-              progress: json.data.progress,
-              jadwalHariIni: json.data.jadwal_hari_ini,
-              materiTerbaru: json.data.materi_terbaru
+            const response = await fetch(API_URL, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
             });
-          }
-        } catch (error) {
-          console.error("Dashboard Fetch Error: ", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
 
-      fetchDashboard();
-    }
-  }, [isRegistered, token]);
+            const json = await response.json();
+            if (json.status === 'success') {
+              setDashboardData({
+                progress: json.data.progress,
+                jadwalHariIni: json.data.jadwal_hari_ini,
+                materiTerbaru: json.data.materi_terbaru,
+                unread_notif: json.data.unread_notif || 0
+              });
+            }
+          } catch (error) {
+            console.error("Dashboard Fetch Error: ", error);
+          } finally {
+            setIsLoading(false);
+          }
+        };
+
+        fetchDashboard();
+      }
+    }, [isRegistered, token])
+  );
 
   const openDaftarModal = () => {
     setModalVisible(true);
@@ -720,11 +729,15 @@ export default function HomeScreen({ navigation, route }) {
             </View>
           </View>
           {isRegistered && (
-            <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Notifikasi')}>
+            <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8} onPress={() => navigation.navigate('Notifikasi', { token })}>
               <BellIcon />
-              <View style={styles.bellBadge}>
-                <AppText style={styles.bellBadgeText}>1</AppText>
-              </View>
+              {dashboardData.unread_notif > 0 && (
+                <View style={styles.bellBadge}>
+                  <AppText style={styles.bellBadgeText}>
+                    {dashboardData.unread_notif > 99 ? '99+' : dashboardData.unread_notif}
+                  </AppText>
+                </View>
+              )}
             </TouchableOpacity>
           )}
         </LinearGradient>

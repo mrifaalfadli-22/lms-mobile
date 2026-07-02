@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppText from '../components/AppText';
 import { View, StyleSheet, TouchableOpacity, ImageBackground, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, Modal } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
+import { API_BASE_URL } from '../config/api';
 
 const BG = '#F8FAFC';
 const PRIMARY = '#116E63';
@@ -86,18 +87,56 @@ export default function ProfilScreen() {
 
   const isRegistered = route.params?.isRegistered || false;
   const user = route.params?.user || null;
+  const token = route.params?.token || null;
 
   // States for registered user form
   const [activeTab, setActiveTab] = useState('profil');
+  const [isFetchingProfile, setIsFetchingProfile] = useState(false);
   const [form, setForm] = useState({
-    nama: user?.nama || 'mahasiswa',
-    email: user?.email || 'mahasiswa@student.ui.ac.id',
-    npm: user?.npm || '1234567890',
-    fakultas: user?.fakultas || 'Fakultas Teknik dan Sains',
-    programStudi: user?.programStudi || 'Teknik Informatika',
-    tahunAngkatan: user?.tahunAngkatan || '2023',
-    foto_profil: user?.foto_profil || null,
+    nama: user?.nama_lengkap || '',
+    email: user?.email || '',
+    npm: user?.nomor_induk || '',
+    fakultas: user?.fakultas || '',
+    programStudi: user?.prodi || '',
+    tahunAngkatan: user?.angkatan || '',
+    foto_profil: user?.foto_profil_url || null,
   });
+
+  useEffect(() => {
+    if (isRegistered && token) {
+      fetchProfile();
+    }
+  }, [isRegistered, token]);
+
+  const fetchProfile = async () => {
+    setIsFetchingProfile(true);
+    try {
+      const API_URL = `${API_BASE_URL}/api/profile`;
+      const response = await fetch(API_URL, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const jsonResponse = await response.json();
+      if (response.status === 200 && jsonResponse.success) {
+        const data = jsonResponse.data;
+        setForm({
+          nama: data.nama_lengkap || '',
+          email: data.email || '',
+          npm: data.nomor_induk || '',
+          fakultas: data.fakultas || '',
+          programStudi: data.prodi || '',
+          tahunAngkatan: data.angkatan || '',
+          foto_profil: data.foto_profil_url || null,
+        });
+      }
+    } catch (error) {
+      console.error("Fetch Profile Error: ", error);
+    } finally {
+      setIsFetchingProfile(false);
+    }
+  };
 
   // Modal states
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -107,16 +146,72 @@ export default function ProfilScreen() {
   const [tempValue, setTempValue] = useState('');
 
   const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (permissionResult.granted === false) {
+      Alert.alert('Izin Ditolak', 'Aplikasi membutuhkan akses ke galeri foto Anda.');
+      return;
+    }
+
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
     });
 
     if (!result.canceled) {
-      setForm({ ...form, foto_profil: result.assets[0].uri });
-      Alert.alert('Sukses', 'Foto profil berhasil diperbarui!');
+      const asset = result.assets[0];
+      const uri = asset.uri;
+      const API_URL = `${API_BASE_URL}/api/profile/foto`;
+      
+      // Determine file extension and mime type dynamically
+      const fileExt = uri.substring(uri.lastIndexOf('.') + 1) || 'jpg';
+      const fileName = asset.fileName || `foto.${fileExt}`;
+      const mimeType = asset.mimeType || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
+      
+      const formData = new FormData();
+      formData.append('foto', {
+        uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
+        name: fileName,
+        type: mimeType
+      });
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData,
+        });
+
+        const textResponse = await response.text();
+        let jsonResponse;
+        try {
+          jsonResponse = JSON.parse(textResponse);
+        } catch (e) {
+          console.error("Not a JSON response:", textResponse);
+          Alert.alert('Error Server', `Server tidak merespons dengan JSON (Status: ${response.status}).`);
+          return;
+        }
+        
+        if (response.status === 200 && jsonResponse.success) {
+          setForm({ ...form, foto_profil: jsonResponse.data?.foto_profil_url || uri });
+          Alert.alert('Sukses', 'Foto profil berhasil diperbarui!');
+        } else {
+          console.log("Upload failed:", jsonResponse);
+          let errorMessage = jsonResponse.message || 'Gagal mengunggah foto profil';
+          if (jsonResponse.errors && jsonResponse.errors.foto) {
+             errorMessage = jsonResponse.errors.foto[0];
+          }
+          Alert.alert('Gagal', errorMessage);
+        }
+      } catch (error) {
+        console.error("Upload Foto Error: ", error);
+        Alert.alert('Error Network', error.message);
+      }
     }
   };
 
@@ -131,21 +226,66 @@ export default function ProfilScreen() {
     setConfirmModalVisible(true);
   };
 
-  const handleSimpanFinal = () => {
-    setForm({ ...form, [editingField]: tempValue });
+  const handleSimpanFinal = async () => {
     setConfirmModalVisible(false);
     setEditModalVisible(false);
-    // Optional: Keep a small alert or toast for success, or just do nothing
-    // Alert.alert('Sukses', `${editingField === 'nama' ? 'Nama' : 'Email'} berhasil diperbarui!`);
+
+    try {
+      const fieldMapping = {
+        nama: 'nama_lengkap',
+        email: 'email',
+      };
+
+      const backendField = fieldMapping[editingField] || editingField;
+      const API_URL = `${API_BASE_URL}/api/profile`;
+      
+      const response = await fetch(API_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          [backendField]: tempValue
+        }),
+      });
+
+      const jsonResponse = await response.json();
+
+      if (response.status === 200 && jsonResponse.success) {
+        setForm({ ...form, [editingField]: tempValue });
+        Alert.alert('Sukses', `${editingField === 'nama' ? 'Nama' : 'Email'} berhasil diperbarui!`);
+      } else {
+        Alert.alert('Gagal', jsonResponse.message || 'Gagal memperbarui profil');
+      }
+    } catch (error) {
+      console.error("Update Profile Error: ", error);
+      Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data');
+    }
   };
 
   const handleLogoutClick = () => {
     setLogoutModalVisible(true);
   };
 
-  const handleLogoutConfirm = () => {
+  const handleLogoutConfirm = async () => {
     setLogoutModalVisible(false);
-    navigation.replace('Main', { screen: 'Home', params: { isRegistered: false } });
+    if (token) {
+      try {
+        const API_URL = `${API_BASE_URL}/api/logout`;
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      } catch (error) {
+        console.error("Logout Error: ", error);
+      }
+    }
+    navigation.replace('Login');
   };
 
   if (!isRegistered) {
@@ -222,7 +362,7 @@ export default function ProfilScreen() {
                 <ChevronRightIcon />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7} onPress={() => navigation.navigate('Notifikasi')}>
+              <TouchableOpacity style={styles.settingsItem} activeOpacity={0.7} onPress={() => navigation.navigate('Notifikasi', { token })}>
                 <View style={styles.settingsItemLeft}>
                   <BellIcon />
                   <AppText style={styles.settingsItemText}>Notifikasi</AppText>
