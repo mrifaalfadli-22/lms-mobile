@@ -87,9 +87,9 @@ export default function VerifikasiSertifikatScreen() {
     try {
       const baseUrl = Platform.OS === 'android' ? API_BASE_URL : 'http://localhost:8000';
       const response = await fetch(`${baseUrl}/api/sertifikat/verify/${numberToVerify.trim()}`);
-      
+
       const resData = await response.json();
-      
+
       if (response.ok && resData.valid) {
         setStatus('valid');
         setVerificationData(resData.data);
@@ -106,7 +106,7 @@ export default function VerifikasiSertifikatScreen() {
     setDownloadingId(sertif.id_sertifikat);
     const mk = verificationData.peserta?.jadwal?.mata_kuliah?.nama_mk || '';
     const kelas = verificationData.peserta?.jadwal?.kelas?.nama_kelas || '';
-    
+
     // Construct dummy course object based on verified data
     const courseObj = {
       courseName: mk ? (kelas ? `${mk} - ${kelas}` : mk) : '',
@@ -117,7 +117,7 @@ export default function VerifikasiSertifikatScreen() {
     };
 
     await downloadCertificate(sertif, courseObj, API_BASE_URL, null);
-    
+
     setDownloadingId(null);
   };
 
@@ -174,8 +174,8 @@ export default function VerifikasiSertifikatScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={{ flexDirection: 'row', alignItems: 'center' }} 
+        <TouchableOpacity
+          style={{ flexDirection: 'row', alignItems: 'center' }}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
@@ -282,7 +282,7 @@ export default function VerifikasiSertifikatScreen() {
                       <View style={styles.sertifInfo}>
                         <AppText style={styles.sertifType}>Sertifikat {getTipeLabel(sertif.tipe_sertifikat)}</AppText>
                       </View>
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.downloadBtn}
                         onPress={() => handleDownloadItem(sertif)}
                         disabled={downloadingId === sertif.id_sertifikat}
@@ -325,7 +325,7 @@ export default function VerifikasiSertifikatScreen() {
       {/* Camera Modal */}
       <Modal visible={isScanning} animationType="slide" transparent={false}>
         <View style={styles.cameraContainer}>
-          <CameraView 
+          <CameraView
             style={{ flex: 1 }}
             facing="back"
             barcodeScannerSettings={{
@@ -347,13 +347,13 @@ export default function VerifikasiSertifikatScreen() {
               </View>
               <View style={styles.cameraFooter}>
                 <AppText style={styles.cameraHint}>Arahkan kamera ke QR Code sertifikat</AppText>
-                
-                <TouchableOpacity style={styles.uploadBtn} onPress={pickImageToScan}>
+
+                {/* <TouchableOpacity style={styles.uploadBtn} onPress={pickImageToScan}>
                   <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <Path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </Svg>
                   <AppText style={styles.uploadBtnText}>Upload dari Galeri</AppText>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             </View>
           </CameraView>
