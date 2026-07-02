@@ -1,6 +1,8 @@
 import { API_BASE_URL } from '../config/api';
 import React, { useState } from 'react';
 import AppText from '../components/AppText';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import {
   View,
 
@@ -68,6 +70,8 @@ const BackgroundBlobs = () => (
 );
 
 // ── LoginScreen ────────────────────────────────────────────────────────────────
+WebBrowser.maybeCompleteAuthSession();
+
 export default function LoginScreen({ navigation }) {
   const [npm, setNpm] = useState('');
   const [password, setPassword] = useState('');
@@ -81,6 +85,51 @@ export default function LoginScreen({ navigation }) {
   const showPopup = (title, message, type = 'error') => {
     setPopupConfig({ title, message, type });
     setPopupVisible(true);
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      // Buka halaman Google Auth Backend dengan parameter source=mobile
+      const authUrl = `${API_BASE_URL}/api/auth/google/redirect?source=mobile`;
+      const redirectUrl = Linking.createURL('/auth/callback');
+
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
+
+      if (result.type === 'success' && result.url) {
+        const params = Linking.parse(result.url);
+        const { token, error } = params.queryParams;
+
+        if (error) {
+          showPopup('Gagal Masuk', error, 'error');
+        } else if (token) {
+          setIsLoading(true);
+          // Get User Profile with token
+          const profileResponse = await fetch(`${API_BASE_URL}/api/profile`, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          const profileJson = await profileResponse.json();
+
+          if (profileResponse.ok && profileJson.success) {
+            navigation.replace('Main', {
+              isRegistered: true,
+              user: profileJson.data,
+              token: token
+            });
+          } else {
+            showPopup('Gagal Masuk', 'Gagal mengambil data profil Google Anda.', 'error');
+          }
+          setIsLoading(false);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      showPopup('Gagal Masuk', 'Gagal membuka halaman login Google.', 'error');
+    }
   };
 
   const handleLogin = async () => {
@@ -238,7 +287,7 @@ export default function LoginScreen({ navigation }) {
             </View>
 
             {/* Google SSO */}
-            <TouchableOpacity style={styles.googleBtn} activeOpacity={0.8} onPress={() => { }}>
+            <TouchableOpacity style={styles.googleBtn} activeOpacity={0.8} onPress={handleGoogleLogin}>
               <View style={styles.googleIconBox}>
                 <GoogleIcon />
               </View>
