@@ -15,12 +15,14 @@ import {
   TextInput,
   Alert,
   Platform,
-  Linking
+  Linking,
+  ActivityIndicator
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import YoutubePlayer from 'react-native-youtube-iframe';
+import { downloadMateri } from '../utils/downloadHelper';
 
 const { width, height } = Dimensions.get('window');
 
@@ -545,27 +547,36 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                             else if (isXls) iconSource = require('../assets/xls.png');
                             else if (isPpt) iconSource = require('../assets/ppt.png');
 
-                            return (
-                              <View key={idx} style={styles.fileItemRow}>
-                                <Image
-                                  source={iconSource}
-                                  style={styles.fileIcon}
-                                  resizeMode="contain"
-                                />
-                                <View style={{ flex: 1, marginRight: 8 }}>
-                                  <AppText style={styles.fileNameText} numberOfLines={1}>{fileName}</AppText>
+                            const FileDownloadRow = () => {
+                              const [isDownloading, setIsDownloading] = useState(false);
+                              return (
+                                <View style={styles.fileItemRow}>
+                                  <Image
+                                    source={iconSource}
+                                    style={styles.fileIcon}
+                                    resizeMode="contain"
+                                  />
+                                  <View style={{ flex: 1, marginRight: 8 }}>
+                                    <AppText style={styles.fileNameText} numberOfLines={1}>{fileName}</AppText>
+                                  </View>
+                                  <TouchableOpacity
+                                    style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+                                    onPress={() => {
+                                      downloadMateri(file, item.judul, setIsDownloading);
+                                    }}
+                                    disabled={isDownloading}
+                                  >
+                                    {isDownloading ? (
+                                      <ActivityIndicator size="small" color="#116E63" />
+                                    ) : (
+                                      <AppText style={{ fontSize: 12, fontWeight: '600', color: '#116E63' }}>Unduh</AppText>
+                                    )}
+                                  </TouchableOpacity>
                                 </View>
-                                <TouchableOpacity
-                                  style={{ paddingHorizontal: 8, paddingVertical: 4 }}
-                                  onPress={() => {
-                                    const baseUrl = API_BASE_URL;
-                                    Linking.openURL(`${baseUrl}/api/public/download?path=${encodeURIComponent(file)}&title=${encodeURIComponent(item.judul)}`);
-                                  }}
-                                >
-                                  <AppText style={{ fontSize: 12, fontWeight: '600', color: '#116E63' }}>Unduh</AppText>
-                                </TouchableOpacity>
-                              </View>
-                            );
+                              );
+                            };
+
+                            return <FileDownloadRow key={idx} />;
                           })}
                         </View>
                       ) : null}

@@ -1,12 +1,13 @@
 import { API_BASE_URL } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import AppText from '../components/AppText';
-import { View, StyleSheet, ScrollView, TouchableOpacity, ImageBackground, Image, Platform, Linking, Modal } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, ImageBackground, Image, Platform, Linking, Modal, ActivityIndicator } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Rect, Polyline, Circle } from 'react-native-svg';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import * as Clipboard from 'expo-clipboard';
+import { downloadMateri } from '../utils/downloadHelper';
 
 const CopyIcon = () => (
   <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -317,24 +318,33 @@ export default function DetailSesiScreen({ route }) {
               else if (isXls) iconSource = require('../assets/xls.png');
               else if (isPpt) iconSource = require('../assets/ppt.png');
 
-              return (
-                <View key={index} style={styles.fileItemRow}>
-                  <Image source={iconSource} style={styles.fileIcon} resizeMode="contain" />
-                  <View style={styles.fileTextContainer}>
-                    <AppText style={styles.fileNameText} numberOfLines={1}>{fileName}</AppText>
-                    <AppText style={styles.fileSizeText}>{ext.toUpperCase()}</AppText>
+              const FileDownloadRow = () => {
+                const [isDownloading, setIsDownloading] = useState(false);
+                return (
+                  <View style={styles.fileItemRow}>
+                    <Image source={iconSource} style={styles.fileIcon} resizeMode="contain" />
+                    <View style={styles.fileTextContainer}>
+                      <AppText style={styles.fileNameText} numberOfLines={1}>{fileName}</AppText>
+                      <AppText style={styles.fileSizeText}>{ext.toUpperCase()}</AppText>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.downloadIconBtn}
+                      onPress={() => {
+                        downloadMateri(file, meetingTitle, setIsDownloading);
+                      }}
+                      disabled={isDownloading}
+                    >
+                      {isDownloading ? (
+                        <ActivityIndicator size="small" color="#116E63" />
+                      ) : (
+                        <AppText style={styles.downloadLink}>Unduh</AppText>
+                      )}
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={styles.downloadIconBtn}
-                    onPress={() => {
-                      const baseUrl = API_BASE_URL;
-                      Linking.openURL(`${baseUrl}/api/public/download?path=${encodeURIComponent(file)}&title=${encodeURIComponent(meetingTitle)}`);
-                    }}
-                  >
-                    <AppText style={styles.downloadLink}>Unduh</AppText>
-                  </TouchableOpacity>
-                </View>
-              );
+                );
+              };
+
+              return <FileDownloadRow key={index} />;
             })}
           </View>
 

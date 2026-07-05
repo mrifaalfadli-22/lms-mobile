@@ -15,6 +15,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle, Polyline, Line } from 'react-native-svg';
 import { API_BASE_URL } from '../config/api';
+import { downloadMateri } from '../utils/downloadHelper';
 
 const BackIcon = () => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -44,11 +45,11 @@ const ChevronRightIcon = () => (
 );
 
 const MateriCard = ({ item }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const handleDownload = () => {
     if (item.filePath) {
-      const baseUrl = API_BASE_URL;
-      const downloadUrl = `${baseUrl}/api/public/download?path=${encodeURIComponent(item.filePath)}&title=${encodeURIComponent(item.judulMateri)}`;
-      Linking.openURL(downloadUrl).catch(err => console.error("Couldn't load page", err));
+      downloadMateri(item.filePath, item.judulMateri, setIsDownloading);
     }
   };
 
@@ -73,8 +74,8 @@ const MateriCard = ({ item }) => {
         <AppText style={styles.courseText}>{item.pertemuan}</AppText>
         <AppText style={styles.dateText}>{item.date}</AppText>
       </View>
-      <TouchableOpacity style={styles.downloadBtn} onPress={handleDownload} activeOpacity={0.7}>
-        <DownloadIcon />
+      <TouchableOpacity style={styles.downloadBtn} onPress={handleDownload} activeOpacity={0.7} disabled={isDownloading}>
+        {isDownloading ? <ActivityIndicator size="small" color="#6B7280" /> : <DownloadIcon />}
       </TouchableOpacity>
     </View>
   );
