@@ -114,7 +114,9 @@ export default function MataKuliahScreen({ navigation, route }) {
   const [selectedHari, setSelectedHari] = useState([]);
   const [selectedDosen, setSelectedDosen] = useState([]);
   const [selectedKelas, setSelectedKelas] = useState([]);
-  const [expandedAccordion, setExpandedAccordion] = useState(null);
+  const [selectedFakultas, setSelectedFakultas] = useState([]);
+  const [selectedProdi, setSelectedProdi] = useState([]);
+  const [expandedAccordions, setExpandedAccordions] = useState(['Fakultas', 'Program Studi', 'Hari', 'Dosen', 'Kelas']);
 
   const PERIODES = ['2023/2024', '2024/2025', '2025/2026', '2026/2027'];
 
@@ -271,6 +273,8 @@ export default function MataKuliahScreen({ navigation, route }) {
   const safeSourceData = Array.isArray(sourceData) ? sourceData : [];
 
   const filterOptions = {
+    Fakultas: [...new Set(safeSourceData.map(item => item.fakultas).filter(Boolean))],
+    'Program Studi': [...new Set(safeSourceData.map(item => item.prodi).filter(Boolean))],
     Hari: [...new Set(safeSourceData.map(item => item.hari).filter(Boolean))],
     Dosen: [...new Set(safeSourceData.map(item => item.dosen).filter(Boolean))],
     Kelas: [...new Set(safeSourceData.map(item => item.kelas).filter(Boolean))]
@@ -289,6 +293,8 @@ export default function MataKuliahScreen({ navigation, route }) {
     if (selectedHari.length > 0 && !selectedHari.includes(item.hari)) return false;
     if (selectedDosen.length > 0 && !selectedDosen.includes(item.dosen)) return false;
     if (selectedKelas.length > 0 && !selectedKelas.includes(item.kelas)) return false;
+    if (selectedFakultas.length > 0 && !selectedFakultas.includes(item.fakultas)) return false;
+    if (selectedProdi.length > 0 && !selectedProdi.includes(item.prodi)) return false;
 
     return true;
   });
@@ -297,7 +303,9 @@ export default function MataKuliahScreen({ navigation, route }) {
     let current, setter;
     if (type === 'Hari') { current = selectedHari; setter = setSelectedHari; }
     else if (type === 'Dosen') { current = selectedDosen; setter = setSelectedDosen; }
-    else { current = selectedKelas; setter = setSelectedKelas; }
+    else if (type === 'Kelas') { current = selectedKelas; setter = setSelectedKelas; }
+    else if (type === 'Fakultas') { current = selectedFakultas; setter = setSelectedFakultas; }
+    else { current = selectedProdi; setter = setSelectedProdi; }
 
     if (current.includes(value)) {
       setter(current.filter(item => item !== value));
@@ -325,20 +333,28 @@ export default function MataKuliahScreen({ navigation, route }) {
           
           <ScrollView style={styles.bottomSheetContent} showsVerticalScrollIndicator={false}>
             {Object.keys(filterOptions).map((type) => {
-              const isExpanded = expandedAccordion === type;
+              const isExpanded = expandedAccordions.includes(type);
               const options = filterOptions[type];
               
               let currentSelected = [];
               if (type === 'Hari') currentSelected = selectedHari;
               if (type === 'Dosen') currentSelected = selectedDosen;
               if (type === 'Kelas') currentSelected = selectedKelas;
+              if (type === 'Fakultas') currentSelected = selectedFakultas;
+              if (type === 'Program Studi') currentSelected = selectedProdi;
 
               return (
                 <View key={type} style={styles.accordionContainer}>
                   <TouchableOpacity
                     style={styles.accordionHeader}
                     activeOpacity={0.7}
-                    onPress={() => setExpandedAccordion(isExpanded ? null : type)}
+                    onPress={() => {
+                      if (isExpanded) {
+                        setExpandedAccordions(expandedAccordions.filter(t => t !== type));
+                      } else {
+                        setExpandedAccordions([...expandedAccordions, type]);
+                      }
+                    }}
                   >
                     <AppText style={styles.accordionTitle}>{type}</AppText>
                     {isExpanded ? <ChevronUp /> : <ChevronDown />}
@@ -386,6 +402,8 @@ export default function MataKuliahScreen({ navigation, route }) {
                 setSelectedHari([]);
                 setSelectedDosen([]);
                 setSelectedKelas([]);
+                setSelectedFakultas([]);
+                setSelectedProdi([]);
               }}
             >
               <AppText style={styles.btnHapusFilterText}>Hapus Filter</AppText>
@@ -395,6 +413,8 @@ export default function MataKuliahScreen({ navigation, route }) {
       </View>
     </Modal>
   );
+
+  const activeFiltersCount = selectedHari.length + selectedDosen.length + selectedKelas.length + selectedFakultas.length + selectedProdi.length;
 
   const innerContent = (
     <View style={styles.content}>
@@ -416,6 +436,11 @@ export default function MataKuliahScreen({ navigation, route }) {
           onPress={() => setModalFilterVisible(true)}
         >
           <FilterIcon />
+          {activeFiltersCount > 0 && (
+            <View style={styles.badgeContainer}>
+              <AppText style={styles.badgeText}>{activeFiltersCount}</AppText>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -740,6 +765,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   bottomSheetOverlay: {
     flex: 1,
