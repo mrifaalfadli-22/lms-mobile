@@ -756,7 +756,7 @@ export default function HomeScreen({ navigation, route }) {
                 )
               ) : (
                 <Image
-                  source={require('../assets/guest-avatar-green.png')}
+                  source={require('../assets/guest-avatar-green.jpg')}
                   style={styles.avatarImage}
                 />
               )}
@@ -877,7 +877,7 @@ export default function HomeScreen({ navigation, route }) {
             </View>
             <View style={styles.progressRight}>
               <Image
-                source={require('../assets/progress-illustration.png')}
+                source={require('../assets/progress-illustration.jpg')}
                 style={styles.progressIllustration}
               />
             </View>

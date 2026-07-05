@@ -304,7 +304,7 @@ export default function ProfilScreen() {
         <ImageBackground source={require('../assets/bg-pattern.png')} style={styles.bgPattern} imageStyle={{ opacity: 0.2 }}>
           <View style={styles.guestContainer}>
             <Image
-              source={require('../assets/guest-avatar-green.png')}
+              source={require('../assets/guest-avatar-green.jpg')}
               style={[styles.avatarPlaceholder, { backgroundColor: '#FFF' }]}
             />
             <AppText style={styles.guestTitle}>Halo, Sobat!</AppText>

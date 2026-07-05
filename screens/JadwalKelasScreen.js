@@ -142,7 +142,7 @@ export default function JadwalKelasScreen({ navigation, route }) {
         userToken: token 
       })}
     >
-      <Image source={require('../assets/dosen.png')} style={styles.cardImage} />
+      <Image source={require('../assets/dosen.jpg')} style={styles.cardImage} />
       <View style={styles.cardContent}>
         <AppText style={styles.cardTitle}>{item.title}</AppText>
         <View style={styles.cardRow}>

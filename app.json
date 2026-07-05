@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "lms-frontend-mobile",
+    "name": "u-Cademy",
     "slug": "lms-frontend-mobile",
     "version": "1.0.0",
     "scheme": "lms",
@@ -11,12 +11,7 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      "package": "com.ucademy.mobileapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -24,6 +19,11 @@
     "plugins": [
       "expo-sharing",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8e807ca2-1347-4668-92f1-0670fd7c91b0"
+      }
+    }
   }
 }

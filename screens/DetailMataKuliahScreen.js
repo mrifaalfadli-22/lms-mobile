@@ -323,7 +323,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
         {/* HERO IMAGE SECTION */}
         <View style={styles.heroContainer}>
           <Image
-            source={require('../assets/dosen.png')}
+            source={require('../assets/dosen.jpg')}
             style={styles.heroImage}
             resizeMode="cover"
           />
