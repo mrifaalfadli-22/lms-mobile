@@ -412,6 +412,53 @@ const AnimatedMateriCard = ({ item, index, activeIndex, scrollToIndex, materisLe
   );
 };
 
+const AnimatedRecommendationCard = ({ item, index, activeIndex, scrollToIndex, dataLength, navigation }) => {
+  const isActive = index === activeIndex;
+  const anim = useRef(new Animated.Value(isActive ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(anim, {
+      toValue: isActive ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [isActive]);
+
+  const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] });
+  const opacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] });
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => !isActive ? scrollToIndex(index) : navigation.navigate('DetailMataKuliah', { course: item })}
+      style={{ marginRight: index === dataLength - 1 ? SIDE_PEEK : CARD_GAP }}
+    >
+      <Animated.View style={[styles.jadwalRegisteredCard, { transform: [{ scale }], opacity }]}>
+        <Image source={{ uri: item.image }} style={styles.jrcImage} />
+        <View style={styles.jrcContent}>
+          <AppText style={styles.jrcTitle} numberOfLines={2}>{item.title}</AppText>
+          <View style={styles.jrcRow}>
+            <CalendarDarkIcon />
+            <AppText style={styles.jrcInfo} numberOfLines={1}>{item.time}</AppText>
+          </View>
+          <View style={styles.jrcRow}>
+            <UsersIcon />
+            <AppText style={styles.jrcInfo}>{item.prodi} • {item.kelas}</AppText>
+          </View>
+          <View style={styles.jrcDivider} />
+          <View style={styles.jrcLecturerRow}>
+            <Image source={{ uri: item.avatar }} style={styles.jrcAvatar} />
+            <View style={{ flex: 1 }}>
+              <AppText style={styles.jrcLecturerName} numberOfLines={1}>{item.dosen}</AppText>
+              <AppText style={styles.jrcLecturerRole}>Dosen pengampu</AppText>
+            </View>
+          </View>
+        </View>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
 const AnimatedJadwalCard = ({ item, index, activeIndex, scrollToIndex, jadwalsLength, navigation, userToken }) => {
   const isActive = index === activeIndex;
   const anim = useRef(new Animated.Value(isActive ? 1 : 0)).current;
@@ -504,6 +551,10 @@ export default function HomeScreen({ navigation, route }) {
     unread_notif: 0
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  // State untuk data rekomendasi guest
+  const [guestCourses, setGuestCourses] = useState([]);
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
 
   useEffect(() => {
     const fetchAdzan = async () => {
@@ -598,6 +649,25 @@ export default function HomeScreen({ navigation, route }) {
           }
         };
         fetchProfile();
+      } else {
+        // Guest: fetch rekomendasi mata kuliah
+        const fetchGuestCourses = async () => {
+          setIsGuestLoading(true);
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/public/mata-kuliah`, {
+              headers: { 'Accept': 'application/json' }
+            });
+            const json = await response.json();
+            if (json.status === 'success' && json.data?.tersedia) {
+              setGuestCourses(json.data.tersedia);
+            }
+          } catch (error) {
+            console.error('Guest courses fetch error:', error);
+          } finally {
+            setIsGuestLoading(false);
+          }
+        };
+        fetchGuestCourses();
       }
     }, [isRegistered, token])
   );
@@ -624,26 +694,7 @@ export default function HomeScreen({ navigation, route }) {
   const jadwals = dashboardData.jadwalHariIni;
   const materis = dashboardData.materiTerbaru;
 
-  const courses = [
-    {
-      id: '1',
-      image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80',
-      title: 'Pemrograman Web',
-      lecturer: 'Yulianto, M.Kom',
-    },
-    {
-      id: '2',
-      image: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=600&q=80',
-      title: 'Kalkulus 1',
-      lecturer: 'Dr. Fauzi Hamdan',
-    },
-    {
-      id: '3',
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80',
-      title: 'Basis Data',
-      lecturer: 'Siti Rahma, S.T',
-    },
-  ];
+  const courses = guestCourses;
 
   const suggestions = isRegistered
     ? ['Kuis html', 'Materi kalkukus', 'Live class']
@@ -1040,50 +1091,57 @@ export default function HomeScreen({ navigation, route }) {
 
         {/* ── Rekomendasi Mata Kuliah (Guest) ── */}
         {!isRegistered && (
-          <>
+          <View style={styles.materiRegisteredSection}>
             <View style={styles.sectionHeader}>
               <AppText style={styles.sectionTitle}>Rekomendasi Mata kuliah</AppText>
-              {/* Dot indicators */}
-              <View style={styles.dotRow}>
-                {courses.map((_, i) => (
-                  <TouchableOpacity key={i} onPress={() => scrollToIndex(i)} activeOpacity={0.7}>
-                    <SmoothDot active={activeIndex === i} />
-                  </TouchableOpacity>
-                ))}
-              </View>
+              {isGuestLoading && <ActivityIndicator size="small" color={PRIMARY} />}
+              {courses.length > 1 && (
+                <View style={styles.dotRow}>
+                  {courses.map((_, i) => (
+                    <TouchableOpacity key={i} onPress={() => scrollToIndex(i)} activeOpacity={0.7}>
+                      <SmoothDot active={activeIndex === i} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
 
-            {/* ── Carousel ── */}
-            <FlatList
-              ref={flatListRef}
-              data={courses}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={SNAP_INTERVAL}
-              snapToAlignment="start"
-              decelerationRate="fast"
-              contentContainerStyle={styles.carouselContainer}
-              initialScrollIndex={0}
-              getItemLayout={(_, index) => ({
-                length: SNAP_INTERVAL,
-                offset: SNAP_INTERVAL * index,
-                index,
-              })}
-              onViewableItemsChanged={onViewableItemsChanged}
-              viewabilityConfig={viewabilityConfig.current}
-              renderItem={({ item, index }) => (
-                <AnimatedCourseCard
-                  item={item}
-                  index={index}
-                  activeIndex={activeIndex}
-                  scrollToIndex={scrollToIndex}
-                  navigation={navigation}
-                  coursesLength={courses.length}
-                />
-              )}
-            />
-          </>
+            {courses.length === 0 && !isGuestLoading ? (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <AppText style={{ color: '#6B7280', fontSize: 13 }}>Belum ada mata kuliah tersedia.</AppText>
+              </View>
+            ) : (
+              <FlatList
+                ref={flatListRef}
+                data={courses}
+                keyExtractor={(item) => String(item.id)}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={SNAP_INTERVAL}
+                snapToAlignment="start"
+                decelerationRate="fast"
+                contentContainerStyle={styles.carouselContainer}
+                initialScrollIndex={0}
+                getItemLayout={(_, index) => ({
+                  length: SNAP_INTERVAL,
+                  offset: SNAP_INTERVAL * index,
+                  index,
+                })}
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig.current}
+                renderItem={({ item, index }) => (
+                  <AnimatedRecommendationCard
+                    item={item}
+                    index={index}
+                    activeIndex={activeIndex}
+                    scrollToIndex={scrollToIndex}
+                    dataLength={courses.length}
+                    navigation={navigation}
+                  />
+                )}
+              />
+            )}
+          </View>
         )}
 
         <View style={{ height: 40 }} />
