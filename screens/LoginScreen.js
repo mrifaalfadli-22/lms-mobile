@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../config/api';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppText from '../components/AppText';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
@@ -78,6 +78,58 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const handleDeepLink = async (event) => {
+      let data = Linking.parse(event.url);
+      if (data.path === 'auth/callback' || event.url.includes('auth/callback')) {
+        WebBrowser.dismissBrowser();
+        
+        const { token, error } = data.queryParams || {};
+        
+        if (error) {
+          showPopup('Gagal Masuk', error, 'error');
+        } else if (token) {
+          setIsLoading(true);
+          try {
+            const profileResponse = await fetch(`${API_BASE_URL}/api/profile`, {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            });
+
+            const profileJson = await profileResponse.json();
+
+            if (profileResponse.ok && profileJson.success) {
+              navigation.replace('Main', {
+                isRegistered: true,
+                user: profileJson.data,
+                token: token
+              });
+            } else {
+              showPopup('Gagal Masuk', 'Gagal mengambil data profil Google Anda.', 'error');
+            }
+          } catch (error) {
+            showPopup('Gagal Masuk', 'Terjadi kesalahan jaringan.', 'error');
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      }
+    };
+
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+    
+    // Check initial URL just in case the app was fully killed and launched via the link
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    return () => subscription.remove();
+  }, [navigation]);
+
+
   // State untuk Notification Popup
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupConfig, setPopupConfig] = useState({ title: '', message: '', type: 'error' });
@@ -89,12 +141,13 @@ export default function LoginScreen({ navigation }) {
 
   const handleGoogleLogin = async () => {
     try {
-      // Buka halaman Google Auth Backend dengan parameter source=mobile
       const authUrl = `${API_BASE_URL}/api/auth/google/redirect?source=mobile`;
+      // Use lms://auth/callback directly as a fallback format to match the backend
       const redirectUrl = Linking.createURL('/auth/callback');
 
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
 
+      // result.type === 'success' normally triggers if WebBrowser catches it natively
       if (result.type === 'success' && result.url) {
         const params = Linking.parse(result.url);
         const { token, error } = params.queryParams;
@@ -103,7 +156,6 @@ export default function LoginScreen({ navigation }) {
           showPopup('Gagal Masuk', error, 'error');
         } else if (token) {
           setIsLoading(true);
-          // Get User Profile with token
           const profileResponse = await fetch(`${API_BASE_URL}/api/profile`, {
             method: 'GET',
             headers: {

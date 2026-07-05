@@ -1,6 +1,6 @@
 import React from 'react';
 import AppText from '../components/AppText';
-import { View,  StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -62,7 +62,7 @@ export default function BantuanScreen() {
         <View style={styles.contactContainer}>
           <AppText style={styles.contactTitle}>Masih butuh bantuan?</AppText>
           <AppText style={styles.contactDesc}>
-            Hubungi dukungan teknis kami melalui email di support@ucademy.id atau kunjungi pusat layanan mahasiswa.
+            Hubungi dukungan teknis kami melalui email di ucademyofficial@gmail.com atau kunjungi pusat layanan mahasiswa.
           </AppText>
         </View>
       </ScrollView>
