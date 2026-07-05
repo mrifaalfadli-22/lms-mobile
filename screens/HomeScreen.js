@@ -21,6 +21,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useFocusEffect } from '@react-navigation/native';
 
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+
 const { width, height } = Dimensions.get('window');
 
 // ── Color Palette ──────────────────────────────────────────────────────────────
@@ -492,6 +494,7 @@ export default function HomeScreen({ navigation, route }) {
 
   const [modalVisible, setModalVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   // State untuk data dinamis
   const [dashboardData, setDashboardData] = useState({
@@ -687,23 +690,50 @@ export default function HomeScreen({ navigation, route }) {
     setActiveMateriIndex(index);
   };
 
+  const headerPaddingBottom = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [36, 12],
+    extrapolate: 'clamp',
+  });
+
+  const headerPaddingTop = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [54, 44],
+    extrapolate: 'clamp',
+  });
+
+  const headerBorderRadius = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [32, 20],
+    extrapolate: 'clamp',
+  });
+
+  const headerElevation = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [0, 5],
+    extrapolate: 'clamp',
+  });
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={PRIMARY} />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
 
-      {/* ── Main scrollable content ── */}
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      {/* ── Header ── */}
+      <AnimatedLinearGradient
+        colors={['#24665A', '#45A493']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          styles.header,
+          {
+            paddingBottom: headerPaddingBottom,
+            paddingTop: headerPaddingTop,
+            borderBottomLeftRadius: headerBorderRadius,
+            borderBottomRightRadius: headerBorderRadius,
+            elevation: headerElevation,
+          }
+        ]}
       >
-        {/* ── Header ── */}
-        <LinearGradient
-          colors={['#24665A', '#45A493']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
           <View style={styles.headerLeft}>
             <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('Profil')}>
               {isRegistered ? (
@@ -759,9 +789,20 @@ export default function HomeScreen({ navigation, route }) {
               )}
             </TouchableOpacity>
           )}
-        </LinearGradient>
+        </AnimatedLinearGradient>
 
-        {/* ── Search Section ── */}
+        {/* ── Main scrollable content ── */}
+        <Animated.ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingTop: 140 }]}
+          showsVerticalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+        >
+          {/* ── Search Section ── */}
         <View style={styles.searchSection}>
           <AppText style={styles.searchLabel}>Hari ini mau belajar apa ?</AppText>
           <View style={styles.searchBar}>
@@ -1046,7 +1087,7 @@ export default function HomeScreen({ navigation, route }) {
         )}
 
         <View style={{ height: 40 }} />
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* ── Modal Pop-up Daftar ── */}
       {modalVisible && (
@@ -1119,14 +1160,16 @@ const styles = StyleSheet.create({
 
   // ── Header ──
   header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 22,
-    paddingTop: 54,
-    paddingBottom: 36,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    // paddingTop, paddingBottom, and border-radius are now animated inline
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   greetText: { color: '#fff', fontSize: 16, fontWeight: '700', marginBottom: 6 },
