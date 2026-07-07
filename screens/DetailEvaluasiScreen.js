@@ -10,6 +10,7 @@ import {
   Modal,
   Platform,
   ActivityIndicator,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { API_BASE_URL } from '../config/api';
