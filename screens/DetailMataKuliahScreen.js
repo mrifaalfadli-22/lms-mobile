@@ -23,6 +23,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { downloadMateri } from '../utils/downloadHelper';
+import { useNotification } from '../context/NotificationContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -70,6 +71,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [activeTab, setActiveTab] = useState('pertemuan');
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { showError, showWarning, showSuccess } = useNotification();
 
   const [meetings, setMeetings] = useState([]);
   const [isLoadingMeetings, setIsLoadingMeetings] = useState(true);
@@ -136,7 +138,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
           }
         } catch (error) {
           console.error("Fetch Meetings Error: ", error);
-          Alert.alert("Fetch Error", error.message || error.toString());
+          showError(error.message || error.toString(), "Fetch Error");
         } finally {
           setIsLoadingMeetings(false);
         }
@@ -258,7 +260,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
 
   const handleEnroll = async () => {
     if (!enrollToken.trim()) {
-      Alert.alert('Gagal', 'Silakan masukkan token terlebih dahulu.');
+      showWarning('Silakan masukkan token terlebih dahulu.');
       return;
     }
 
@@ -280,16 +282,16 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
 
       const json = await response.json();
       if (json.success) {
-        Alert.alert('Sukses', 'Anda berhasil bergabung ke kelas ini.');
+        showSuccess('Anda berhasil bergabung ke kelas ini.');
         setHasJoined(true);
         closeMeetingModal();
         navigation.goBack(); // Trigger refresh on MataKuliahScreen
       } else {
-        Alert.alert('Gagal', json.message || 'Token tidak valid atau sudah terdaftar.');
+        showError(json.message || 'Token tidak valid atau sudah terdaftar.');
       }
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Terjadi kesalahan jaringan.');
+      showError('Terjadi kesalahan jaringan.');
     } finally {
       setIsEnrolling(false);
     }

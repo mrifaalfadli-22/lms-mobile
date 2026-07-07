@@ -12,13 +12,13 @@ import {
   ScrollView,
   Modal,
   FlatList,
-  Alert,
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Ellipse } from 'react-native-svg';
 import { fakultasData } from '../data/fakultasData';
 import { API_BASE_URL } from '../config/api';
+import { useNotification } from '../context/NotificationContext';
 
 const { width, height } = Dimensions.get('window');
 const PRIMARY = '#116E63';
@@ -63,6 +63,7 @@ export default function RegisterScreen({ navigation }) {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const { showError, showWarning, showSuccess } = useNotification();
 
   // ── Modal & Select Logic ──
   const [modalType, setModalType] = useState(null); // 'fakultas' | 'prodi' | null
@@ -93,7 +94,7 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (!form.nama || !form.npm || !form.email || !form.password || !form.fakultas || !form.programStudi || !form.tahunAngkatan) {
-      Alert.alert('Gagal', 'Harap isi semua kolom terlebih dahulu.');
+      showWarning('Harap isi semua kolom terlebih dahulu.');
       return;
     }
 
@@ -120,20 +121,18 @@ export default function RegisterScreen({ navigation }) {
       const json = await response.json();
 
       if (response.status === 201 && json.success) {
-        Alert.alert('Sukses', json.message || 'Pendaftaran berhasil. Silakan login.', [
-          { text: 'OK', onPress: () => navigation.replace('Login') }
-        ]);
+        showSuccess(json.message || 'Pendaftaran berhasil. Silakan login.', 'Sukses', () => navigation.replace('Login'));
       } else {
         let errorMessage = json.message || 'Pendaftaran gagal.';
         if (json.errors) {
           const firstErrorKey = Object.keys(json.errors)[0];
           errorMessage = json.errors[firstErrorKey][0];
         }
-        Alert.alert('Gagal', errorMessage);
+        showError(errorMessage);
       }
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Terjadi kesalahan jaringan.');
+      showError('Terjadi kesalahan jaringan.');
     } finally {
       setIsLoading(false);
     }

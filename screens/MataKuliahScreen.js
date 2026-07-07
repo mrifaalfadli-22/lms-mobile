@@ -187,19 +187,19 @@ export default function MataKuliahScreen({ navigation, route }) {
       <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={() => navigation.navigate('DetailMataKuliah', { course: item, isRegistered, user, token, isDiambil })}>
         <Image source={{ uri: item?.image || 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80' }} style={styles.cardImage} />
         <View style={styles.cardContent}>
-          <AppText style={styles.cardTitle} numberOfLines={2}>{item?.title || 'Judul Tidak Tersedia'}</AppText>
+          <AppText style={styles.cardTitle}>{item?.title || 'Judul Tidak Tersedia'}</AppText>
           <View style={styles.cardRow}>
             <UsersIcon />
-            <AppText style={styles.cardInfo} numberOfLines={1}>{item?.type || 'Tipe Tidak Tersedia'}</AppText>
+            <AppText style={[styles.cardInfo, { flex: 1 }]}>{item?.type || 'Tipe Tidak Tersedia'}</AppText>
           </View>
           <View style={styles.cardRow}>
             <ClockIcon />
-            <AppText style={styles.cardInfo}>{item?.time || 'Waktu Tidak Tersedia'}</AppText>
+            <AppText style={[styles.cardInfo, { flex: 1 }]}>{item?.time || 'Waktu Tidak Tersedia'}</AppText>
           </View>
           <View style={styles.dosenRow}>
             <Image source={{ uri: item?.avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80' }} style={styles.dosenAvatar} />
-            <View>
-              <AppText style={styles.dosenName} numberOfLines={1}>{item?.dosen || 'Dosen Tidak Tersedia'}</AppText>
+            <View style={{ flex: 1 }}>
+              <AppText style={styles.dosenName}>{item?.dosen || 'Dosen Tidak Tersedia'}</AppText>
               <AppText style={styles.dosenRole}>{item?.role || 'Dosen pengampu'}</AppText>
             </View>
           </View>

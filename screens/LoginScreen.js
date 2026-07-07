@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Ellipse } from 'react-native-svg';
-import NotificationPopup from '../components/NotificationPopup';
+import { useNotification } from '../context/NotificationContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -77,6 +77,7 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { showError, showWarning } = useNotification();
 
   useEffect(() => {
     const handleDeepLink = async (event) => {
@@ -87,7 +88,7 @@ export default function LoginScreen({ navigation }) {
         const { token, error } = data.queryParams || {};
         
         if (error) {
-          showPopup('Gagal Masuk', error, 'error');
+          showError(error);
         } else if (token) {
           setIsLoading(true);
           try {
@@ -108,10 +109,10 @@ export default function LoginScreen({ navigation }) {
                 token: token
               });
             } else {
-              showPopup('Gagal Masuk', 'Gagal mengambil data profil Google Anda.', 'error');
+              showError('Gagal mengambil data profil Google Anda.');
             }
           } catch (error) {
-            showPopup('Gagal Masuk', 'Terjadi kesalahan jaringan.', 'error');
+            showError('Terjadi kesalahan jaringan.');
           } finally {
             setIsLoading(false);
           }
@@ -129,16 +130,6 @@ export default function LoginScreen({ navigation }) {
     return () => subscription.remove();
   }, [navigation]);
 
-
-  // State untuk Notification Popup
-  const [popupVisible, setPopupVisible] = useState(false);
-  const [popupConfig, setPopupConfig] = useState({ title: '', message: '', type: 'error' });
-
-  const showPopup = (title, message, type = 'error') => {
-    setPopupConfig({ title, message, type });
-    setPopupVisible(true);
-  };
-
   const handleGoogleLogin = async () => {
     try {
       const authUrl = `${API_BASE_URL}/api/auth/google/redirect?source=mobile`;
@@ -153,7 +144,7 @@ export default function LoginScreen({ navigation }) {
         const { token, error } = params.queryParams;
 
         if (error) {
-          showPopup('Gagal Masuk', error, 'error');
+          showError(error);
         } else if (token) {
           setIsLoading(true);
           const profileResponse = await fetch(`${API_BASE_URL}/api/profile`, {
@@ -173,20 +164,20 @@ export default function LoginScreen({ navigation }) {
               token: token
             });
           } else {
-            showPopup('Gagal Masuk', 'Gagal mengambil data profil Google Anda.', 'error');
+            showError('Gagal mengambil data profil Google Anda.');
           }
           setIsLoading(false);
         }
       }
     } catch (e) {
       console.error(e);
-      showPopup('Gagal Masuk', 'Gagal membuka halaman login Google.', 'error');
+      showError('Gagal membuka halaman login Google.');
     }
   };
 
   const handleLogin = async () => {
     if (npm.trim() === '' || password.trim() === '') {
-      showPopup('Gagal Masuk', 'Silakan masukkan NPM dan Password Anda terlebih dahulu.', 'warning');
+      showWarning('Silakan masukkan NPM dan Password Anda terlebih dahulu.');
       return;
     }
 
@@ -223,11 +214,11 @@ export default function LoginScreen({ navigation }) {
         });
       } else {
         // Tampilkan error (kredensial salah, akun dinonaktifkan, dll)
-        showPopup('Gagal Masuk', jsonResponse.message || 'NPM atau Password yang Anda masukkan salah.', 'error');
+        showError(jsonResponse.message || 'NPM atau Password yang Anda masukkan salah.');
       }
     } catch (error) {
       console.error("Login Error: ", error);
-      showPopup('Kesalahan', 'Tidak dapat terhubung ke server. Pastikan backend Laravel sudah berjalan dan URL API sesuai.', 'error');
+      showError('Tidak dapat terhubung ke server. Pastikan backend Laravel sudah berjalan dan URL API sesuai.');
     } finally {
       setIsLoading(false);
     }
@@ -358,14 +349,6 @@ export default function LoginScreen({ navigation }) {
 
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <NotificationPopup
-        visible={popupVisible}
-        title={popupConfig.title}
-        message={popupConfig.message}
-        type={popupConfig.type}
-        onClose={() => setPopupVisible(false)}
-      />
     </SafeAreaView>
   );
 }

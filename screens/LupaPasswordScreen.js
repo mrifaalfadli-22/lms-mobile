@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import AppText from '../components/AppText';
-import { View, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { API_BASE_URL } from '../config/api';
+import { useNotification } from '../context/NotificationContext';
 
 const PRIMARY = '#116E63';
 const BG = '#F8FAFC';
@@ -20,10 +21,11 @@ export default function LupaPasswordScreen() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { showError, showWarning } = useNotification();
 
   const handleKirimLink = async () => {
     if (!email) {
-      Alert.alert('Peringatan', 'Silakan masukkan email Anda terlebih dahulu.');
+      showWarning('Silakan masukkan email Anda terlebih dahulu.');
       return;
     }
 
@@ -47,10 +49,10 @@ export default function LupaPasswordScreen() {
         if (json.errors && json.errors.email) {
             msg = json.errors.email[0];
         }
-        Alert.alert('Gagal', msg);
+        showError(msg);
       }
     } catch (error) {
-      Alert.alert('Error', 'Gagal terhubung ke server.');
+      showError('Gagal terhubung ke server.');
     } finally {
       setIsLoading(false);
     }

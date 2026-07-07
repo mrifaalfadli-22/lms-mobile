@@ -10,11 +10,10 @@ import {
   Modal,
   Platform,
   ActivityIndicator,
-  Alert
-} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { API_BASE_URL } from '../config/api';
+import { useNotification } from '../context/NotificationContext';
 
 const BackIcon = () => (
   <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -41,12 +40,12 @@ export default function DetailEvaluasiScreen({ route }) {
   const token = route?.params?.token;
   const user = route?.params?.user;
   const isRegistered = route?.params?.isRegistered;
+  const { showError, showWarning } = useNotification();
 
   const [loading, setLoading] = useState(true);
   const [pages, setPages] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -109,7 +108,7 @@ export default function DetailEvaluasiScreen({ route }) {
     });
 
     if (!isAllAnswered) {
-      setErrorModalVisible(true);
+      showWarning('Harap isi semua pilihan pada pertanyaan sebelum melanjutkan.', 'Evaluasi Belum Lengkap');
       return false;
     }
     return true;
@@ -165,11 +164,11 @@ export default function DetailEvaluasiScreen({ route }) {
           ],
         });
       } else {
-        Alert.alert('Gagal', json.message || 'Terjadi kesalahan saat menyimpan evaluasi.');
+        showError(json.message || 'Terjadi kesalahan saat menyimpan evaluasi.');
       }
     } catch (error) {
       console.error("Submit Evaluation Error:", error);
-      Alert.alert('Gagal', 'Terjadi kesalahan jaringan.');
+      showError('Terjadi kesalahan jaringan.');
     } finally {
       setSubmitting(false);
     }
@@ -296,24 +295,6 @@ export default function DetailEvaluasiScreen({ route }) {
 
         </ScrollView>
       )}
-
-      {/* Error Modal */}
-      <Modal visible={errorModalVisible} transparent={true} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <AppText style={styles.modalTitle}>Evaluasi Belum Lengkap</AppText>
-            <AppText style={styles.modalDesc}>Harap isi semua pilihan pada pertanyaan sebelum melanjutkan.</AppText>
-            <TouchableOpacity
-              style={styles.modalBtn}
-              activeOpacity={0.8}
-              onPress={() => setErrorModalVisible(false)}
-            >
-              <AppText style={styles.modalBtnText}>Mengerti</AppText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
     </View>
   );
 }

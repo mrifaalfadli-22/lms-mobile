@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import AppText from '../components/AppText';
-import { View, StyleSheet, TouchableOpacity, ImageBackground, TextInput, ScrollView, KeyboardAvoidingView, Platform, Alert, Image, Modal, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ImageBackground, TextInput, ScrollView, KeyboardAvoidingView, Platform, Image, Modal, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import { API_BASE_URL } from '../config/api';
+import { useNotification } from '../context/NotificationContext';
 
 const BG = '#F8FAFC';
 const PRIMARY = '#116E63';
@@ -88,6 +89,7 @@ export default function ProfilScreen() {
   const isRegistered = route.params?.isRegistered || false;
   const user = route.params?.user || null;
   const token = route.params?.token || null;
+  const { showError, showWarning, showSuccess, showConfirm } = useNotification();
 
   // States for registered user form
   const [activeTab, setActiveTab] = useState('profil');
@@ -141,8 +143,6 @@ export default function ProfilScreen() {
 
   // Modal states
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [editingField, setEditingField] = useState(null);
   const [tempValue, setTempValue] = useState('');
 
@@ -150,7 +150,7 @@ export default function ProfilScreen() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (permissionResult.granted === false) {
-      Alert.alert('Izin Ditolak', 'Aplikasi membutuhkan akses ke galeri foto Anda.');
+      showWarning('Aplikasi membutuhkan akses ke galeri foto Anda.', 'Izin Ditolak');
       return;
     }
 
@@ -200,17 +200,17 @@ export default function ProfilScreen() {
           // Gunakan API_BASE_URL untuk membangun URL yang bisa diakses HP (bukan localhost dari server)
           const newFotoUrl = `${API_BASE_URL}/storage/foto-profil/${result2.data.data?.foto_profil}`;
           setForm({ ...form, foto_profil: newFotoUrl });
-          Alert.alert('Sukses', 'Foto profil berhasil diperbarui!');
+          showSuccess('Foto profil berhasil diperbarui!');
         } else {
           let errorMessage = result2.data.message || 'Gagal mengunggah foto profil';
           if (result2.data.errors && result2.data.errors.foto) {
             errorMessage = result2.data.errors.foto[0];
           }
-          Alert.alert('Gagal', errorMessage);
+          showError(errorMessage);
         }
       } catch (error) {
         console.error('Upload Foto Error: ', error);
-        Alert.alert('Error', error.message);
+        showError(error.message);
       } finally {
         setIsUploadingPhoto(false);
       }
@@ -224,12 +224,13 @@ export default function ProfilScreen() {
   };
 
   const handleSimpanAwal = () => {
-    // Open confirmation modal
-    setConfirmModalVisible(true);
+    setEditModalVisible(false);
+    setTimeout(() => {
+      showConfirm("Yakin nggak nih mau disimpan perubahannya?", "Konfirmasi", handleSimpanFinal, () => setEditModalVisible(true));
+    }, 300);
   };
 
   const handleSimpanFinal = async () => {
-    setConfirmModalVisible(false);
     setEditModalVisible(false);
 
     try {
@@ -257,22 +258,21 @@ export default function ProfilScreen() {
 
       if (response.status === 200 && jsonResponse.success) {
         setForm({ ...form, [editingField]: tempValue });
-        Alert.alert('Sukses', `${editingField === 'nama' ? 'Nama' : 'Email'} berhasil diperbarui!`);
+        showSuccess(`${editingField === 'nama' ? 'Nama' : 'Email'} berhasil diperbarui!`);
       } else {
-        Alert.alert('Gagal', jsonResponse.message || 'Gagal memperbarui profil');
+        showError(jsonResponse.message || 'Gagal memperbarui profil');
       }
     } catch (error) {
       console.error("Update Profile Error: ", error);
-      Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data');
+      showError('Terjadi kesalahan saat menyimpan data');
     }
   };
 
   const handleLogoutClick = () => {
-    setLogoutModalVisible(true);
+    showConfirm("Yakin nggak nih mau keluar dari akun kamu?", "Konfirmasi Keluar", handleLogoutConfirm);
   };
 
   const handleLogoutConfirm = async () => {
-    setLogoutModalVisible(false);
     if (token) {
       try {
         const API_URL = `${API_BASE_URL}/api/logout`;
@@ -504,42 +504,6 @@ export default function ProfilScreen() {
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalBtnPrimary} onPress={handleSimpanAwal}>
                 <AppText style={styles.modalBtnPrimaryText}>Simpan</AppText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── MODAL KONFIRMASI ── */}
-      <Modal visible={confirmModalVisible} transparent={true} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <AppText style={styles.modalTitle}>Konfirmasi</AppText>
-            <AppText style={styles.modalDesc}>Yakin nggak nih mau disimpan perubahannya?</AppText>
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity style={styles.modalBtnOutline} onPress={() => setConfirmModalVisible(false)}>
-                <AppText style={styles.modalBtnOutlineText}>Batal</AppText>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalBtnPrimary} onPress={handleSimpanFinal}>
-                <AppText style={styles.modalBtnPrimaryText}>Ya, Simpan</AppText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── MODAL LOGOUT ── */}
-      <Modal visible={logoutModalVisible} transparent={true} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <AppText style={styles.modalTitle}>Konfirmasi Keluar</AppText>
-            <AppText style={styles.modalDesc}>Yakin nggak nih mau keluar dari akun kamu?</AppText>
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity style={styles.modalBtnOutline} onPress={() => setLogoutModalVisible(false)}>
-                <AppText style={styles.modalBtnOutlineText}>Batal</AppText>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtnPrimary, { backgroundColor: '#EF4444' }]} onPress={handleLogoutConfirm}>
-                <AppText style={styles.modalBtnPrimaryText}>Ya, Keluar</AppText>
               </TouchableOpacity>
             </View>
           </View>

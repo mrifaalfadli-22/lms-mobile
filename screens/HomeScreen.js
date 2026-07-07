@@ -449,7 +449,7 @@ const AnimatedRecommendationCard = ({ item, index, activeIndex, scrollToIndex, d
           <View style={styles.jrcLecturerRow}>
             <Image source={{ uri: item.avatar }} style={styles.jrcAvatar} />
             <View style={{ flex: 1 }}>
-              <AppText style={styles.jrcLecturerName} numberOfLines={1}>{item.dosen}</AppText>
+              <AppText style={styles.jrcLecturerName}>{item.dosen}</AppText>
               <AppText style={styles.jrcLecturerRole}>Dosen pengampu</AppText>
             </View>
           </View>
@@ -509,7 +509,7 @@ const AnimatedJadwalCard = ({ item, index, activeIndex, scrollToIndex, jadwalsLe
           <View style={styles.jrcDivider} />
           <View style={styles.jrcLecturerRow}>
             <Image source={{ uri: item.avatar }} style={styles.jrcAvatar} />
-            <View>
+            <View style={{ flex: 1 }}>
               <AppText style={styles.jrcLecturerName}>{item.lecturer}</AppText>
               <AppText style={styles.jrcLecturerRole}>{item.role}</AppText>
             </View>
@@ -887,13 +887,22 @@ export default function HomeScreen({ navigation, route }) {
             <View style={styles.tagsRow}>
               <AppText style={styles.tagsLabel}>Misal</AppText>
               {suggestions.map((s, i) => (
-                <TouchableOpacity key={i} style={styles.tag} activeOpacity={0.75}>
+                <TouchableOpacity 
+                  key={i} 
+                  style={styles.tag} 
+                  activeOpacity={0.75}
+                  onPress={() => setSearchText(s)}
+                >
                   <AppText style={styles.tagText}>{s}</AppText>
                 </TouchableOpacity>
               ))}
             </View>
             <View style={styles.tagsRowCenter}>
-              <TouchableOpacity style={styles.tag} activeOpacity={0.75}>
+              <TouchableOpacity 
+                style={styles.tag} 
+                activeOpacity={0.75}
+                onPress={() => setSearchText(isRegistered ? 'Materi pemprogram berbasis web' : 'Struktur Data & Algoritma')}
+              >
                 <AppText style={styles.tagText}>
                   {isRegistered ? 'Materi pemprogram berbasis web' : 'Struktur Data & Algoritma'}
                 </AppText>

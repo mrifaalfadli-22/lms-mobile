@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import AppText from '../components/AppText';
-import { View, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { API_BASE_URL } from '../config/api';
+import { useNotification } from '../context/NotificationContext';
 
 const PRIMARY = '#116E63';
 const BG = '#F8FAFC';
@@ -43,25 +44,26 @@ export default function ResetPasswordScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [isLoading, setIsLoading] = useState(false);
+  const { showError, showWarning, showSuccess } = useNotification();
 
   const handleResetPassword = async () => {
     if (!token || !email) {
-      Alert.alert('Gagal', 'Tautan tidak valid. Silakan minta tautan baru.');
+      showError('Tautan tidak valid. Silakan minta tautan baru.');
       return;
     }
 
     if (!password || !confirmPassword) {
-      Alert.alert('Gagal', 'Semua kolom harus diisi.');
+      showWarning('Semua kolom harus diisi.');
       return;
     }
 
     if (password.length < 8) {
-      Alert.alert('Gagal', 'Kata sandi baru minimal 8 karakter.');
+      showWarning('Kata sandi baru minimal 8 karakter.');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Gagal', 'Konfirmasi kata sandi tidak cocok.');
+      showWarning('Konfirmasi kata sandi tidak cocok.');
       return;
     }
 
@@ -84,19 +86,17 @@ export default function ResetPasswordScreen() {
       const json = await response.json();
 
       if (response.ok && json.success) {
-        Alert.alert('Sukses', 'Kata sandi Anda berhasil diatur ulang. Silakan masuk dengan kata sandi baru Anda.', [
-          { text: 'OK', onPress: () => navigation.navigate('Login') }
-        ]);
+        showSuccess('Kata sandi Anda berhasil diatur ulang. Silakan masuk dengan kata sandi baru Anda.', 'Sukses', () => navigation.navigate('Login'));
       } else {
         let msg = json.message || 'Gagal mengatur ulang kata sandi.';
         if (json.errors) {
             // Ambil pesan error validasi pertama jika ada
             msg = Object.values(json.errors)[0][0];
         }
-        Alert.alert('Gagal', msg);
+        showError(msg);
       }
     } catch (error) {
-      Alert.alert('Error', 'Gagal terhubung ke server.');
+      showError('Gagal terhubung ke server.');
     } finally {
       setIsLoading(false);
     }

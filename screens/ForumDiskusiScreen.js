@@ -8,6 +8,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { useNotification } from '../context/NotificationContext';
 
 // Icons
 const BackIcon = () => (
@@ -60,6 +61,7 @@ export default function ForumDiskusiScreen({ route }) {
   const topic = route?.params?.topic || "Pengenalan dasar HTML";
   const meeting = route?.params?.meeting;
   const userToken = route?.params?.userToken;
+  const { showConfirm } = useNotification();
 
   const [messages, setMessages] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -186,28 +188,23 @@ export default function ForumDiskusiScreen({ route }) {
   };
 
   const handleDelete = () => {
-    Alert.alert("Hapus Pesan", "Anda yakin ingin menghapus pesan ini?", [
-      { text: "Batal", style: "cancel" },
-      {
-        text: "Hapus", style: "destructive", onPress: async () => {
-          try {
-            const res = await fetch(`${baseUrl}/api/forum/${selectedMessage.id_pesan}`, {
-              method: 'DELETE',
-              headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${userToken}`
-              }
-            });
-            if (res.ok) {
-              fetchMessages();
-            }
-          } catch (error) {
-            console.error(error);
+    showConfirm("Anda yakin ingin menghapus pesan ini?", "Hapus Pesan", async () => {
+      try {
+        const res = await fetch(`${baseUrl}/api/forum/${selectedMessage.id_pesan}`, {
+          method: 'DELETE',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${userToken}`
           }
-          setModalVisible(false);
+        });
+        if (res.ok) {
+          fetchMessages();
         }
+      } catch (error) {
+        console.error(error);
       }
-    ]);
+      setModalVisible(false);
+    });
   };
 
   const getInitials = (name) => {
@@ -308,7 +305,10 @@ export default function ForumDiskusiScreen({ route }) {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => navigation.goBack()}>
@@ -332,8 +332,7 @@ export default function ForumDiskusiScreen({ route }) {
       </View>
 
       {/* Input Area */}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={styles.inputContainer}>
+      <View style={styles.inputContainer}>
           {/* Action preview (Reply/Edit) */}
           {(replyTo || editMsgId) && (
             <View style={styles.actionPreview}>
@@ -370,7 +369,6 @@ export default function ForumDiskusiScreen({ route }) {
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
 
       {/* Options Modal */}
       <Modal transparent visible={modalVisible} animationType="fade" onRequestClose={() => setModalVisible(false)}>
@@ -401,7 +399,7 @@ export default function ForumDiskusiScreen({ route }) {
         </BlurView>
       </Modal>
 
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

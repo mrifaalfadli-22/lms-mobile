@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootNavigator from './navigation/RootNavigator';
+import { NotificationProvider } from './context/NotificationContext';
 import {
   useFonts,
   PlusJakartaSans_300Light,
@@ -46,9 +47,11 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer linking={linking}>
-        <RootNavigator />
-      </NavigationContainer>
+      <NotificationProvider>
+        <NavigationContainer linking={linking}>
+          <RootNavigator />
+        </NavigationContainer>
+      </NotificationProvider>
     </SafeAreaProvider>
   );
 }

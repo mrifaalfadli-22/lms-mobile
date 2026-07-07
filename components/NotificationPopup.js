@@ -82,6 +82,17 @@ const VARIANTS = {
     btnLabel: 'Tutup',
     defaultTitle: 'Peringatan',
   },
+  confirm: {
+    icon: AlertTriangleIcon,
+    iconColor: '#3b82f6', // blue-500
+    iconBgColor: '#dbeafe', // blue-100
+    btnTextColor: '#3b82f6',
+    btnBorderColor: '#eff6ff',
+    btnIcon: CheckIcon,
+    btnLabel: 'Ya',
+    defaultTitle: 'Konfirmasi',
+    showCancel: true,
+  },
 };
 
 export default function NotificationPopup({
@@ -90,6 +101,7 @@ export default function NotificationPopup({
   title,
   type = 'error',
   onClose,
+  onConfirm,
 }) {
   const [scaleAnim] = React.useState(new Animated.Value(0.9));
   const [opacityAnim] = React.useState(new Animated.Value(0));
@@ -150,16 +162,39 @@ export default function NotificationPopup({
           </View>
 
           {/* Action button */}
-          <TouchableOpacity
-            style={[styles.button, { borderTopColor: v.btnBorderColor }]}
-            activeOpacity={0.7}
-            onPress={onClose}
-          >
-            <BtnIcon color={v.btnTextColor} size={15} />
-            <AppText style={[styles.buttonText, { color: v.btnTextColor }]}>
-              {v.btnLabel}
-            </AppText>
-          </TouchableOpacity>
+          {v.showCancel ? (
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.buttonHalf, { borderRightWidth: 1, borderRightColor: '#f3f4f6' }]}
+                activeOpacity={0.7}
+                onPress={onClose}
+              >
+                <AppText style={[styles.buttonText, { color: '#6b7280' }]}>
+                  Batal
+                </AppText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.buttonHalf}
+                activeOpacity={0.7}
+                onPress={onConfirm}
+              >
+                <AppText style={[styles.buttonText, { color: v.iconColor, fontWeight: '700' }]}>
+                  {v.btnLabel}
+                </AppText>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.button, { borderTopColor: v.btnBorderColor }]}
+              activeOpacity={0.7}
+              onPress={onClose}
+            >
+              <BtnIcon color={v.btnTextColor} size={15} />
+              <AppText style={[styles.buttonText, { color: v.btnTextColor }]}>
+                {v.btnLabel}
+              </AppText>
+            </TouchableOpacity>
+          )}
         </Animated.View>
       </View>
       </BlurView>
@@ -227,5 +262,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     marginLeft: 6,
+  },
+  buttonRow: {
+    width: '100%',
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+  },
+  buttonHalf: {
+    flex: 1,
+    paddingVertical: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
   },
 });

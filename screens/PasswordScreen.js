@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import AppText from '../components/AppText';
-import { View, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, Modal, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, Modal } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { API_BASE_URL } from '../config/api';
+import { useNotification } from '../context/NotificationContext';
 
 const PRIMARY = '#116E63';
 const BG = '#F8FAFC';
@@ -34,6 +35,7 @@ export default function PasswordScreen() {
   const route = useRoute();
   
   const token = route.params?.token;
+  const { showError, showWarning, showSuccess, showConfirm } = useNotification();
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -46,30 +48,28 @@ export default function PasswordScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
 
   const handleSimpanClick = () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Gagal', 'Semua kolom password harus diisi.');
+      showWarning('Semua kolom password harus diisi.');
       return;
     }
     if (newPassword.length < 8) {
-      Alert.alert('Gagal', 'Password baru minimal 8 karakter.');
+      showWarning('Password baru minimal 8 karakter.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert('Gagal', 'Konfirmasi password baru tidak cocok.');
+      showWarning('Konfirmasi password baru tidak cocok.');
       return;
     }
     // Close edit modal, open confirm modal
     setEditModalVisible(false);
     setTimeout(() => {
-      setConfirmModalVisible(true);
+      showConfirm("Yakin nggak nih mau ubah password kamu?", "Konfirmasi", handleSimpanFinal);
     }, 300); // slight delay for smooth transition
   };
 
   const handleSimpanFinal = async () => {
-    setConfirmModalVisible(false);
     setIsSubmitting(true);
     
     try {
@@ -90,20 +90,19 @@ export default function PasswordScreen() {
       const json = await response.json();
       
       if (response.status === 200 && json.success) {
-        Alert.alert('Sukses', 'Password berhasil diubah!');
-        navigation.goBack();
+        showSuccess('Password berhasil diubah!', 'Sukses', () => navigation.goBack());
       } else {
         let msg = json.message || 'Gagal mengubah password';
         if (json.errors) {
           msg = Object.values(json.errors)[0][0]; // get first validation error
         }
         setTimeout(() => {
-          Alert.alert('Gagal', msg);
+          showError(msg);
         }, 500);
       }
     } catch (error) {
       setTimeout(() => {
-        Alert.alert('Error', 'Gagal terhubung ke server');
+        showError('Gagal terhubung ke server');
       }, 500);
     } finally {
       setIsSubmitting(false);
@@ -191,24 +190,6 @@ export default function PasswordScreen() {
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalBtnPrimary} onPress={handleSimpanClick}>
                 <AppText style={styles.modalBtnPrimaryText}>Simpan</AppText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ── MODAL KONFIRMASI ── */}
-      <Modal visible={confirmModalVisible} transparent={true} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <AppText style={styles.modalTitle}>Konfirmasi</AppText>
-            <AppText style={styles.modalDesc}>Yakin nggak nih mau ubah password kamu?</AppText>
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity style={styles.modalBtnOutline} onPress={() => setConfirmModalVisible(false)}>
-                <AppText style={styles.modalBtnOutlineText}>Batal</AppText>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalBtnPrimary} onPress={handleSimpanFinal} disabled={isSubmitting}>
-                <AppText style={styles.modalBtnPrimaryText}>{isSubmitting ? 'Menyimpan...' : 'Ya, Simpan'}</AppText>
               </TouchableOpacity>
             </View>
           </View>
