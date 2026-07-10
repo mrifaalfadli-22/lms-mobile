@@ -135,6 +135,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                 lecturer: lecturer,
                 method: sesi.metode_pertemuan,
                 time: timeString,
+                scheduledDateString: `${dateNum} ${monthName} ${year}`,
                 link_kelas_daring: sesi.link_kelas_daring,
                 rawMateri: sesi.materi,
                 tanggal_pelaksanaan: sesi.tanggal_pelaksanaan,
@@ -457,6 +458,25 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                         ) : null}
                       </View>
                       <AppText style={styles.meetingTopic}>{item.topic}</AppText>
+                      {(() => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const sessionDate = new Date(item.tanggal_pelaksanaan);
+                        sessionDate.setHours(0, 0, 0, 0);
+                        const isLocked = !item.akses_bebas && sessionDate > today;
+                        
+                        if (isLocked) {
+                          return (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, marginBottom: 2 }}>
+                              <Ionicons name="time-outline" size={14} color="#D97706" style={{ marginRight: 4 }} />
+                              <AppText style={{ fontSize: 12, color: '#D97706', fontWeight: '600' }}>
+                                Dijadwalkan: {item.scheduledDateString}
+                              </AppText>
+                            </View>
+                          );
+                        }
+                        return null;
+                      })()}
                       <AppText style={styles.meetingLecturer}>{lecturer}</AppText>
                     </View>
                   </TouchableOpacity>
