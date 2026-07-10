@@ -24,6 +24,7 @@ import { BlurView } from 'expo-blur';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { downloadMateri } from '../utils/downloadHelper';
 import { useNotification } from '../context/NotificationContext';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -56,6 +57,8 @@ const YoutubePlayIcon = () => (
   </Svg>
 );
 
+
+
 export default function DetailMataKuliahScreen({ navigation, route }) {
   const isRegistered = route?.params?.isRegistered || false;
   const course = route?.params?.course;
@@ -65,12 +68,14 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
   const isDiambil = route?.params?.isDiambil || false;
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [lockedModalVisible, setLockedModalVisible] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [enrollToken, setEnrollToken] = useState('');
   const [hasJoined, setHasJoined] = useState(isDiambil);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [activeTab, setActiveTab] = useState('pertemuan');
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnimLocked = useRef(new Animated.Value(0)).current;
   const { showError, showWarning, showSuccess } = useNotification();
 
   const [meetings, setMeetings] = useState([]);
@@ -131,7 +136,9 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                 method: sesi.metode_pertemuan,
                 time: timeString,
                 link_kelas_daring: sesi.link_kelas_daring,
-                rawMateri: sesi.materi
+                rawMateri: sesi.materi,
+                tanggal_pelaksanaan: sesi.tanggal_pelaksanaan,
+                akses_bebas: sesi.jadwal_perkuliahan?.akses_bebas
               };
             });
             setMeetings(fetchedMeetings);
@@ -255,6 +262,25 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
     }).start(() => {
       setModalVisible(false);
       setEnrollToken('');
+    });
+  };
+
+  const openLockedModal = () => {
+    setLockedModalVisible(true);
+    Animated.timing(fadeAnimLocked, {
+      toValue: 1,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeLockedModal = () => {
+    Animated.timing(fadeAnimLocked, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setLockedModalVisible(false);
     });
   };
 
@@ -397,6 +423,17 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                       if (!hasJoined) {
                         openMeetingModal(item);
                       } else {
+                        if (!item.akses_bebas) {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const sessionDate = new Date(item.tanggal_pelaksanaan);
+                          sessionDate.setHours(0, 0, 0, 0);
+                          
+                          if (sessionDate > today) {
+                            openLockedModal();
+                            return;
+                          }
+                        }
                         navigation.navigate('DetailSesi', { meeting: item, course: course, userToken: userToken });
                       }
                     }}
@@ -672,6 +709,44 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
         </Animated.View>
       )}
 
+      {/* LOCKED MEETING MODAL POPUP */}
+      {lockedModalVisible && (
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            { opacity: fadeAnimLocked, zIndex: 100 }
+          ]}
+        >
+          <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
+            <View style={styles.modalOverlay}>
+              <View style={[styles.modalContentSmall, { padding: 0, overflow: 'hidden' }]}>
+                <View style={{ padding: 24, alignItems: 'center' }}>
+                  <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEF3C7', justifyContent: 'center', alignItems: 'center' }}>
+                    <Ionicons name="warning-outline" size={32} color="#D97706" />
+                  </View>
+                  <AppText style={{ fontSize: 16, fontWeight: '700', color: '#111827', marginTop: 16, marginBottom: 8 }}>
+                    Akses Terkunci
+                  </AppText>
+                  <AppText style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', lineHeight: 20 }}>
+                    Sesi pertemuan ini belum bisa diakses karena belum sesuai tanggalnya.
+                  </AppText>
+                </View>
+                
+                <View style={{ width: '100%', borderTopWidth: 1, borderTopColor: '#F3F4F6', flexDirection: 'row' }}>
+                  <TouchableOpacity
+                    style={{ flex: 1, paddingVertical: 14, alignItems: 'center' }}
+                    onPress={closeLockedModal}
+                    activeOpacity={0.7}
+                  >
+                    <AppText style={{ color: '#2563EB', fontWeight: '600', fontSize: 14 }}>Tutup</AppText>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </BlurView>
+        </Animated.View>
+      )}
+
     </ImageBackground>
   );
 }
@@ -861,7 +936,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalContentSmall: {
-    width: '80%',
+    width: '85%',
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 24,
