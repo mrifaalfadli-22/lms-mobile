@@ -598,6 +598,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                             const isDocx = ext === 'docx' || ext === 'doc';
                             const isXls = ext === 'xls' || ext === 'xlsx';
                             const isPpt = ext === 'ppt' || ext === 'pptx';
+                            const isImg = ext === 'png' || ext === 'jpg' || ext === 'jpeg';
                             const fileName = file.split('/').pop().replace(/^[a-f0-9\-]+_/, '');
 
                             let iconSource = require('../assets/other.png');
@@ -605,6 +606,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                             else if (isDocx) iconSource = require('../assets/doc.png');
                             else if (isXls) iconSource = require('../assets/xls.png');
                             else if (isPpt) iconSource = require('../assets/ppt.png');
+                            else if (isImg) iconSource = require('../assets/img.png');
 
                             const FileDownloadRow = () => {
                               const [isDownloading, setIsDownloading] = useState(false);
