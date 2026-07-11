@@ -304,7 +304,10 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
           'Accept': 'application/json',
           'Authorization': `Bearer ${userToken}`
         },
-        body: JSON.stringify({ token_enrollment: enrollToken })
+        body: JSON.stringify({ 
+          token_enrollment: enrollToken,
+          id_jadwal: course.id 
+        })
       });
 
       const json = await response.json();
