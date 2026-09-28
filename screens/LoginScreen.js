@@ -337,6 +337,15 @@ export default function LoginScreen({ navigation }) {
               <AppText style={styles.googleBtnText}>Masuk dengan Google</AppText>
             </TouchableOpacity>
 
+            {/* E-Portal SSO */}
+            <TouchableOpacity
+              style={[styles.googleBtn, { marginTop: 12 }]}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('EportalLogin')}
+            >
+              <AppText style={styles.googleBtnText}>Masuk dengan Akun E-Portal</AppText>
+            </TouchableOpacity>
+
           </View>
 
           {/* Sign-up link */}
