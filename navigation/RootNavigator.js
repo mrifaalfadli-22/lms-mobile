@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import SplashScreen from '../screens/SplashScreen';
 import LoginScreen from '../screens/LoginScreen';
-import EportalLoginScreen from '../screens/EportalLoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import LupaPasswordScreen from '../screens/LupaPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
@@ -35,7 +34,6 @@ export default function RootNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
       <Stack.Screen name="Splash" component={SplashScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="EportalLogin" component={EportalLoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="LupaPassword" component={LupaPasswordScreen} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />

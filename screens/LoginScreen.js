@@ -1,11 +1,8 @@
-import { API_BASE_URL } from '../config/api';
-import React, { useState, useEffect } from 'react';
+import { API_BASE_URL, EPORTAL_API_URL } from '../config/api';
+import React, { useState } from 'react';
 import AppText from '../components/AppText';
-import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
 import {
   View,
-
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -24,17 +21,6 @@ import { useNotification } from '../context/NotificationContext';
 const { width, height } = Dimensions.get('window');
 
 const PRIMARY = '#116E63';
-const LINK_COLOR = '#116E63';
-
-// ── Google "G" logo ────────────────────────────────────────────────────────────
-const GoogleIcon = () => (
-  <Svg width="22" height="22" viewBox="0 0 24 24">
-    <Path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-    <Path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-    <Path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
-    <Path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-  </Svg>
-);
 
 // ── Eye icon ───────────────────────────────────────────────────────────────────
 const EyeIcon = ({ visible }) =>
@@ -70,150 +56,62 @@ const BackgroundBlobs = () => (
 );
 
 // ── LoginScreen ────────────────────────────────────────────────────────────────
-WebBrowser.maybeCompleteAuthSession();
-
 export default function LoginScreen({ navigation }) {
-  const [npm, setNpm] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { showError, showWarning } = useNotification();
 
-  useEffect(() => {
-    const handleDeepLink = async (event) => {
-      let data = Linking.parse(event.url);
-      if (data.path === 'auth/callback' || event.url.includes('auth/callback')) {
-        WebBrowser.dismissBrowser();
-        
-        const { token, error } = data.queryParams || {};
-        
-        if (error) {
-          showError(error);
-        } else if (token) {
-          setIsLoading(true);
-          try {
-            const profileResponse = await fetch(`${API_BASE_URL}/api/profile`, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            });
-
-            const profileJson = await profileResponse.json();
-
-            if (profileResponse.ok && profileJson.success) {
-              navigation.replace('Main', {
-                isRegistered: true,
-                user: profileJson.data,
-                token: token
-              });
-            } else {
-              showError('Gagal mengambil data profil Google Anda.');
-            }
-          } catch (error) {
-            showError('Terjadi kesalahan jaringan.');
-          } finally {
-            setIsLoading(false);
-          }
-        }
-      }
-    };
-
-    const subscription = Linking.addEventListener('url', handleDeepLink);
-    
-    // Check initial URL just in case the app was fully killed and launched via the link
-    Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink({ url });
-    });
-
-    return () => subscription.remove();
-  }, [navigation]);
-
-  const handleGoogleLogin = async () => {
-    try {
-      const authUrl = `${API_BASE_URL}/api/auth/google/redirect?source=mobile`;
-      // Use lms://auth/callback directly as a fallback format to match the backend
-      const redirectUrl = Linking.createURL('/auth/callback');
-
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
-
-      // result.type === 'success' normally triggers if WebBrowser catches it natively
-      if (result.type === 'success' && result.url) {
-        const params = Linking.parse(result.url);
-        const { token, error } = params.queryParams;
-
-        if (error) {
-          showError(error);
-        } else if (token) {
-          setIsLoading(true);
-          const profileResponse = await fetch(`${API_BASE_URL}/api/profile`, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          const profileJson = await profileResponse.json();
-
-          if (profileResponse.ok && profileJson.success) {
-            navigation.replace('Main', {
-              isRegistered: true,
-              user: profileJson.data,
-              token: token
-            });
-          } else {
-            showError('Gagal mengambil data profil Google Anda.');
-          }
-          setIsLoading(false);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-      showError('Gagal membuka halaman login Google.');
-    }
-  };
-
   const handleLogin = async () => {
-    if (npm.trim() === '' || password.trim() === '') {
-      showWarning('Silakan masukkan NPM dan Password Anda terlebih dahulu.');
+    if (email.trim() === '' || password.trim() === '') {
+      showWarning('Silakan masukkan email dan password akun E-Portal Anda.');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/login`, {
+      const eportalResponse = await fetch(`${EPORTAL_API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({
-          identifier: npm, // Backend menerima 'identifier' (yang memproses NPM / nomor_induk)
-          password: password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
-      const jsonResponse = await response.json();
+      const eportalJson = await eportalResponse.json();
 
-      if (response.status === 200 && jsonResponse.status === 'success') {
-        // Jika login berhasil
-        const token = jsonResponse.data.token;
+      if (!eportalResponse.ok || !eportalJson?.data?.uika_sso_token) {
+        showError(eportalJson?.message || 'Email atau password E-Portal salah.');
+        setIsLoading(false);
+        return;
+      }
 
+      const lmsResponse = await fetch(`${API_BASE_URL}/api/sso/mobile-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ token: eportalJson.data.uika_sso_token }),
+      });
+
+      const lmsJson = await lmsResponse.json();
+
+      if (lmsResponse.ok && lmsJson.status === 'success') {
         navigation.replace('Main', {
           isRegistered: true,
-          user: jsonResponse.data.user,
-          token: token
+          user: lmsJson.data.user,
+          token: lmsJson.data.token,
         });
       } else {
-        // Tampilkan error (kredensial salah, akun dinonaktifkan, dll)
-        showError(jsonResponse.message || 'NPM atau Password yang Anda masukkan salah.');
+        showError(lmsJson.message || 'Gagal masuk ke LMS dengan akun E-Portal.');
       }
     } catch (error) {
-      console.error("Login Error: ", error);
-      showError('Tidak dapat terhubung ke server. Pastikan backend Laravel sudah berjalan dan URL API sesuai.');
+      console.error('Login Error: ', error);
+      showError('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
     } finally {
       setIsLoading(false);
     }
@@ -248,24 +146,24 @@ export default function LoginScreen({ navigation }) {
           </View>
 
           {/* ── Headline ── */}
-          <AppText style={styles.headline}>Yuk, Daftar di U-Cademy{'\n'}GRATIS!</AppText>
+          <AppText style={styles.headline}>Masuk dengan{'\n'}Akun E-Portal</AppText>
           <AppText style={styles.subheadline}>
-            Akses ratusan materi kuliah dan beragam fitur{'\n'}menarik lainnya sekarang !
+            Gunakan email dan password akun E-Portal UIKA Anda{'\n'}untuk masuk ke u-Cademy.
           </AppText>
 
           {/* ── Form ── */}
           <View style={styles.form}>
 
-            {/* NPM */}
+            {/* Email */}
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Masukkan NPM kamu"
+                placeholder="Email E-Portal"
                 placeholderTextColor="#BDBDBD"
-                value={npm}
-                onChangeText={setNpm}
+                value={email}
+                onChangeText={setEmail}
                 autoCapitalize="none"
-                keyboardType="numeric"
+                keyboardType="email-address"
               />
             </View>
 
@@ -288,11 +186,6 @@ export default function LoginScreen({ navigation }) {
                 <EyeIcon visible={showPassword} />
               </TouchableOpacity>
             </View>
-
-            {/* Lupa Password */}
-            <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('LupaPassword')}>
-              <AppText style={styles.forgotText}>Lupa Password</AppText>
-            </TouchableOpacity>
 
             {/* Masuk */}
             <TouchableOpacity
@@ -317,38 +210,6 @@ export default function LoginScreen({ navigation }) {
               <AppText style={styles.secondaryBtnText}>Login as Guest</AppText>
             </TouchableOpacity>
 
-            {/* Divider */}
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <AppText style={styles.dividerText}>Atau masuk dengan</AppText>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Google SSO */}
-            <TouchableOpacity style={styles.googleBtn} activeOpacity={0.8} onPress={handleGoogleLogin}>
-              <View style={styles.googleIconBox}>
-                <GoogleIcon />
-              </View>
-              <AppText style={styles.googleBtnText}>Masuk dengan Google</AppText>
-            </TouchableOpacity>
-
-            {/* E-Portal SSO */}
-            <TouchableOpacity
-              style={[styles.googleBtn, { marginTop: 12 }]}
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate('EportalLogin')}
-            >
-              <AppText style={styles.googleBtnText}>Masuk dengan Akun E-Portal</AppText>
-            </TouchableOpacity>
-
-          </View>
-
-          {/* Sign-up link */}
-          <View style={styles.signupRow}>
-            <AppText style={styles.signupText}>Tidak punya akun? </AppText>
-            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <AppText style={styles.signupLink}>Buat sekarang</AppText>
-            </TouchableOpacity>
           </View>
 
         </ScrollView>
@@ -430,18 +291,6 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
 
-  // Lupa Password
-  forgotBtn: {
-    alignSelf: 'flex-end',
-    marginBottom: 28,
-    marginTop: -8,
-  },
-  forgotText: {
-    color: LINK_COLOR,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
   // Tombol Masuk
   primaryBtn: {
     backgroundColor: PRIMARY,
@@ -478,73 +327,5 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontSize: 14,
     fontWeight: '500',
-  },
-
-  // Divider
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E5E7EB',
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-
-  // Google button
-  googleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    height: 48,
-    paddingHorizontal: 14,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-  },
-  googleIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    backgroundColor: '#F8F9FA',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  googleBtnText: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginRight: 32, // Compensate for icon width to keep text centered
-  },
-
-  // Sign-up
-  signupRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 18,
-  },
-  signupText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  signupLink: {
-    fontSize: 14,
-    color: LINK_COLOR,
-    fontWeight: '700',
   },
 });
