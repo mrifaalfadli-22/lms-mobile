@@ -72,19 +72,41 @@ export default function LoginScreen({ navigation }) {
     setIsLoading(true);
 
     try {
+      // 1. Coba login lokal ke backend LMS terlebih dahulu (Email / NPM)
+      const localResponse = await fetch(`${API_BASE_URL}/api/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ identifier: email.trim(), password }),
+      });
+
+      const localJson = await localResponse.json();
+
+      if (localResponse.ok && localJson.status === 'success') {
+        navigation.replace('Main', {
+          isRegistered: true,
+          user: localJson.data.user,
+          token: localJson.data.token,
+        });
+        return;
+      }
+
+      // 2. Fallback: Coba login melalui SSO E-Portal jika akun lokal tidak cocok
       const eportalResponse = await fetch(`${EPORTAL_API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const eportalJson = await eportalResponse.json();
 
       if (!eportalResponse.ok || !eportalJson?.data?.uika_sso_token) {
-        showError(eportalJson?.message || 'Email atau password E-Portal salah.');
+        showError(localJson?.message || eportalJson?.message || 'Email/NPM atau password salah.');
         setIsLoading(false);
         return;
       }
@@ -107,7 +129,7 @@ export default function LoginScreen({ navigation }) {
           token: lmsJson.data.token,
         });
       } else {
-        showError(lmsJson.message || 'Gagal masuk ke LMS dengan akun E-Portal.');
+        showError(lmsJson.message || 'Gagal masuk ke sistem dengan akun E-Portal.');
       }
     } catch (error) {
       console.error('Login Error: ', error);

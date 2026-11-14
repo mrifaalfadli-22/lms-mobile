@@ -396,14 +396,13 @@ const AnimatedMateriCard = ({ item, index, activeIndex, scrollToIndex, materisLe
           </View>
           <View style={styles.jrcRow}>
             <UsersIcon />
-            <AppText style={styles.jrcInfo}>{item.fakultas} • {item.kelas}</AppText>
           </View>
           <View style={styles.jrcDivider} />
           <View style={styles.jrcLecturerRow}>
             <Image source={{ uri: item.avatar }} style={styles.jrcAvatar} />
             <View style={{ flex: 1 }}>
               <AppText style={styles.jrcLecturerName} numberOfLines={1}>{item.lecturer}</AppText>
-              <AppText style={styles.jrcLecturerRole}>Dosen Utama</AppText>
+              <AppText style={styles.jrcLecturerRole}>Pengajar Utama</AppText>
             </View>
           </View>
         </View>
@@ -443,14 +442,13 @@ const AnimatedRecommendationCard = ({ item, index, activeIndex, scrollToIndex, d
           </View>
           <View style={styles.jrcRow}>
             <UsersIcon />
-            <AppText style={styles.jrcInfo}>{item.prodi} • {item.kelas}</AppText>
           </View>
           <View style={styles.jrcDivider} />
           <View style={styles.jrcLecturerRow}>
             <Image source={{ uri: item.avatar }} style={styles.jrcAvatar} />
             <View style={{ flex: 1 }}>
               <AppText style={styles.jrcLecturerName}>{item.dosen}</AppText>
-              <AppText style={styles.jrcLecturerRole}>Dosen pengampu</AppText>
+              <AppText style={styles.jrcLecturerRole}>Pengajar</AppText>
             </View>
           </View>
         </View>
@@ -511,7 +509,7 @@ const AnimatedJadwalCard = ({ item, index, activeIndex, scrollToIndex, jadwalsLe
             <Image source={{ uri: item.avatar }} style={styles.jrcAvatar} />
             <View style={{ flex: 1 }}>
               <AppText style={styles.jrcLecturerName}>{item.lecturer}</AppText>
-              <AppText style={styles.jrcLecturerRole}>{item.role}</AppText>
+              <AppText style={styles.jrcLecturerRole}>Pengajar</AppText>
             </View>
           </View>
         </View>
@@ -650,7 +648,7 @@ export default function HomeScreen({ navigation, route }) {
         };
         fetchProfile();
       } else {
-        // Guest: fetch rekomendasi mata kuliah
+        // Guest: fetch rekomendasi kursus
         const fetchGuestCourses = async () => {
           setIsGuestLoading(true);
           try {
@@ -797,7 +795,7 @@ export default function HomeScreen({ navigation, route }) {
                   <View style={styles.avatarInitialContainer}>
                     <AppText style={styles.avatarInitialText}>
                       {(() => {
-                        const name = currentUser?.nama_lengkap || 'Mahasiswa';
+                        const name = currentUser?.nama_lengkap || 'Peserta';
                         const words = name.trim().split(/\s+/);
                         if (words.length > 1) return (words[0][0] + words[words.length - 1][0]).toUpperCase();
                         return name.substring(0, 2).toUpperCase();
@@ -816,7 +814,7 @@ export default function HomeScreen({ navigation, route }) {
               {isRegistered ? (
                 <>
                   <AppText style={styles.greetSubText}>Selamat datang,</AppText>
-                  <AppText style={styles.greetText}>{currentUser?.nama_lengkap || 'Mahasiswa'}</AppText>
+                  <AppText style={styles.greetText}>{currentUser?.nama_lengkap || 'Peserta'}</AppText>
                 </>
               ) : (
                 <>
@@ -947,7 +945,7 @@ export default function HomeScreen({ navigation, route }) {
         {/* ── Menu Grid (Registered: right after progress card) ── */}
         {isRegistered && (
           <View style={styles.menuGridExpanded}>
-            <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" onPress={() => navigation.navigate('MataKuliah', { isRegistered, user, token })} />
+            <MenuIcon icon={<IconMataKuliah />} label="Kursus" onPress={() => navigation.navigate('MataKuliah', { isRegistered, user, token })} />
             <MenuIcon icon={<IconJadwal />} label="Jadwal" onPress={() => navigation.navigate('JadwalKelas', { isRegistered, user, token })} />
             <MenuIcon icon={<IconMateri />} label="Materi" onPress={() => navigation.navigate('Materi', { isRegistered, user, token })} />
             <MenuIcon icon={<IconTugas />} label={"Tugas\n&Kuis"} onPress={() => navigation.navigate('TugasKuis', { isRegistered, user, token })} />
@@ -977,7 +975,7 @@ export default function HomeScreen({ navigation, route }) {
 
             {jadwals.length === 0 && !isLoading ? (
               <View style={{ padding: 20, alignItems: 'center' }}>
-                <AppText style={{ color: '#6B7280', fontSize: 13 }}>Tidak ada jadwal perkuliahan hari ini.</AppText>
+                <AppText style={{ color: '#6B7280', fontSize: 13 }}>Tidak ada jadwal kursus hari ini.</AppText>
               </View>
             ) : (
               <FlatList
@@ -1021,7 +1019,7 @@ export default function HomeScreen({ navigation, route }) {
               </View>
             </View>
             <AppText style={styles.jadwalInfo}>
-              Kamu belum memilih mata kuliah, yuk isi untuk{'\n'}menggunakan fitur lainnya
+              Kamu belum memilih kursus, yuk pilih untuk{'\n'}menggunakan fitur lainnya
             </AppText>
             <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate('Register')}>
               <AppText style={styles.jadwalCTA}>Isi sekarang</AppText>
@@ -1032,7 +1030,7 @@ export default function HomeScreen({ navigation, route }) {
         {/* ── Menu Grid (Guest: after Jadwal Card) ── */}
         {!isRegistered && (
           <View style={styles.menuGridExpanded}>
-            <MenuIcon icon={<IconMataKuliah />} label="Mata kuliah" onPress={() => navigation.navigate('MataKuliah')} isLocked={false} />
+            <MenuIcon icon={<IconMataKuliah />} label="Kursus" onPress={() => navigation.navigate('MataKuliah')} isLocked={false} />
             <MenuIcon icon={<IconJadwal />} label="Jadwal" isLocked onPress={openDaftarModal} />
             <MenuIcon icon={<IconMateri />} label="Materi" isLocked onPress={openDaftarModal} />
             <MenuIcon icon={<IconTugas />} label={"Tugas\n&kuis"} isLocked onPress={openDaftarModal} />
@@ -1098,11 +1096,11 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* ── Rekomendasi Mata Kuliah (Guest) ── */}
+        {/* ── Rekomendasi Kursus (Guest) ── */}
         {!isRegistered && (
           <View style={styles.materiRegisteredSection}>
             <View style={styles.sectionHeader}>
-              <AppText style={styles.sectionTitle}>Rekomendasi Mata kuliah</AppText>
+              <AppText style={styles.sectionTitle}>Rekomendasi Kursus</AppText>
               {isGuestLoading && <ActivityIndicator size="small" color={PRIMARY} />}
               {courses.length > 1 && (
                 <View style={styles.dotRow}>
@@ -1117,7 +1115,7 @@ export default function HomeScreen({ navigation, route }) {
 
             {courses.length === 0 && !isGuestLoading ? (
               <View style={{ padding: 20, alignItems: 'center' }}>
-                <AppText style={{ color: '#6B7280', fontSize: 13 }}>Belum ada mata kuliah tersedia.</AppText>
+              <AppText style={{ color: '#6B7280', fontSize: 13 }}>Belum ada kursus tersedia.</AppText>
               </View>
             ) : (
               <FlatList

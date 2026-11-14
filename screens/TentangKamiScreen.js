@@ -45,7 +45,7 @@ export default function TentangKamiScreen() {
         <View style={styles.card}>
           <AppText style={styles.cardTitle}>Apa itu Ucademy?</AppText>
           <AppText style={styles.cardDesc}>
-            Ucademy adalah platform Learning Management System (LMS) modern yang dirancang khusus untuk mempermudah kegiatan belajar mengajar antara mahasiswa dan dosen. Kami bertujuan untuk menciptakan pengalaman akademik yang terintegrasi, interaktif, dan mudah diakses dari mana saja.
+            Ucademy adalah platform kursus digital modern yang dirancang untuk mempermudah proses belajar antara peserta dan pengajar. Kami bertujuan untuk menciptakan pengalaman belajar yang terintegrasi, interaktif, dan mudah diakses dari mana saja.
           </AppText>
         </View>
 

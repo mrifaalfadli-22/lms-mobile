@@ -4,7 +4,7 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import Svg, { Path, Circle, Rect, Polyline, Mask, G } from 'react-native-svg';
 
 import HomeScreen from '../screens/HomeScreen';
-import MataKuliahScreen from '../screens/MataKuliahScreen';
+import KursusScreen from '../screens/KursusScreen';
 import JadwalKelasScreen from '../screens/JadwalKelasScreen';
 import ProfilScreen from '../screens/ProfilScreen';
 
@@ -91,10 +91,10 @@ export default function MainTabNavigator({ route }) {
       />
       <Tab.Screen
         name="MataKuliah"
-        component={MataKuliahScreen}
+        component={KursusScreen}
         initialParams={{ isRegistered, user, token }}
         options={{
-          tabBarLabel: 'Mata Kuliah',
+          tabBarLabel: 'Kursus',
         }}
       />
       {isRegistered && (

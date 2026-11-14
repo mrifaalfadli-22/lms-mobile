@@ -54,7 +54,7 @@ export default function DetailProgressBelajarScreen({ route }) {
   const [isTugasExpanded, setIsTugasExpanded] = useState(true);
 
   const course = route?.params?.item || {
-    title: 'Mata Kuliah',
+    title: 'Kursus',
   };
   const token = route?.params?.token || null;
 

@@ -59,7 +59,7 @@ const YoutubePlayIcon = () => (
 
 
 
-export default function DetailMataKuliahScreen({ navigation, route }) {
+export default function DetailKursusScreen({ navigation, route }) {
   const isRegistered = route?.params?.isRegistered || false;
   const course = route?.params?.course;
   const courseName = course?.title || "Pemrograman Web + Praktikum";
@@ -347,7 +347,7 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
           activeOpacity={0.7}
         >
           <ChevronLeft />
-          <AppText style={styles.headerTitle}>Detail mata kuliah</AppText>
+          <AppText style={styles.headerTitle}>Detail Kursus</AppText>
         </TouchableOpacity>
       </View>
 
@@ -688,12 +688,12 @@ export default function DetailMataKuliahScreen({ navigation, route }) {
                     <TouchableOpacity style={styles.modalCloseBtn} onPress={closeMeetingModal} activeOpacity={0.8}>
                       <CloseIcon />
                     </TouchableOpacity>
-                    <AppText style={styles.modalTokenMessage}>Masukkan token untuk melanjutkan</AppText>
+                    <AppText style={styles.modalTokenMessage}>Masukkan Token Enrollment 6 karakter untuk melanjutkan</AppText>
                     <TextInput
                       style={styles.modalInput}
                       value={enrollToken}
                       onChangeText={setEnrollToken}
-                      placeholder="Masukkan Token..."
+                      placeholder="Token Enrollment..."
                       placeholderTextColor="#9CA3AF"
                       autoCapitalize="characters"
                     />

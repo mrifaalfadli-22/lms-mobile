@@ -157,7 +157,7 @@ export default function JadwalKelasScreen({ navigation, route }) {
           <Image source={{ uri: item.avatar }} style={styles.dosenAvatar} />
           <View>
             <AppText style={styles.dosenName}>{item.dosen}</AppText>
-            <AppText style={styles.dosenRole}>{item.role}</AppText>
+            <AppText style={styles.dosenRole}>Pengajar</AppText>
           </View>
         </View>
       </View>

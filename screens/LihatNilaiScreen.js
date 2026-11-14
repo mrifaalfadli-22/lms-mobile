@@ -43,9 +43,6 @@ const TableRow = ({ item, index, onEvalPress }) => {
         </TouchableOpacity>
       ) : (
         <>
-          <View style={styles.colSKS}>
-            <AppText style={styles.valueText}>{item.sks}</AppText>
-          </View>
           <View style={styles.colNilai}>
             <AppText style={styles.valueText}>{item.nilai}</AppText>
           </View>
@@ -65,9 +62,6 @@ export default function LihatNilaiScreen() {
 
   const [loading, setLoading] = useState(true);
   const [allNilaiData, setAllNilaiData] = useState([]);
-  const [periods, setPeriods] = useState(['Semua']);
-  const [selectedPeriod, setSelectedPeriod] = useState('Semua');
-  const [modalPeriodeVisible, setModalPeriodeVisible] = useState(false);
 
   useEffect(() => {
     const fetchNilai = async () => {
@@ -90,8 +84,6 @@ export default function LihatNilaiScreen() {
           const data = json.data || [];
           setAllNilaiData(data);
           
-          const uniquePeriods = Array.from(new Set(data.map(item => item.periode).filter(Boolean))).sort().reverse();
-          setPeriods(['Semua', ...uniquePeriods]);
         }
       } catch (error) {
         console.error("Fetch Nilai Error: ", error);
@@ -107,64 +99,20 @@ export default function LihatNilaiScreen() {
     }
   }, [token, route.params?.refresh]);
 
-  const filteredData = selectedPeriod === 'Semua' 
-    ? allNilaiData 
-    : allNilaiData.filter(item => item.periode === selectedPeriod);
+  const filteredData = allNilaiData;
 
-  let totalSKS = 0;
-  let totalPoints = 0;
+  let totalNilai = 0;
+  let jumlahNilai = 0;
 
   filteredData.forEach(item => {
     if (!item.needsEval) {
-      const sks = parseFloat(item.sks) || 0;
       const nilai = parseFloat(item.nilai) || 0;
-      totalSKS += sks;
-      totalPoints += (sks * nilai);
+      totalNilai += nilai;
+      jumlahNilai += 1;
     }
   });
 
-  const ipk = totalSKS > 0 ? (totalPoints / totalSKS).toFixed(2) : '0.00';
-
-  const renderPeriodeModal = () => (
-    <Modal
-      transparent={true}
-      visible={modalPeriodeVisible}
-      animationType="fade"
-      onRequestClose={() => setModalPeriodeVisible(false)}
-    >
-      <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setModalPeriodeVisible(false)}
-        >
-          <View style={styles.modalContent}>
-            <AppText style={styles.modalTitle}>Pilih Periode</AppText>
-            {periods.map((periode, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.periodeOption,
-                  selectedPeriod === periode && styles.periodeOptionActive
-                ]}
-                onPress={() => {
-                  setSelectedPeriod(periode);
-                  setModalPeriodeVisible(false);
-                }}
-              >
-                <AppText style={[
-                  styles.periodeOptionText,
-                  selectedPeriod === periode && styles.periodeOptionTextActive
-                ]}>
-                  {periode === 'Semua' ? 'Semua Periode' : periode}
-                </AppText>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </BlurView>
-    </Modal>
-  );
+  const rataRata = jumlahNilai > 0 ? (totalNilai / jumlahNilai).toFixed(2) : '0.00';
 
   return (
     <View style={styles.safeArea}>
@@ -180,33 +128,18 @@ export default function LihatNilaiScreen() {
 
       <View style={styles.summaryContainer}>
         <View style={styles.summaryLeft}>
-          <AppText style={styles.summaryText}>TOTAL SKS : {totalSKS}</AppText>
+          <AppText style={styles.summaryText}>Jumlah Nilai : {jumlahNilai}</AppText>
         </View>
         <View style={styles.summaryRight}>
-          <AppText style={styles.summaryText}>IPK : {ipk}</AppText>
+          <AppText style={styles.summaryText}>Rata-rata Nilai : {rataRata}</AppText>
         </View>
-      </View>
-
-      <View style={styles.periodeRow}>
-        <AppText style={styles.periodeLabel}>Periode :</AppText>
-        <TouchableOpacity
-          style={styles.periodeSelector}
-          activeOpacity={0.7}
-          onPress={() => setModalPeriodeVisible(true)}
-        >
-          <AppText style={styles.periodeText}>{selectedPeriod === 'Semua' ? 'Semua Periode' : selectedPeriod}</AppText>
-          <ChevronsUpDown />
-        </TouchableOpacity>
       </View>
 
       <View style={styles.container}>
         {/* Table Header */}
         <View style={styles.tableHeader}>
           <View style={styles.colCourse}>
-            <AppText style={styles.tableHeaderLabel}>Mata kuliah</AppText>
-          </View>
-          <View style={styles.colSKS}>
-            <AppText style={styles.tableHeaderLabelCenter}>SKS</AppText>
+            <AppText style={styles.tableHeaderLabel}>Kursus</AppText>
           </View>
           <View style={styles.colNilai}>
             <AppText style={styles.tableHeaderLabelCenter}>Nilai</AppText>
@@ -224,7 +157,7 @@ export default function LihatNilaiScreen() {
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             {filteredData.length === 0 ? (
               <View style={{ alignItems: 'center', marginTop: 40 }}>
-                <AppText style={{ color: '#6B7280' }}>Tidak ada data nilai untuk periode ini.</AppText>
+              <AppText style={{ color: '#6B7280' }}>Belum ada data nilai.</AppText>
               </View>
             ) : (
               filteredData.map((item, index) => (
@@ -239,7 +172,6 @@ export default function LihatNilaiScreen() {
           </ScrollView>
         )}
       </View>
-      {renderPeriodeModal()}
     </View>
   );
 }
@@ -396,9 +328,6 @@ const styles = StyleSheet.create({
   colCourse: {
     flex: 2.5,
     paddingRight: 8,
-  },
-  colSKS: {
-    flex: 0.8,
   },
   colNilai: {
     flex: 1,

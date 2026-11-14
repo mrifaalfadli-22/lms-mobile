@@ -38,17 +38,16 @@ const CourseCard = ({ course, onPress }) => (
   <TouchableOpacity style={styles.courseCard} onPress={onPress} activeOpacity={0.7}>
     <View style={styles.courseCardTop}>
       <View style={styles.courseIconBox}>
-        <AppText style={styles.courseIconText}>{course?.title ? course.title.substring(0, 2).toUpperCase() : 'MK'}</AppText>
+        <AppText style={styles.courseIconText}>{course?.title ? course.title.substring(0, 2).toUpperCase() : 'KU'}</AppText>
       </View>
       <View style={styles.courseContent}>
         <AppText style={styles.courseTitleText}>{course.title}</AppText>
-        <AppText style={styles.courseNidnText}>{(course.prodi || 'Program Studi')} . {(course.kelas || 'Kelas')}</AppText>
       </View>
       <ChevronRightIcon />
     </View>
     <View style={styles.courseCardDivider} />
     <View style={styles.courseCardBottom}>
-      <AppText style={styles.courseDosenText}>{course.dosen || 'Dosen tidak diketahui'}</AppText>
+      <AppText style={styles.courseDosenText}>{course.dosen || 'Pengajar tidak diketahui'}</AppText>
     </View>
   </TouchableOpacity>
 );
@@ -195,7 +194,7 @@ export default function TugasKuisScreen({ route }) {
           <View style={styles.searchContainer}>
             <TextInput
               style={styles.searchInput}
-              placeholder={selectedCourse ? "Cari tugas..." : "Cari mata kuliah atau dosen..."}
+              placeholder={selectedCourse ? "Cari tugas..." : "Cari kursus atau pengajar..."}
               placeholderTextColor="#9CA3AF"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -213,7 +212,7 @@ export default function TugasKuisScreen({ route }) {
               ) : (
                 <>
                   {filteredCourses.length === 0 && (
-                    <AppText style={styles.emptyText}>Mata kuliah tidak ditemukan.</AppText>
+                    <AppText style={styles.emptyText}>Kursus tidak ditemukan.</AppText>
                   )}
                   {filteredCourses.map((course) => (
                     <CourseCard

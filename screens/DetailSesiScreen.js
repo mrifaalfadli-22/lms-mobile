@@ -252,7 +252,7 @@ export default function DetailSesiScreen({ route }) {
           <AppText style={styles.cardContentText}>
             {meeting?.rawMateri && meeting.rawMateri !== '-'
               ? meeting.rawMateri
-              : 'Silakan pelajari materi berikut sebelum memulai sesi perkuliahan.'}
+              : 'Silakan pelajari materi berikut sebelum memulai sesi kursus.'}
           </AppText>
 
           {/* Support embedded video if the string is a youtube link */}
@@ -421,7 +421,7 @@ export default function DetailSesiScreen({ route }) {
                 ) : (
                   <>
                     <CheckboxEmpty />
-                    <AppText style={[styles.attendanceText, { color: '#9CA3AF' }]}>Belum diabsen oleh dosen</AppText>
+                    <AppText style={[styles.attendanceText, { color: '#9CA3AF' }]}>Belum diabsen oleh pengajar</AppText>
                   </>
                 )}
               </View>

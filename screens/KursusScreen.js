@@ -94,7 +94,7 @@ const UsersIcon = () => (
   </Svg>
 );
 
-export default function MataKuliahScreen({ navigation, route }) {
+export default function KursusScreen({ navigation, route }) {
   const isRegistered = route?.params?.isRegistered || false;
   const user = route?.params?.user || null;
   const token = route?.params?.token || null;
@@ -105,8 +105,6 @@ export default function MataKuliahScreen({ navigation, route }) {
     tersedia: []
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPeriode, setSelectedPeriode] = useState('2025/2026');
-  const [modalPeriodeVisible, setModalPeriodeVisible] = useState(false);
 
   // Filter & Search States
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,11 +112,7 @@ export default function MataKuliahScreen({ navigation, route }) {
   const [selectedHari, setSelectedHari] = useState([]);
   const [selectedDosen, setSelectedDosen] = useState([]);
   const [selectedKelas, setSelectedKelas] = useState([]);
-  const [selectedFakultas, setSelectedFakultas] = useState([]);
-  const [selectedProdi, setSelectedProdi] = useState([]);
-  const [expandedAccordions, setExpandedAccordions] = useState(['Fakultas', 'Program Studi', 'Hari', 'Dosen', 'Kelas']);
-
-  const PERIODES = ['2023/2024', '2024/2025', '2025/2026', '2026/2027'];
+  const [expandedAccordions, setExpandedAccordions] = useState(['Hari', 'Pengajar', 'Kelas']);
 
   useFocusEffect(
     useCallback(() => {
@@ -155,7 +149,7 @@ export default function MataKuliahScreen({ navigation, route }) {
             });
           }
         } catch (error) {
-          console.error("Mata Kuliah Fetch Error: ", error);
+          console.error("Course Fetch Error: ", error);
         } finally {
           setIsLoading(false);
         }
@@ -199,8 +193,8 @@ export default function MataKuliahScreen({ navigation, route }) {
           <View style={styles.dosenRow}>
             <Image source={{ uri: item?.avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80' }} style={styles.dosenAvatar} />
             <View style={{ flex: 1 }}>
-              <AppText style={styles.dosenName}>{item?.dosen || 'Dosen Tidak Tersedia'}</AppText>
-              <AppText style={styles.dosenRole}>{item?.role || 'Dosen pengampu'}</AppText>
+              <AppText style={styles.dosenName}>{item?.dosen || 'Pengajar Tidak Tersedia'}</AppText>
+              <AppText style={styles.dosenRole}>Pengajar</AppText>
             </View>
           </View>
         </View>
@@ -227,74 +221,27 @@ export default function MataKuliahScreen({ navigation, route }) {
     </View>
   );
 
-  const renderPeriodeModal = () => (
-    <Modal
-      transparent={true}
-      visible={modalPeriodeVisible}
-      animationType="fade"
-      onRequestClose={() => setModalPeriodeVisible(false)}
-    >
-      <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill}>
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setModalPeriodeVisible(false)}
-        >
-          <View style={styles.modalContent}>
-            <AppText style={styles.modalTitle}>Pilih Periode</AppText>
-            {PERIODES.map((periode, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.periodeOption,
-                  selectedPeriode === periode && styles.periodeOptionActive
-                ]}
-                onPress={() => {
-                  setSelectedPeriode(periode);
-                  setModalPeriodeVisible(false);
-                }}
-              >
-                <AppText style={[
-                  styles.periodeOptionText,
-                  selectedPeriode === periode && styles.periodeOptionTextActive
-                ]}>
-                  {periode}
-                </AppText>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </BlurView>
-    </Modal>
-  );
-
   // Filter berdasarkan tab aktif (diambil/tersedia)
   const sourceData = activeTab === 'diambil' ? coursesData.diambil : coursesData.tersedia;
   const safeSourceData = Array.isArray(sourceData) ? sourceData : [];
 
   const filterOptions = {
-    Fakultas: [...new Set(safeSourceData.map(item => item.fakultas).filter(Boolean))],
-    'Program Studi': [...new Set(safeSourceData.map(item => item.prodi).filter(Boolean))],
     Hari: [...new Set(safeSourceData.map(item => item.hari).filter(Boolean))],
-    Dosen: [...new Set(safeSourceData.map(item => item.dosen).filter(Boolean))],
+    Pengajar: [...new Set(safeSourceData.map(item => item.dosen).filter(Boolean))],
     Kelas: [...new Set(safeSourceData.map(item => item.kelas).filter(Boolean))]
   };
 
   const currentData = safeSourceData.filter(item => {
-    if (item.tahun && item.tahun !== selectedPeriode) return false;
-    
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       const titleMatch = item.title?.toLowerCase().includes(q);
-      const dosenMatch = item.dosen?.toLowerCase().includes(q);
-      if (!titleMatch && !dosenMatch) return false;
+      const pengajarMatch = item.dosen?.toLowerCase().includes(q);
+      if (!titleMatch && !pengajarMatch) return false;
     }
 
     if (selectedHari.length > 0 && !selectedHari.includes(item.hari)) return false;
     if (selectedDosen.length > 0 && !selectedDosen.includes(item.dosen)) return false;
     if (selectedKelas.length > 0 && !selectedKelas.includes(item.kelas)) return false;
-    if (selectedFakultas.length > 0 && !selectedFakultas.includes(item.fakultas)) return false;
-    if (selectedProdi.length > 0 && !selectedProdi.includes(item.prodi)) return false;
 
     return true;
   });
@@ -302,10 +249,8 @@ export default function MataKuliahScreen({ navigation, route }) {
   const toggleCheckbox = (type, value) => {
     let current, setter;
     if (type === 'Hari') { current = selectedHari; setter = setSelectedHari; }
-    else if (type === 'Dosen') { current = selectedDosen; setter = setSelectedDosen; }
+    else if (type === 'Pengajar') { current = selectedDosen; setter = setSelectedDosen; }
     else if (type === 'Kelas') { current = selectedKelas; setter = setSelectedKelas; }
-    else if (type === 'Fakultas') { current = selectedFakultas; setter = setSelectedFakultas; }
-    else { current = selectedProdi; setter = setSelectedProdi; }
 
     if (current.includes(value)) {
       setter(current.filter(item => item !== value));
@@ -338,10 +283,8 @@ export default function MataKuliahScreen({ navigation, route }) {
               
               let currentSelected = [];
               if (type === 'Hari') currentSelected = selectedHari;
-              if (type === 'Dosen') currentSelected = selectedDosen;
+              if (type === 'Pengajar') currentSelected = selectedDosen;
               if (type === 'Kelas') currentSelected = selectedKelas;
-              if (type === 'Fakultas') currentSelected = selectedFakultas;
-              if (type === 'Program Studi') currentSelected = selectedProdi;
 
               return (
                 <View key={type} style={styles.accordionContainer}>
@@ -402,8 +345,6 @@ export default function MataKuliahScreen({ navigation, route }) {
                 setSelectedHari([]);
                 setSelectedDosen([]);
                 setSelectedKelas([]);
-                setSelectedFakultas([]);
-                setSelectedProdi([]);
               }}
             >
               <AppText style={styles.btnHapusFilterText}>Hapus Filter</AppText>
@@ -414,7 +355,7 @@ export default function MataKuliahScreen({ navigation, route }) {
     </Modal>
   );
 
-  const activeFiltersCount = selectedHari.length + selectedDosen.length + selectedKelas.length + selectedFakultas.length + selectedProdi.length;
+  const activeFiltersCount = selectedHari.length + selectedDosen.length + selectedKelas.length;
 
   const innerContent = (
     <View style={styles.content}>
@@ -424,7 +365,7 @@ export default function MataKuliahScreen({ navigation, route }) {
           <SearchIcon />
           <TextInput
             style={styles.searchInput}
-            placeholder="Cari mata kuliah atau dosen..."
+            placeholder="Cari kursus atau pengajar..."
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -446,19 +387,6 @@ export default function MataKuliahScreen({ navigation, route }) {
 
       {/* ── Tabs ── */}
       {renderTabs()}
-
-      {/* ── Periode Selector ── */}
-      <View style={styles.periodeRow}>
-        <AppText style={styles.periodeLabel}>Periode :</AppText>
-        <TouchableOpacity
-          style={styles.periodeSelector}
-          activeOpacity={0.7}
-          onPress={() => setModalPeriodeVisible(true)}
-        >
-          <AppText style={styles.periodeText}>{selectedPeriode}</AppText>
-          <ChevronsUpDown />
-        </TouchableOpacity>
-      </View>
 
       {isLoading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -492,7 +420,7 @@ export default function MataKuliahScreen({ navigation, route }) {
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <ChevronLeft />
-          <AppText style={styles.headerTitle}>Mata Kuliah</AppText>
+          <AppText style={styles.headerTitle}>Kursus</AppText>
         </TouchableOpacity>
       </View>
 
@@ -510,7 +438,6 @@ export default function MataKuliahScreen({ navigation, route }) {
         </View>
       )}
 
-      {renderPeriodeModal()}
       {renderFilterModal()}
     </View>
   );

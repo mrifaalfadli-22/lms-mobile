@@ -59,10 +59,6 @@ const ProgressCard = ({ item, onPress }) => (
     <Image source={{ uri: item.image }} style={styles.cardImage} resizeMode="cover" />
     <View style={styles.cardContent}>
       <AppText style={styles.titleText}>{item.title}</AppText>
-      <View style={styles.subtitleRow}>
-        <UsersIcon />
-        <AppText style={styles.subtitleText}>{item.classInfo} - {item.major}</AppText>
-      </View>
       <View style={styles.progressColumn}>
         <LinearProgress 
           label="Absensi" 
@@ -87,12 +83,8 @@ export default function ProgressBelajarScreen({ route }) {
   const navigation = useNavigation();
   const token = route?.params?.token || null;
   const [searchQuery, setSearchQuery] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedPeriode, setSelectedPeriode] = useState(new Date().getFullYear().toString());
-
   const [progressData, setProgressData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [periodes, setPeriodes] = useState([new Date().getFullYear().toString()]);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -108,13 +100,6 @@ export default function ProgressBelajarScreen({ route }) {
         const json = await response.json();
         if (json.status === 'success') {
           setProgressData(json.data || []);
-          const uniquePeriodes = [...new Set((json.data || []).map(item => item.periode))].filter(Boolean);
-          if (uniquePeriodes.length > 0) {
-            setPeriodes(uniquePeriodes);
-            if (!uniquePeriodes.includes(selectedPeriode)) {
-                setSelectedPeriode(uniquePeriodes[0]);
-            }
-          }
         }
       } catch (error) {
         console.error("Fetch Progress Error: ", error);
@@ -127,16 +112,10 @@ export default function ProgressBelajarScreen({ route }) {
     }
   }, [token]);
 
-  const handleSelectPeriode = (periode) => {
-    setSelectedPeriode(periode);
-    setModalVisible(false);
-  };
-
   const filteredData = progressData.filter(d => {
-    const matchPeriode = d.periode === selectedPeriode;
     const searchLower = searchQuery.toLowerCase();
     const matchSearch = d.title?.toLowerCase().includes(searchLower) || d.dosen?.toLowerCase().includes(searchLower);
-    return matchPeriode && matchSearch;
+    return matchSearch;
   });
 
   return (
@@ -156,26 +135,18 @@ export default function ProgressBelajarScreen({ route }) {
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Cari mata kuliah atau dosen..."
+            placeholder="Cari kursus atau pengajar..."
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
 
-        <View style={styles.filterRow}>
-          <AppText style={styles.filterLabel}>Periode : </AppText>
-          <TouchableOpacity style={styles.dropdownBtn} onPress={() => setModalVisible(true)}>
-            <AppText style={styles.dropdownText}>{selectedPeriode}</AppText>
-            <DropdownIcon />
-          </TouchableOpacity>
-        </View>
-
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {isLoading ? (
             <ActivityIndicator size="large" color="#116E63" style={{ marginTop: 40 }} />
           ) : filteredData.length === 0 ? (
-            <AppText style={{ textAlign: 'center', marginTop: 40, color: '#9CA3AF' }}>Tidak ada data progress belajar pada periode ini.</AppText>
+            <AppText style={{ textAlign: 'center', marginTop: 40, color: '#9CA3AF' }}>Tidak ada data progress belajar.</AppText>
           ) : (
             filteredData.map(data => (
               <ProgressCard
@@ -187,23 +158,6 @@ export default function ProgressBelajarScreen({ route }) {
           )}
         </ScrollView>
       </View>
-
-      <Modal visible={modalVisible} transparent={true} animationType="fade">
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVisible(false)}>
-          <View style={styles.modalContent}>
-            <AppText style={styles.modalTitle}>Pilih Periode</AppText>
-            {periodes.map((p, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[styles.periodeOption, selectedPeriode === p && styles.periodeOptionSelected, index === periodes.length - 1 && { borderBottomWidth: 0 }]}
-                onPress={() => handleSelectPeriode(p)}
-              >
-                <AppText style={[styles.periodeOptionText, selectedPeriode === p && styles.periodeOptionTextSelected]}>{p}</AppText>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
     </View>
   );

@@ -16,16 +16,16 @@ const ChevronLeft = () => (
 
 const faqs = [
   {
-    question: 'Bagaimana cara mendaftar kelas di Ucademy?',
-    answer: 'Pilih menu "Mata Kuliah" dari halaman utama. Cari mata kuliah yang Anda inginkan, lalu klik tombol "Gabung" atau masukkan token pendaftaran jika diminta oleh Dosen Anda.'
+    question: 'Bagaimana cara mendaftar kursus di Ucademy?',
+    answer: 'Pilih menu "Kursus" dari halaman utama. Cari kursus yang Anda inginkan, lalu klik tombol "Gabung" dan masukkan Token Enrollment 6 karakter dari Pengajar.'
   },
   {
-    question: 'Di mana saya bisa melihat jadwal kuliah?',
-    answer: 'Jadwal kuliah dapat dilihat pada tab "Home" (Beranda) di bagian Jadwal Hari Ini. Anda juga dapat melihat kalender lengkap di menu Jadwal Kelas.'
+    question: 'Di mana saya bisa melihat jadwal kursus?',
+    answer: 'Jadwal kursus dapat dilihat pada tab "Home" (Beranda) di bagian Jadwal Hari Ini. Anda juga dapat melihat kalender lengkap di menu Jadwal Kelas.'
   },
   {
     question: 'Bagaimana cara mengumpulkan tugas?',
-    answer: 'Buka mata kuliah yang bersangkutan, lalu masuk ke tab "Tugas dan Kuis". Pilih tugas yang ingin dikerjakan, lalu klik tombol "Lihat Tugas" dan Anda akan langsung diarahkan ke sistem CBT Ucademy untuk proses pengerjaan dan pengumpulan tugas.'
+    answer: 'Buka kursus yang bersangkutan, lalu masuk ke tab "Tugas dan Kuis". Pilih tugas yang ingin dikerjakan, lalu klik tombol "Lihat Tugas" dan Anda akan langsung diarahkan ke sistem CBT Ucademy untuk proses pengerjaan dan pengumpulan tugas.'
   },
   {
     question: 'Kenapa saya tidak bisa mengubah NPM?',
@@ -62,7 +62,7 @@ export default function BantuanScreen() {
         <View style={styles.contactContainer}>
           <AppText style={styles.contactTitle}>Masih butuh bantuan?</AppText>
           <AppText style={styles.contactDesc}>
-            Hubungi dukungan teknis kami melalui email di ucademyofficial@gmail.com atau kunjungi pusat layanan mahasiswa.
+            Hubungi dukungan teknis kami melalui email di ucademyofficial@gmail.com atau kunjungi pusat layanan peserta.
           </AppText>
         </View>
       </ScrollView>

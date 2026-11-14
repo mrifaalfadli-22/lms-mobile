@@ -14,7 +14,7 @@ import ProgressBelajarScreen from '../screens/ProgressBelajarScreen';
 import SertifikatScreen from '../screens/SertifikatScreen';
 import LihatNilaiScreen from '../screens/LihatNilaiScreen';
 import EvaluasiScreen from '../screens/EvaluasiScreen';
-import DetailMataKuliahScreen from '../screens/DetailMataKuliahScreen';
+import DetailKursusScreen from '../screens/DetailKursusScreen';
 import DetailSesiScreen from '../screens/DetailSesiScreen';
 import DetailProgressBelajarScreen from '../screens/DetailProgressBelajarScreen';
 import DetailEvaluasiScreen from '../screens/DetailEvaluasiScreen';
@@ -46,7 +46,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Sertifikat" component={SertifikatScreen} />
       <Stack.Screen name="LihatNilai" component={LihatNilaiScreen} />
       <Stack.Screen name="Evaluasi" component={EvaluasiScreen} />
-      <Stack.Screen name="DetailMataKuliah" component={DetailMataKuliahScreen} />
+      <Stack.Screen name="DetailMataKuliah" component={DetailKursusScreen} />
       <Stack.Screen name="DetailSesi" component={DetailSesiScreen} />
       <Stack.Screen name="DetailProgressBelajar" component={DetailProgressBelajarScreen} />
       <Stack.Screen name="DetailEvaluasi" component={DetailEvaluasiScreen} />

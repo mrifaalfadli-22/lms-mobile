@@ -57,7 +57,7 @@ export const downloadCertificate = async (sertif, course, API_BASE_URL, setIsDow
     };
     const tipeLabel = getTipeLabel(sertif.tipe_sertifikat);
     
-    // Resolve mk and mhs names for file title
+    // Resolve course and participant names for file title
     let mk = course?.mkOnly || course?.courseName || course?.title || sertif.peserta?.jadwal?.mata_kuliah?.nama_mk || sertif.peserta?.jadwal?.mataKuliah?.nama_mk || '';
     let mhs = course?.mahasiswaName || sertif.peserta?.mahasiswa?.nama_lengkap || sertif.peserta?.nama_lengkap || 'Download';
     

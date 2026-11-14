@@ -309,7 +309,7 @@ export default function ProfilScreen() {
             />
             <AppText style={styles.guestTitle}>Halo, Sobat!</AppText>
             <AppText style={styles.guestDesc}>
-              Kamu belum mendaftar nih. Yuk daftar atau masuk sekarang untuk bisa menyimpan progress belajar, mengakses jadwal kuliah, dan mengumpulkan tugas!
+              Kamu belum mendaftar nih. Yuk daftar atau masuk sekarang untuk bisa menyimpan progress belajar, mengakses jadwal kursus, dan mengumpulkan tugas!
             </AppText>
 
             <TouchableOpacity
@@ -400,7 +400,7 @@ export default function ProfilScreen() {
                     <View style={styles.avatarInitialContainer}>
                       <AppText style={styles.avatarInitial}>
                         {(() => {
-                          const name = form.nama || 'Mahasiswa';
+                          const name = form.nama || 'Peserta';
                           const words = name.trim().split(/\s+/);
                           if (words.length > 1) return (words[0][0] + words[words.length - 1][0]).toUpperCase();
                           return name.substring(0, 2).toUpperCase();

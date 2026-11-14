@@ -96,7 +96,7 @@ export default function LupaPasswordScreen() {
               <View style={styles.inputWrapper}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Contoh: mahasiswa@email.com"
+                  placeholder="Contoh: peserta@email.com"
                   placeholderTextColor="#BDBDBD"
                   value={email}
                   onChangeText={setEmail}

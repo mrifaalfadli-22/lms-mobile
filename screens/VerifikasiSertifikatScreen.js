@@ -261,7 +261,7 @@ export default function VerifikasiSertifikatScreen() {
                   <AppText style={styles.infoValue}>{verificationData.peserta?.mahasiswa?.nama_lengkap || '-'}</AppText>
                 </View>
                 <View style={styles.infoRow}>
-                  <AppText style={styles.infoLabel}>Mata Kuliah</AppText>
+                  <AppText style={styles.infoLabel}>Kursus</AppText>
                   <AppText style={styles.infoValue}>{verificationData.peserta?.jadwal?.mata_kuliah?.nama_mk || '-'}</AppText>
                 </View>
                 <View style={styles.infoRow}>

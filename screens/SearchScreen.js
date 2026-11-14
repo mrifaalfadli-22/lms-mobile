@@ -59,7 +59,7 @@ export default function SearchScreen() {
       if (json.status === 'success') {
         const { mata_kuliah, materi } = json.data;
         const combined = [
-          ...mata_kuliah.map(item => ({ ...item, typeTitle: 'Mata Kuliah' })),
+          ...mata_kuliah.map(item => ({ ...item, typeTitle: 'Kursus' })),
           ...materi.map(item => ({ ...item, typeTitle: 'Materi' }))
         ];
         setResults(combined);
@@ -83,7 +83,7 @@ export default function SearchScreen() {
         style={styles.resultCard}
         activeOpacity={0.8}
         onPress={() => {
-          if (item.typeTitle === 'Mata Kuliah') {
+          if (item.typeTitle === 'Kursus') {
             navigation.navigate('DetailMataKuliah', { 
               course: { ...item },
               isDiambil: item.isDiambil,
@@ -105,10 +105,8 @@ export default function SearchScreen() {
           <Text style={styles.resultTitle} numberOfLines={2}>{item.title}</Text>
           {item.course ? <Text style={styles.resultSubtitle} numberOfLines={1}>{item.course}</Text> : null}
           {item.lecturer ? <Text style={styles.resultSubtitle} numberOfLines={1}>{item.lecturer}</Text> : null}
-          {item.typeTitle === 'Mata Kuliah' && (
+          {item.typeTitle === 'Kursus' && (
             <View style={{ marginTop: 2 }}>
-              <Text style={styles.resultSubtitle} numberOfLines={1}>Fakultas {item.fakultas}</Text>
-              <Text style={styles.resultSubtitle} numberOfLines={1}>{item.prodi} • {item.kelas}</Text>
             </View>
           )}
         </View>
@@ -129,7 +127,7 @@ export default function SearchScreen() {
           <SearchIcon />
           <TextInput
             style={styles.searchInput}
-            placeholder="Cari materi atau mata kuliah..."
+            placeholder="Cari materi atau kursus..."
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={setSearchQuery}

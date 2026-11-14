@@ -60,11 +60,10 @@ const CourseCard = ({ course, onPress }) => (
   <TouchableOpacity style={styles.courseCard} onPress={onPress} activeOpacity={0.7}>
     <View style={styles.courseCardTop}>
       <View style={styles.courseIconBox}>
-        <AppText style={styles.courseIconText}>{course.mkOnly ? course.mkOnly.substring(0, 2).toUpperCase() : 'MK'}</AppText>
+        <AppText style={styles.courseIconText}>{course.mkOnly ? course.mkOnly.substring(0, 2).toUpperCase() : 'KU'}</AppText>
       </View>
       <View style={styles.courseContent}>
         <AppText style={styles.courseTitleText}>{course.courseName}</AppText>
-        <AppText style={styles.courseNidnText}>{course.prodi || 'Program Studi'} . {course.kelas || 'Kelas'}</AppText>
       </View>
       <ChevronRightIcon />
     </View>
@@ -275,12 +274,10 @@ export default function SertifikatScreen({ route }) {
         const formatted = json.data.data.map(p => {
           const mk = p.jadwal?.mata_kuliah?.nama_mk || '';
           const kelas = p.jadwal?.kelas?.nama_kelas || '';
-          const prodi = p.jadwal?.prodi || 'Program Studi';
           return {
             id: p.id_peserta,
             courseName: `${mk} ${kelas ? '+ ' + kelas : ''}`.trim(),
             mkOnly: mk,
-            prodi: prodi,
             kelas: kelas,
             dosen: p.jadwal?.dosen?.nama_lengkap || '-',
             nidn: p.jadwal?.dosen?.nomor_induk || '-',
@@ -360,21 +357,21 @@ export default function SertifikatScreen({ route }) {
               <View style={styles.searchContainer}>
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Cari mata kuliah atau dosen..."
+                  placeholder="Cari kursus atau pengajar..."
                   placeholderTextColor="#9CA3AF"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
               </View>
               <View style={styles.sectionHeader}>
-                <AppText style={styles.sectionTitle}>Sertifikat dari mata kuliah yang di selesaikan</AppText>
+                <AppText style={styles.sectionTitle}>Sertifikat Kursus yang Diselesaikan</AppText>
               </View>
               {isLoading ? (
                 <ActivityIndicator size="large" color="#116E63" style={{ marginTop: 40 }} />
               ) : (
                 <>
                   {filteredCourses.length === 0 && (
-                    <AppText style={styles.emptyText}>Mata kuliah tidak ditemukan.</AppText>
+                    <AppText style={styles.emptyText}>Kursus tidak ditemukan.</AppText>
                   )}
                   {filteredCourses.map((course) => (
                     <CourseCard
